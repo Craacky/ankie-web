@@ -1044,7 +1044,7 @@ export default function App() {
               </div>
             </div>
           </DialogHeader>
-          <div className="min-h-0 flex-1 overflow-y-auto">
+          <div className="hide-scrollbar min-h-0 flex-1 overflow-y-auto">
             {renderCollectionsList()}
           </div>
         </DialogContent>
@@ -1126,7 +1126,7 @@ export default function App() {
                 </div>
               </div>
             </CardHeader>
-            <CardContent className="overflow-y-auto lg:h-[calc(100vh-13.5rem)]">
+            <CardContent className="hide-scrollbar overflow-y-auto lg:h-[calc(100vh-13.5rem)]">
               {renderCollectionsList()}
             </CardContent>
           </Card>
