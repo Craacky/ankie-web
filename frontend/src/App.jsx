@@ -185,6 +185,8 @@ export default function App() {
   const [collectionDialogOpen, setCollectionDialogOpen] = useState(false)
   const [folderDialogOpen, setFolderDialogOpen] = useState(false)
   const [mobileCollectionsOpen, setMobileCollectionsOpen] = useState(false)
+  const [renameFolderTarget, setRenameFolderTarget] = useState(null)
+  const [renameFolderInput, setRenameFolderInput] = useState('')
   const telegramContainerRef = useRef(null)
   const profileMenuRef = useRef(null)
   const [profileMenuOpen, setProfileMenuOpen] = useState(false)
@@ -530,13 +532,28 @@ export default function App() {
     setCollapsedFolders((prev) => ({ ...prev, [folderId]: !prev[folderId] }))
   }
 
-  async function renameFolder(folder) {
-    const nextName = window.prompt('New folder name', folder.name)
-    if (!nextName || !nextName.trim() || nextName.trim() === folder.name) return
+  function openRenameFolderDialog(folder) {
+    setRenameFolderTarget(folder)
+    setRenameFolderInput(folder.name)
+  }
+
+  async function saveFolderRename(event) {
+    event?.preventDefault()
+    if (!renameFolderTarget) return
+    const nextName = renameFolderInput.trim()
+    if (!nextName) {
+      notify('Folder name cannot be empty', 'error')
+      return
+    }
+    if (nextName === renameFolderTarget.name) {
+      setRenameFolderTarget(null)
+      return
+    }
 
     try {
-      await api.renameFolder(folder.id, nextName.trim())
+      await api.renameFolder(renameFolderTarget.id, nextName)
       await fetchFolders()
+      setRenameFolderTarget(null)
       notify('Folder renamed')
     } catch (err) {
       notify(err.message, 'error')
@@ -569,12 +586,15 @@ export default function App() {
   }
 
   function renderCollectionItem(collection) {
+    const isMenuOpen = collectionMenuOpenId === collection.id
     return (
       <div
         key={collection.id}
         draggable
         onDragStart={() => setDraggedCollectionId(collection.id)}
-        className={`glass-item relative w-full rounded-md border p-3 text-left transition ${collectionItemClass(collection)}`}
+        className={`relative w-full rounded-md border bg-card/55 p-3 text-left transition ${collectionItemClass(collection)} ${
+          isMenuOpen ? 'z-30' : ''
+        }`}
         onClick={() => {
           setSelectedCollectionId(collection.id)
           if (mobileCollectionsOpen) {
@@ -603,9 +623,9 @@ export default function App() {
           >
             <MoreVertical size={14} />
           </Button>
-          {collectionMenuOpenId === collection.id && (
+          {isMenuOpen && (
             <div
-              className="glass-panel absolute right-0 z-30 mt-1 w-44 rounded-md p-1 shadow-lg"
+              className="absolute right-0 z-50 mt-1 w-44 rounded-md border bg-card p-1 shadow-lg"
               onClick={(e) => e.stopPropagation()}
             >
               <button
@@ -640,7 +660,7 @@ export default function App() {
     return (
       <div className={`space-y-2 ${scrollClassName}`}>
         <div
-          className="glass-item rounded-md border border-dashed p-2"
+          className="rounded-md border border-dashed bg-card/45 p-2"
           onDragOver={(e) => e.preventDefault()}
           onDrop={() => {
             if (draggedCollectionId != null) {
@@ -661,7 +681,7 @@ export default function App() {
           return (
             <div
               key={folder.id}
-              className="glass-item rounded-md border p-2"
+              className="rounded-md border bg-card/45 p-2"
               onDragOver={(e) => e.preventDefault()}
               onDrop={() => {
                 if (draggedCollectionId != null) {
@@ -684,7 +704,7 @@ export default function App() {
                     variant="ghost"
                     size="sm"
                     className="h-7 px-2"
-                    onClick={() => renameFolder(folder)}
+                    onClick={() => openRenameFolderDialog(folder)}
                   >
                     <Pencil size={12} />
                   </Button>
@@ -1136,6 +1156,31 @@ export default function App() {
               </Button>
               <Button type="submit" disabled={loading}>
                 <FolderPlus size={16} /> Create
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={Boolean(renameFolderTarget)} onOpenChange={(isOpen) => !isOpen && setRenameFolderTarget(null)}>
+        <DialogContent className="frosted-surface">
+          <DialogHeader>
+            <DialogTitle>Rename Folder</DialogTitle>
+          </DialogHeader>
+          <form className="space-y-3" onSubmit={saveFolderRename}>
+            <Input
+              placeholder="Folder name"
+              value={renameFolderInput}
+              onChange={(e) => setRenameFolderInput(e.target.value)}
+              disabled={loading}
+              autoFocus
+            />
+            <DialogFooter>
+              <Button type="button" variant="outline" onClick={() => setRenameFolderTarget(null)}>
+                Cancel
+              </Button>
+              <Button type="submit" disabled={loading}>
+                <Save size={16} /> Save
               </Button>
             </DialogFooter>
           </form>
