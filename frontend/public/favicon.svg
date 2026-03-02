@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="Ankie Web">
+  <defs>
+    <linearGradient id="bg" x1="0" x2="1" y1="0" y2="1">
+      <stop offset="0%" stop-color="#1e3a5f" />
+      <stop offset="100%" stop-color="#2c8f7b" />
+    </linearGradient>
+  </defs>
+  <rect x="4" y="4" width="56" height="56" rx="14" fill="url(#bg)" />
+  <rect x="14" y="18" width="36" height="28" rx="6" fill="#f8fafc" opacity="0.96" />
+  <path d="M14 32h36" stroke="#1e3a5f" stroke-width="2.5" opacity="0.35" />
+  <circle cx="24" cy="32" r="2.5" fill="#1e3a5f" opacity="0.55" />
+  <path d="M35 26l8 6-8 6" fill="none" stroke="#2c8f7b" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round" />
+</svg>
