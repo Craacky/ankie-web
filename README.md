@@ -185,5 +185,4 @@ Output:
   - Restrict access by IP or VPN if possible.
 
 ## License
-
-Add your preferred license here (MIT, Apache-2.0, etc.).
+MIT
