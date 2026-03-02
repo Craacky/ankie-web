@@ -11,7 +11,9 @@ import {
   Upload,
   FolderPlus,
   ChevronRight,
-  ChevronDown
+  ChevronDown,
+  MoreVertical,
+  LogOut
 } from 'lucide-react'
 
 import { api } from './api'
@@ -25,26 +27,46 @@ const MIN_REPEAT_AFTER = 1
 const MAX_REPEAT_AFTER = 8
 const THEME_STORAGE_KEY = 'ankie_theme'
 const THEMES = [
-  { key: 'solarized', label: 'Solarized', dark: false },
-  { key: 'gruvbox', label: 'Gruvbox', dark: true },
-  { key: 'dracula', label: 'Dracula', dark: true },
-  { key: 'monokai', label: 'Monokai', dark: true },
-  { key: 'one-dark', label: 'One Dark', dark: true },
-  { key: 'nord', label: 'Nord', dark: true },
-  { key: 'tomorrow-night', label: 'Tomorrow Night', dark: true },
-  { key: 'tokyo-night', label: 'Tokyo Night', dark: true },
-  { key: 'material-theme', label: 'Material Theme', dark: true },
-  { key: 'ayu', label: 'Ayu', dark: true },
-  { key: 'palenight', label: 'Palenight', dark: true },
-  { key: 'papercolor', label: 'PaperColor', dark: false },
-  { key: 'base16-ocean', label: 'Base16 (Ocean)', dark: true },
-  { key: 'horizon', label: 'Horizon', dark: true },
-  { key: 'night-owl', label: 'Night Owl', dark: true },
-  { key: 'pop-dark', label: 'Pop Dark', dark: true },
-  { key: 'edge', label: 'Edge', dark: true },
-  { key: 'iceberg', label: 'Iceberg', dark: true },
-  { key: 'atom-one-light', label: 'Atom One Light', dark: false },
-  { key: 'catppuccin', label: 'Catppuccin', dark: true }
+  { key: 'catppuccin', label: 'Catppuccin', dark: true, swatches: ['#cba6f7', '#89dceb', '#f38ba8'] },
+  { key: 'solarized', label: 'Solarized', dark: false, swatches: ['#2aa198', '#cb4b16', '#b58900'] },
+  { key: 'gruvbox', label: 'Gruvbox', dark: true, swatches: ['#d79921', '#98971a', '#cc241d'] },
+  { key: 'dracula', label: 'Dracula', dark: true, swatches: ['#bd93f9', '#50fa7b', '#ff5555'] },
+  { key: 'monokai', label: 'Monokai', dark: true, swatches: ['#a6e22e', '#66d9ef', '#f92672'] },
+  { key: 'one-dark', label: 'One Dark', dark: true, swatches: ['#61afef', '#98c379', '#e06c75'] },
+  { key: 'nord', label: 'Nord', dark: true, swatches: ['#88c0d0', '#a3be8c', '#bf616a'] },
+  { key: 'tomorrow-night', label: 'Tomorrow Night', dark: true, swatches: ['#81a2be', '#b5bd68', '#cc6666'] },
+  { key: 'tokyo-night', label: 'Tokyo Night', dark: true, swatches: ['#7aa2f7', '#73daca', '#f7768e'] },
+  { key: 'material-theme', label: 'Material Theme', dark: true, swatches: ['#c792ea', '#89ddff', '#f07178'] },
+  { key: 'ayu', label: 'Ayu', dark: true, swatches: ['#ffcc66', '#95e6cb', '#f28779'] },
+  { key: 'palenight', label: 'Palenight', dark: true, swatches: ['#c792ea', '#89ddff', '#f07178'] },
+  { key: 'papercolor', label: 'PaperColor', dark: false, swatches: ['#af005f', '#008700', '#d75f00'] },
+  { key: 'base16-ocean', label: 'Base16 (Ocean)', dark: true, swatches: ['#8fa1b3', '#96b5b4', '#ab7967'] },
+  { key: 'horizon', label: 'Horizon', dark: true, swatches: ['#fab795', '#59e1e3', '#e95678'] },
+  { key: 'night-owl', label: 'Night Owl', dark: true, swatches: ['#82aaff', '#7fdbca', '#ff5874'] },
+  { key: 'pop-dark', label: 'Pop Dark', dark: true, swatches: ['#be95ff', '#33b1ff', '#ff7eb6'] },
+  { key: 'edge', label: 'Edge', dark: true, swatches: ['#4aa5f0', '#7ec699', '#ef6b73'] },
+  { key: 'iceberg', label: 'Iceberg', dark: true, swatches: ['#84a0c6', '#89b8c2', '#e27878'] },
+  { key: 'atom-one-light', label: 'Atom One Light', dark: false, swatches: ['#4078f2', '#50a14f', '#e45649'] },
+  { key: 'github-light', label: 'GitHub Light', dark: false, swatches: ['#0969da', '#1a7f37', '#cf222e'] },
+  { key: 'github-dark', label: 'GitHub Dark', dark: true, swatches: ['#58a6ff', '#3fb950', '#f85149'] },
+  { key: 'github-dimmed', label: 'GitHub Dimmed', dark: true, swatches: ['#6cb6ff', '#57ab5a', '#f47067'] },
+  { key: 'vscode-dark-plus', label: 'VS Code Dark+', dark: true, swatches: ['#569cd6', '#4ec9b0', '#f44747'] },
+  { key: 'synthwave-84', label: 'Synthwave 84', dark: true, swatches: ['#f97e72', '#72f1b8', '#ff8bff'] },
+  { key: 'cobalt2', label: 'Cobalt2', dark: true, swatches: ['#ffc600', '#3ad900', '#ff9d00'] },
+  { key: 'rose-pine', label: 'Rosé Pine', dark: true, swatches: ['#c4a7e7', '#9ccfd8', '#eb6f92'] },
+  { key: 'rose-pine-dawn', label: 'Rosé Pine Dawn', dark: false, swatches: ['#907aa9', '#56949f', '#b4637a'] },
+  { key: 'everforest-dark', label: 'Everforest Dark', dark: true, swatches: ['#a7c080', '#7fbbb3', '#e67e80'] },
+  { key: 'everforest-light', label: 'Everforest Light', dark: false, swatches: ['#8da101', '#35a77c', '#f85552'] },
+  { key: 'kanagawa-wave', label: 'Kanagawa Wave', dark: true, swatches: ['#7e9cd8', '#98bb6c', '#e46876'] },
+  { key: 'moonlight', label: 'Moonlight', dark: true, swatches: ['#82aaff', '#c3e88d', '#ff757f'] },
+  { key: 'shades-of-purple', label: 'Shades of Purple', dark: true, swatches: ['#b362ff', '#00f5d4', '#ff628c'] },
+  { key: 'xcode-dusk', label: 'Xcode Dusk', dark: true, swatches: ['#c77dff', '#7bd88f', '#ff6b6b'] },
+  { key: 'tomorrow', label: 'Tomorrow', dark: false, swatches: ['#4271ae', '#718c00', '#c82829'] },
+  { key: 'zenburn', label: 'Zenburn', dark: true, swatches: ['#8cd0d3', '#7f9f7f', '#cc9393'] },
+  { key: 'high-contrast-light', label: 'High Contrast Light', dark: false, swatches: ['#0037ff', '#008a00', '#bf0000'] },
+  { key: 'high-contrast-dark', label: 'High Contrast Dark', dark: true, swatches: ['#5ea1ff', '#68d391', '#fc8181'] },
+  { key: 'arc-dark', label: 'Arc Dark', dark: true, swatches: ['#5294e2', '#99c794', '#ec5f67'] },
+  { key: 'catppuccin-latte', label: 'Catppuccin Latte', dark: false, swatches: ['#8839ef', '#179299', '#d20f39'] }
 ]
 
 function randomRepeatAfter() {
@@ -158,7 +180,10 @@ export default function App() {
   const [draggedCollectionId, setDraggedCollectionId] = useState(null)
   const [collapsedFolders, setCollapsedFolders] = useState({})
   const [themeMenuOpen, setThemeMenuOpen] = useState(false)
+  const [collectionMenuOpenId, setCollectionMenuOpenId] = useState(null)
   const telegramContainerRef = useRef(null)
+  const profileMenuRef = useRef(null)
+  const [profileMenuOpen, setProfileMenuOpen] = useState(false)
 
   const selectedCollectionStats = useMemo(
     () => collections.find((c) => c.id === selectedCollectionId) || null,
@@ -180,6 +205,12 @@ export default function App() {
     })
     return grouped
   }, [collections, folders])
+  const displayName = useMemo(() => user?.first_name || user?.username || 'Telegram User', [user])
+  const displayHandle = useMemo(
+    () => (user?.username ? `@${user.username}` : `id: ${user?.telegram_id ?? ''}`),
+    [user]
+  )
+  const userInitial = useMemo(() => (displayName?.trim()?.[0] || 'U').toUpperCase(), [displayName])
 
   function notify(message, type = 'success') {
     setSnack({ message, type })
@@ -307,6 +338,17 @@ export default function App() {
       delete window.onTelegramAuth
     }
   }, [authChecked, user, telegramBotUsername])
+
+  useEffect(() => {
+    function onDocumentClick(event) {
+      if (profileMenuRef.current && !profileMenuRef.current.contains(event.target)) {
+        setProfileMenuOpen(false)
+      }
+    }
+
+    document.addEventListener('mousedown', onDocumentClick)
+    return () => document.removeEventListener('mousedown', onDocumentClick)
+  }, [])
 
   async function handleImport(event) {
     event.preventDefault()
@@ -518,6 +560,69 @@ export default function App() {
     return 'hover:bg-accent'
   }
 
+  function renderCollectionItem(collection) {
+    return (
+      <div
+        key={collection.id}
+        draggable
+        onDragStart={() => setDraggedCollectionId(collection.id)}
+        className={`relative w-full rounded-md border p-3 text-left transition ${collectionItemClass(collection)}`}
+        onClick={() => setSelectedCollectionId(collection.id)}
+      >
+        <div className="pr-9">
+          <div className={`font-medium ${collection.is_mastered ? 'text-emerald-700 dark:text-emerald-300' : ''}`}>
+            {collection.name}
+          </div>
+          <div className="text-xs text-muted-foreground">
+            Remaining: {collection.remaining_cards} / {collection.total_cards}
+          </div>
+        </div>
+        <div className="absolute right-2 top-2">
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            className="h-7 w-7 p-0"
+            onClick={(e) => {
+              e.stopPropagation()
+              setCollectionMenuOpenId((prev) => (prev === collection.id ? null : collection.id))
+            }}
+          >
+            <MoreVertical size={14} />
+          </Button>
+          {collectionMenuOpenId === collection.id && (
+            <div
+              className="absolute right-0 z-30 mt-1 w-44 rounded-md border bg-card p-1 shadow-lg"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <button
+                className="w-full rounded-sm px-2 py-1.5 text-left text-sm hover:bg-accent"
+                onClick={() => {
+                  moveCollection(collection.id, null)
+                  setCollectionMenuOpenId(null)
+                }}
+              >
+                Move to Ungrouped
+              </button>
+              {folders.map((folder) => (
+                <button
+                  key={`${collection.id}-folder-${folder.id}`}
+                  className="w-full rounded-sm px-2 py-1.5 text-left text-sm hover:bg-accent"
+                  onClick={() => {
+                    moveCollection(collection.id, folder.id)
+                    setCollectionMenuOpenId(null)
+                  }}
+                >
+                  Move to {folder.name}
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+    )
+  }
+
   async function exportCollection() {
     if (!selectedCollectionId || !selectedCollectionStats) return
     try {
@@ -545,25 +650,63 @@ export default function App() {
 
   return (
     <div className="min-h-screen bg-background text-foreground">
-      <header className="sticky top-0 z-20 border-b bg-card/95 backdrop-blur">
-        <div className="mx-auto flex max-w-[1800px] items-center justify-between px-4 py-3">
-          <h1 className="text-xl font-bold">Ankie Web</h1>
-          <div className="relative">
-            <Button
-              type="button"
-              variant="outline"
-              className="gap-2"
-              onClick={() => setThemeMenuOpen(true)}
-            >
-              <Palette size={16} />
-              Theme
-            </Button>
+      <header className="sticky top-3 z-30 px-4">
+        <div className="mx-auto flex max-w-[1800px] items-center justify-between rounded-2xl border border-white/20 bg-background/60 px-5 py-3 shadow-[0_12px_45px_rgba(0,0,0,0.14)] backdrop-blur-xl dark:border-white/10">
+          <h1 className="text-xl font-semibold tracking-tight">Ankie Web</h1>
+          <div className="flex items-center gap-2">
+            <div className="relative">
+              <Button
+                type="button"
+                variant="outline"
+                className="gap-2"
+                onClick={() => setThemeMenuOpen(true)}
+              >
+                <Palette size={16} />
+                Theme
+              </Button>
+            </div>
+            {user && (
+              <div className="relative" ref={profileMenuRef}>
+                <button
+                  type="button"
+                  className="flex items-center gap-2 rounded-full border border-white/25 bg-card/70 px-2 py-1 shadow-sm transition hover:bg-card"
+                  onClick={() => setProfileMenuOpen((prev) => !prev)}
+                >
+                  {user.photo_url ? (
+                    <img
+                      src={user.photo_url}
+                      alt={displayName}
+                      className="h-8 w-8 rounded-full object-cover ring-1 ring-border"
+                    />
+                  ) : (
+                    <span className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/20 text-sm font-semibold text-primary">
+                      {userInitial}
+                    </span>
+                  )}
+                  <span className="max-w-[180px] truncate pr-1 text-sm font-medium">{displayName}</span>
+                </button>
+                {profileMenuOpen && (
+                  <div className="absolute right-0 z-40 mt-2 w-60 rounded-xl border bg-card/95 p-2 shadow-xl backdrop-blur">
+                    <div className="rounded-lg px-2 py-1.5">
+                      <div className="truncate text-sm font-semibold">{displayName}</div>
+                      <div className="truncate text-xs text-muted-foreground">{displayHandle}</div>
+                    </div>
+                    <button
+                      type="button"
+                      className="mt-1 flex w-full items-center gap-2 rounded-lg px-2 py-2 text-left text-sm text-destructive transition hover:bg-destructive/10"
+                      onClick={async () => {
+                        setProfileMenuOpen(false)
+                        await handleLogout()
+                      }}
+                    >
+                      <LogOut size={14} />
+                      Log out
+                    </button>
+                  </div>
+                )}
+              </div>
+            )}
           </div>
-          {user && (
-            <Button type="button" variant="outline" onClick={handleLogout}>
-              Logout
-            </Button>
-          )}
         </div>
       </header>
 
@@ -572,16 +715,15 @@ export default function App() {
           className="fixed inset-0 z-50 flex items-center justify-center bg-black/45 p-4"
           onClick={() => setThemeMenuOpen(false)}
         >
-          <Card
-            className="w-full max-w-3xl"
-            onClick={(e) => e.stopPropagation()}
-          >
+          <Card className="w-full max-w-xl" onClick={(e) => e.stopPropagation()}>
             <CardHeader>
               <CardTitle>Choose Theme</CardTitle>
-              <CardDescription>Pick one of the popular themes. Your choice is saved automatically.</CardDescription>
+              <CardDescription>
+                Pick one of the popular themes. Your choice is saved automatically.
+              </CardDescription>
             </CardHeader>
             <CardContent className="max-h-[70vh] overflow-y-auto">
-              <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+              <div className="space-y-2">
                 {THEMES.map((theme) => {
                   const selected = themeKey === theme.key
                   return (
@@ -595,9 +737,13 @@ export default function App() {
                         setThemeMenuOpen(false)
                       }}
                     >
-                      <span className="flex items-center gap-2">
-                        <span className={`h-2.5 w-2.5 rounded-full ${theme.dark ? 'bg-slate-800 dark:bg-slate-200' : 'bg-amber-400'}`} />
-                        {theme.label}
+                      <span className="flex items-center gap-3">
+                        <span className="inline-flex items-center rounded-full border px-2 py-1">
+                          <span className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: theme.swatches[0] }} />
+                          <span className="ml-1.5 h-2.5 w-2.5 rounded-full" style={{ backgroundColor: theme.swatches[1] }} />
+                          <span className="ml-1.5 h-2.5 w-2.5 rounded-full" style={{ backgroundColor: theme.swatches[2] }} />
+                        </span>
+                        <span>{theme.label}</span>
                       </span>
                       <span className="flex items-center gap-2">
                         <span className="rounded border px-1.5 py-0.5 text-[10px] uppercase text-muted-foreground">
@@ -645,36 +791,8 @@ export default function App() {
       )}
 
       {authChecked && user && (
-        <div className="mx-auto grid max-w-[1800px] grid-cols-1 gap-4 p-4 lg:grid-cols-[340px_1fr]">
+        <div className="mx-auto grid max-w-[1800px] grid-cols-1 gap-4 p-4 pt-8 lg:grid-cols-[340px_1fr]">
         <aside className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-lg">New Collection</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <form className="space-y-3" onSubmit={handleImport}>
-                <Input
-                  placeholder="Collection name"
-                  value={nameInput}
-                  onChange={(e) => setNameInput(e.target.value)}
-                  disabled={loading}
-                />
-                <label className="block">
-                  <span className="mb-2 block text-sm text-muted-foreground">JSON file</span>
-                  <Input
-                    type="file"
-                    accept="application/json,.json,text/json,text/plain"
-                    onChange={(e) => setJsonFile(e.target.files?.[0] || null)}
-                    disabled={loading}
-                  />
-                </label>
-                <Button type="submit" className="w-full" disabled={loading}>
-                  <Upload size={16} /> Create and import
-                </Button>
-              </form>
-            </CardContent>
-          </Card>
-
           <Card>
             <CardHeader>
               <CardTitle className="text-lg">Folders & Collections</CardTitle>
@@ -703,22 +821,7 @@ export default function App() {
               >
                 <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">Ungrouped</p>
                 <div className="space-y-2">
-                  {ungroupedCollections.map((collection) => (
-                    <button
-                      key={collection.id}
-                      draggable
-                      onDragStart={() => setDraggedCollectionId(collection.id)}
-                      className={`w-full rounded-md border p-3 text-left transition ${collectionItemClass(collection)}`}
-                      onClick={() => setSelectedCollectionId(collection.id)}
-                    >
-                      <div className={`font-medium ${collection.is_mastered ? 'text-emerald-700 dark:text-emerald-300' : ''}`}>
-                        {collection.name}
-                      </div>
-                      <div className="text-xs text-muted-foreground">
-                        Remaining: {collection.remaining_cards} / {collection.total_cards}
-                      </div>
-                    </button>
-                  ))}
+                  {ungroupedCollections.map((collection) => renderCollectionItem(collection))}
                   {ungroupedCollections.length === 0 && (
                     <p className="text-xs text-muted-foreground">Drop collections here</p>
                   )}
@@ -773,22 +876,7 @@ export default function App() {
                     </div>
                     {!isCollapsed && (
                       <div className="space-y-2">
-                        {folderCollections.map((collection) => (
-                          <button
-                            key={collection.id}
-                            draggable
-                            onDragStart={() => setDraggedCollectionId(collection.id)}
-                            className={`w-full rounded-md border p-3 text-left transition ${collectionItemClass(collection)}`}
-                            onClick={() => setSelectedCollectionId(collection.id)}
-                          >
-                            <div className={`font-medium ${collection.is_mastered ? 'text-emerald-700 dark:text-emerald-300' : ''}`}>
-                              {collection.name}
-                            </div>
-                            <div className="text-xs text-muted-foreground">
-                              Remaining: {collection.remaining_cards} / {collection.total_cards}
-                            </div>
-                          </button>
-                        ))}
+                        {folderCollections.map((collection) => renderCollectionItem(collection))}
                         {folderCollections.length === 0 && (
                           <p className="text-xs text-muted-foreground">Drop collections here</p>
                         )}
@@ -799,6 +887,34 @@ export default function App() {
               })}
 
               {collections.length === 0 && <p className="text-sm text-muted-foreground">No collections yet</p>}
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-lg">New Collection</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <form className="space-y-3" onSubmit={handleImport}>
+                <Input
+                  placeholder="Collection name"
+                  value={nameInput}
+                  onChange={(e) => setNameInput(e.target.value)}
+                  disabled={loading}
+                />
+                <label className="block">
+                  <span className="mb-2 block text-sm text-muted-foreground">JSON file</span>
+                  <Input
+                    type="file"
+                    accept="application/json,.json,text/json,text/plain"
+                    onChange={(e) => setJsonFile(e.target.files?.[0] || null)}
+                    disabled={loading}
+                  />
+                </label>
+                <Button type="submit" className="w-full" disabled={loading}>
+                  <Upload size={16} /> Create and import
+                </Button>
+              </form>
             </CardContent>
           </Card>
         </aside>
