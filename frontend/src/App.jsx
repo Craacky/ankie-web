@@ -148,12 +148,12 @@ const FlipCard = memo(function FlipCard({ card, flipped, onFlip, onEdit, onDelet
             <CardDescription>Question</CardDescription>
             <CardTitle className="text-xl break-words whitespace-pre-wrap sm:text-2xl">{card.question}</CardTitle>
           </CardHeader>
-          <CardContent className="flex h-[240px] flex-col sm:h-[320px]">
+          <CardContent className="flex h-[290px] flex-col sm:h-[390px]">
             <div className="mb-3 text-sm font-semibold uppercase tracking-wide text-muted-foreground">Answer</div>
             <div className="min-h-0 flex-1 overflow-y-auto pr-1 text-lg font-medium whitespace-pre-wrap break-words sm:text-xl">
               {card.answer}
             </div>
-            <p className="pt-4 text-sm text-muted-foreground">Choose “Know” or “Don't Know”</p>
+            <p className="mt-4 text-sm text-muted-foreground">Choose “Know” or “Don't Know”</p>
           </CardContent>
         </Card>
       </div>
@@ -839,7 +839,7 @@ export default function App() {
                 onClick={() => setMobileCollectionsOpen(true)}
               >
                 <PanelLeft size={16} />
-                Collections
+                <span className="hidden sm:inline">Collections</span>
               </Button>
             )}
             {user && (
