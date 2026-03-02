@@ -846,7 +846,6 @@ export default function App() {
               <Button
                 type="button"
                 variant="outline"
-                size="sm"
                 className="gap-2"
                 onClick={() => setGuideOpen(true)}
               >
@@ -1059,8 +1058,9 @@ export default function App() {
             <p>1. Open the collections panel and create a folder or import a collection from JSON.</p>
             <p>2. Select a collection and tap the card to flip between question and answer.</p>
             <p>3. Use “Know” if you answered correctly, or “Don't Know” to repeat the card later.</p>
-            <p>4. Use “Reset progress” when you want to restart the collection from the beginning.</p>
-            <p>5. Change theme anytime from the top bar and reopen this guide with the “Guide” button.</p>
+            <p>4. JSON format: [{'{ "question": "...", "answer": "..." }'}] or {'{ "cards": [{ "q": "...", "a": "..." }] }'}.</p>
+            <p>5. Use “Reset progress” when you want to restart the collection from the beginning.</p>
+            <p>6. Change theme anytime from the top bar and reopen this guide with the “Guide” button.</p>
           </div>
           <DialogFooter>
             <Button type="button" onClick={() => setGuideOpen(false)}>
