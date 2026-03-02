@@ -866,6 +866,23 @@
   --ring: 267 83% 56%;
 }
 
+@layer components {
+  .glass-panel {
+    background: hsl(var(--card) / 0.68);
+    border-color: hsl(var(--border) / 0.72);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    box-shadow: 0 12px 36px rgba(0, 0, 0, 0.08);
+  }
+
+  .glass-item {
+    background: hsl(var(--card) / 0.52);
+    border-color: hsl(var(--border) / 0.68);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+  }
+}
+
 @layer base {
   * {
     @apply border-border;

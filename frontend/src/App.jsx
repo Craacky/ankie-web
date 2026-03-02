@@ -13,7 +13,8 @@ import {
   ChevronRight,
   ChevronDown,
   MoreVertical,
-  LogOut
+  LogOut,
+  PanelLeft
 } from 'lucide-react'
 
 import { api } from './api'
@@ -108,11 +109,11 @@ function FlipCard({ card, flipped, onFlip, onEdit, onDelete }) {
   return (
     <div onClick={onFlip} className="w-full max-w-6xl cursor-pointer [perspective:1400px]">
       <div
-        className="relative min-h-[520px] w-full [transform-style:preserve-3d] transition-transform duration-500"
+        className="relative min-h-[440px] w-full [transform-style:preserve-3d] transition-transform duration-500 sm:min-h-[520px]"
         style={{ transform: flipped ? 'rotateY(180deg)' : 'rotateY(0deg)' }}
       >
         <Card
-          className="absolute inset-0 overflow-hidden border-2 border-primary/20 bg-gradient-to-br from-primary/10 to-transparent"
+          className="glass-panel absolute inset-0 overflow-hidden border-2 border-primary/20 bg-gradient-to-br from-primary/10 to-transparent"
           style={{
             backfaceVisibility: 'hidden',
             WebkitBackfaceVisibility: 'hidden',
@@ -121,17 +122,17 @@ function FlipCard({ card, flipped, onFlip, onEdit, onDelete }) {
           }}
         >
           <CardActionButtons onEdit={onEdit} onDelete={onDelete} />
-          <CardHeader>
+          <CardHeader className="pb-2 sm:pb-4">
             <CardDescription>Question</CardDescription>
-            <CardTitle className="text-3xl break-words whitespace-pre-wrap">{card.question}</CardTitle>
+            <CardTitle className="text-2xl break-words whitespace-pre-wrap sm:text-3xl">{card.question}</CardTitle>
           </CardHeader>
-          <CardContent className="flex h-[320px] flex-col">
+          <CardContent className="flex h-[240px] flex-col sm:h-[320px]">
             <p className="mt-4 text-sm text-muted-foreground">Click the card to flip</p>
           </CardContent>
         </Card>
 
         <Card
-          className="absolute inset-0 overflow-hidden border-2 border-secondary/30 bg-gradient-to-br from-secondary/20 to-transparent"
+          className="glass-panel absolute inset-0 overflow-hidden border-2 border-secondary/30 bg-gradient-to-br from-secondary/20 to-transparent"
           style={{
             transform: 'rotateY(180deg)',
             backfaceVisibility: 'hidden',
@@ -141,13 +142,13 @@ function FlipCard({ card, flipped, onFlip, onEdit, onDelete }) {
           }}
         >
           <CardActionButtons onEdit={onEdit} onDelete={onDelete} />
-          <CardHeader>
+          <CardHeader className="pb-2 sm:pb-4">
             <CardDescription>Question</CardDescription>
-            <CardTitle className="text-2xl break-words whitespace-pre-wrap">{card.question}</CardTitle>
+            <CardTitle className="text-xl break-words whitespace-pre-wrap sm:text-2xl">{card.question}</CardTitle>
           </CardHeader>
-          <CardContent className="flex h-[320px] flex-col">
+          <CardContent className="flex h-[240px] flex-col sm:h-[320px]">
             <div className="mb-3 text-sm font-semibold uppercase tracking-wide text-muted-foreground">Answer</div>
-            <div className="max-h-[230px] overflow-y-auto pr-1 text-xl font-medium whitespace-pre-wrap break-words">
+            <div className="max-h-[170px] overflow-y-auto pr-1 text-lg font-medium whitespace-pre-wrap break-words sm:max-h-[230px] sm:text-xl">
               {card.answer}
             </div>
             <p className="mt-auto pt-4 text-sm text-muted-foreground">Choose “Know” or “Don't Know”</p>
@@ -181,6 +182,9 @@ export default function App() {
   const [collapsedFolders, setCollapsedFolders] = useState({})
   const [themeMenuOpen, setThemeMenuOpen] = useState(false)
   const [collectionMenuOpenId, setCollectionMenuOpenId] = useState(null)
+  const [collectionDialogOpen, setCollectionDialogOpen] = useState(false)
+  const [folderDialogOpen, setFolderDialogOpen] = useState(false)
+  const [mobileCollectionsOpen, setMobileCollectionsOpen] = useState(false)
   const telegramContainerRef = useRef(null)
   const profileMenuRef = useRef(null)
   const [profileMenuOpen, setProfileMenuOpen] = useState(false)
@@ -351,7 +355,7 @@ export default function App() {
   }, [])
 
   async function handleImport(event) {
-    event.preventDefault()
+    event?.preventDefault()
     if (!nameInput.trim() || !jsonFile) {
       notify('Provide a collection name and JSON file', 'error')
       return
@@ -362,6 +366,7 @@ export default function App() {
       const result = await api.importCollection(nameInput.trim(), jsonFile)
       setNameInput('')
       setJsonFile(null)
+      setCollectionDialogOpen(false)
       await Promise.all([fetchCollections(), fetchFolders()])
       setSelectedCollectionId(result.collection_id)
       notify(`Imported ${result.imported_count} cards`)
@@ -486,7 +491,7 @@ export default function App() {
   }
 
   async function createFolder(event) {
-    event.preventDefault()
+    event?.preventDefault()
     const name = folderNameInput.trim()
     if (!name) {
       notify('Folder name cannot be empty', 'error')
@@ -497,6 +502,7 @@ export default function App() {
     try {
       await api.createFolder(name)
       setFolderNameInput('')
+      setFolderDialogOpen(false)
       await fetchFolders()
       notify('Folder created')
     } catch (err) {
@@ -566,8 +572,13 @@ export default function App() {
         key={collection.id}
         draggable
         onDragStart={() => setDraggedCollectionId(collection.id)}
-        className={`relative w-full rounded-md border p-3 text-left transition ${collectionItemClass(collection)}`}
-        onClick={() => setSelectedCollectionId(collection.id)}
+        className={`glass-item relative w-full rounded-md border p-3 text-left transition ${collectionItemClass(collection)}`}
+        onClick={() => {
+          setSelectedCollectionId(collection.id)
+          if (mobileCollectionsOpen) {
+            setMobileCollectionsOpen(false)
+          }
+        }}
       >
         <div className="pr-9">
           <div className={`font-medium ${collection.is_mastered ? 'text-emerald-700 dark:text-emerald-300' : ''}`}>
@@ -592,7 +603,7 @@ export default function App() {
           </Button>
           {collectionMenuOpenId === collection.id && (
             <div
-              className="absolute right-0 z-30 mt-1 w-44 rounded-md border bg-card p-1 shadow-lg"
+              className="glass-panel absolute right-0 z-30 mt-1 w-44 rounded-md p-1 shadow-lg"
               onClick={(e) => e.stopPropagation()}
             >
               <button
@@ -619,6 +630,84 @@ export default function App() {
             </div>
           )}
         </div>
+      </div>
+    )
+  }
+
+  function renderCollectionsList(scrollClassName = '') {
+    return (
+      <div className={`space-y-2 ${scrollClassName}`}>
+        <div
+          className="glass-item rounded-md border border-dashed p-2"
+          onDragOver={(e) => e.preventDefault()}
+          onDrop={() => {
+            if (draggedCollectionId != null) {
+              moveCollection(draggedCollectionId, null)
+            }
+          }}
+        >
+          <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">Ungrouped</p>
+          <div className="space-y-2">
+            {ungroupedCollections.map((collection) => renderCollectionItem(collection))}
+            {ungroupedCollections.length === 0 && <p className="text-xs text-muted-foreground">Drop collections here</p>}
+          </div>
+        </div>
+
+        {folders.map((folder) => {
+          const folderCollections = collectionsByFolder.get(folder.id) || []
+          const isCollapsed = Boolean(collapsedFolders[folder.id])
+          return (
+            <div
+              key={folder.id}
+              className="glass-item rounded-md border p-2"
+              onDragOver={(e) => e.preventDefault()}
+              onDrop={() => {
+                if (draggedCollectionId != null) {
+                  moveCollection(draggedCollectionId, folder.id)
+                }
+              }}
+            >
+              <div className="mb-2 flex items-center justify-between gap-2">
+                <button
+                  className="flex items-center gap-1 text-xs font-semibold uppercase tracking-wide text-muted-foreground"
+                  onClick={() => toggleFolderCollapsed(folder.id)}
+                >
+                  {isCollapsed ? <ChevronRight size={14} /> : <ChevronDown size={14} />}
+                  {folder.name}
+                  <span className="ml-1 rounded border px-1 py-0 text-[10px]">{folderCollections.length}</span>
+                </button>
+                <div className="flex items-center gap-1">
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    className="h-7 px-2"
+                    onClick={() => renameFolder(folder)}
+                  >
+                    <Pencil size={12} />
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    className="h-7 px-2 text-destructive"
+                    onClick={() => deleteFolder(folder)}
+                  >
+                    <Trash2 size={12} />
+                  </Button>
+                </div>
+              </div>
+              {!isCollapsed && (
+                <div className="space-y-2">
+                  {folderCollections.map((collection) => renderCollectionItem(collection))}
+                  {folderCollections.length === 0 && <p className="text-xs text-muted-foreground">Drop collections here</p>}
+                </div>
+              )}
+            </div>
+          )
+        })}
+
+        {collections.length === 0 && <p className="text-sm text-muted-foreground">No collections yet</p>}
       </div>
     )
   }
@@ -651,9 +740,21 @@ export default function App() {
   return (
     <div className="min-h-screen bg-background text-foreground">
       <header className="sticky top-3 z-30 px-4">
-        <div className="mx-auto flex max-w-[1800px] items-center justify-between rounded-2xl border border-white/20 bg-background/60 px-5 py-3 shadow-[0_12px_45px_rgba(0,0,0,0.14)] backdrop-blur-xl dark:border-white/10">
-          <h1 className="text-xl font-semibold tracking-tight">Ankie Web</h1>
+        <div className="mx-auto flex max-w-[1800px] items-center justify-between rounded-2xl border border-white/20 bg-background/60 px-3 py-2.5 shadow-[0_12px_45px_rgba(0,0,0,0.14)] backdrop-blur-xl dark:border-white/10 sm:px-5 sm:py-3">
+          <h1 className="text-lg font-semibold tracking-tight sm:text-xl">Ankie Web</h1>
           <div className="flex items-center gap-2">
+            {user && (
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                className="gap-2 lg:hidden"
+                onClick={() => setMobileCollectionsOpen(true)}
+              >
+                <PanelLeft size={16} />
+                Collections
+              </Button>
+            )}
             <div className="relative">
               <Button
                 type="button"
@@ -662,7 +763,7 @@ export default function App() {
                 onClick={() => setThemeMenuOpen(true)}
               >
                 <Palette size={16} />
-                Theme
+                <span className="hidden sm:inline">Theme</span>
               </Button>
             </div>
             {user && (
@@ -683,7 +784,7 @@ export default function App() {
                       {userInitial}
                     </span>
                   )}
-                  <span className="max-w-[180px] truncate pr-1 text-sm font-medium">{displayName}</span>
+                  <span className="hidden max-w-[180px] truncate pr-1 text-sm font-medium sm:inline">{displayName}</span>
                 </button>
                 {profileMenuOpen && (
                   <div className="absolute right-0 z-40 mt-2 w-60 rounded-xl border bg-card/95 p-2 shadow-xl backdrop-blur">
@@ -715,21 +816,21 @@ export default function App() {
           className="fixed inset-0 z-50 flex items-center justify-center bg-black/45 p-4"
           onClick={() => setThemeMenuOpen(false)}
         >
-          <Card className="w-full max-w-xl" onClick={(e) => e.stopPropagation()}>
+          <Card className="glass-panel w-full max-w-xl" onClick={(e) => e.stopPropagation()}>
             <CardHeader>
               <CardTitle>Choose Theme</CardTitle>
               <CardDescription>
                 Pick one of the popular themes. Your choice is saved automatically.
               </CardDescription>
             </CardHeader>
-            <CardContent className="max-h-[70vh] overflow-y-auto">
-              <div className="space-y-2">
+            <CardContent className="max-h-[70vh] overflow-y-auto px-1">
+              <div className="space-y-2 pr-1">
                 {THEMES.map((theme) => {
                   const selected = themeKey === theme.key
                   return (
                     <button
                       key={theme.key}
-                      className={`flex items-center justify-between rounded-md border px-3 py-2 text-left text-sm transition ${
+                      className={`flex w-full items-center justify-between rounded-lg border px-3 py-2.5 text-left text-sm transition ${
                         selected ? 'border-primary bg-primary/15' : 'hover:bg-accent'
                       }`}
                       onClick={() => {
@@ -737,16 +838,16 @@ export default function App() {
                         setThemeMenuOpen(false)
                       }}
                     >
-                      <span className="flex items-center gap-3">
+                      <span className="flex min-w-0 items-center gap-3">
                         <span className="inline-flex items-center rounded-full border px-2 py-1">
                           <span className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: theme.swatches[0] }} />
                           <span className="ml-1.5 h-2.5 w-2.5 rounded-full" style={{ backgroundColor: theme.swatches[1] }} />
                           <span className="ml-1.5 h-2.5 w-2.5 rounded-full" style={{ backgroundColor: theme.swatches[2] }} />
                         </span>
-                        <span>{theme.label}</span>
+                        <span className="truncate">{theme.label}</span>
                       </span>
                       <span className="flex items-center gap-2">
-                        <span className="rounded border px-1.5 py-0.5 text-[10px] uppercase text-muted-foreground">
+                        <span className="w-12 rounded border px-1.5 py-0.5 text-center text-[10px] uppercase text-muted-foreground">
                           {theme.dark ? 'Dark' : 'Light'}
                         </span>
                         {selected && <Check size={14} />}
@@ -765,9 +866,50 @@ export default function App() {
         </div>
       )}
 
+      <Dialog open={mobileCollectionsOpen} onOpenChange={setMobileCollectionsOpen}>
+        <DialogContent className="glass-panel flex h-[88vh] w-[96vw] max-w-none flex-col sm:max-w-xl lg:hidden">
+          <DialogHeader>
+            <div className="flex items-center justify-between gap-2">
+              <DialogTitle>Folders & Collections</DialogTitle>
+              <div className="flex items-center gap-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  className="h-8 px-2"
+                  onClick={() => {
+                    setMobileCollectionsOpen(false)
+                    setCollectionDialogOpen(true)
+                  }}
+                  title="Add collection"
+                >
+                  <Upload size={14} />
+                </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  className="h-8 px-2"
+                  onClick={() => {
+                    setMobileCollectionsOpen(false)
+                    setFolderDialogOpen(true)
+                  }}
+                  title="Add folder"
+                >
+                  <FolderPlus size={14} />
+                </Button>
+              </div>
+            </div>
+          </DialogHeader>
+          <div className="min-h-0 flex-1 overflow-y-auto">
+            {renderCollectionsList()}
+          </div>
+        </DialogContent>
+      </Dialog>
+
       {!authChecked && (
         <div className="mx-auto max-w-[900px] p-6">
-          <Card>
+          <Card className="glass-panel">
             <CardHeader>
               <CardTitle>Checking session…</CardTitle>
             </CardHeader>
@@ -778,7 +920,7 @@ export default function App() {
 
       {authChecked && !user && (
         <div className="mx-auto max-w-[900px] p-6">
-          <Card>
+          <Card className="glass-panel">
             <CardHeader>
               <CardTitle>Sign in with Telegram</CardTitle>
               <CardDescription>Each user gets isolated folders, collections, and progress.</CardDescription>
@@ -791,137 +933,45 @@ export default function App() {
       )}
 
       {authChecked && user && (
-        <div className="mx-auto grid max-w-[1800px] grid-cols-1 gap-4 p-4 pt-8 lg:grid-cols-[340px_1fr]">
-        <aside className="space-y-4">
-          <Card>
+        <div className="mx-auto grid max-w-[1800px] grid-cols-1 items-start gap-4 p-4 pt-8 lg:grid-cols-[340px_1fr]">
+        <aside className="hidden space-y-4 lg:sticky lg:top-24 lg:block">
+          <Card className="glass-panel lg:h-[calc(100vh-7.5rem)]">
             <CardHeader>
-              <CardTitle className="text-lg">Folders & Collections</CardTitle>
-            </CardHeader>
-            <CardContent className="max-h-[62vh] space-y-2 overflow-y-auto">
-              <form className="flex gap-2" onSubmit={createFolder}>
-                <Input
-                  placeholder="New folder"
-                  value={folderNameInput}
-                  onChange={(e) => setFolderNameInput(e.target.value)}
-                  disabled={loading}
-                />
-                <Button type="submit" variant="outline" disabled={loading}>
-                  <FolderPlus size={16} />
-                </Button>
-              </form>
-
-              <div
-                className="rounded-md border border-dashed p-2"
-                onDragOver={(e) => e.preventDefault()}
-                onDrop={() => {
-                  if (draggedCollectionId != null) {
-                    moveCollection(draggedCollectionId, null)
-                  }
-                }}
-              >
-                <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">Ungrouped</p>
-                <div className="space-y-2">
-                  {ungroupedCollections.map((collection) => renderCollectionItem(collection))}
-                  {ungroupedCollections.length === 0 && (
-                    <p className="text-xs text-muted-foreground">Drop collections here</p>
-                  )}
+              <div className="flex items-center justify-between gap-2">
+                <CardTitle className="text-lg">Folders & Collections</CardTitle>
+                <div className="flex items-center gap-2">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    className="h-8 px-2"
+                    onClick={() => setCollectionDialogOpen(true)}
+                    title="Add collection"
+                  >
+                    <Upload size={14} />
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    className="h-8 px-2"
+                    onClick={() => setFolderDialogOpen(true)}
+                    title="Add folder"
+                  >
+                    <FolderPlus size={14} />
+                  </Button>
                 </div>
               </div>
-
-              {folders.map((folder) => {
-                const folderCollections = collectionsByFolder.get(folder.id) || []
-                const isCollapsed = Boolean(collapsedFolders[folder.id])
-                return (
-                  <div
-                    key={folder.id}
-                    className="rounded-md border p-2"
-                    onDragOver={(e) => e.preventDefault()}
-                    onDrop={() => {
-                      if (draggedCollectionId != null) {
-                        moveCollection(draggedCollectionId, folder.id)
-                      }
-                    }}
-                  >
-                    <div className="mb-2 flex items-center justify-between gap-2">
-                      <button
-                        className="flex items-center gap-1 text-xs font-semibold uppercase tracking-wide text-muted-foreground"
-                        onClick={() => toggleFolderCollapsed(folder.id)}
-                      >
-                        {isCollapsed ? <ChevronRight size={14} /> : <ChevronDown size={14} />}
-                        {folder.name}
-                        <span className="ml-1 rounded border px-1 py-0 text-[10px]">
-                          {folderCollections.length}
-                        </span>
-                      </button>
-                      <div className="flex items-center gap-1">
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="sm"
-                          className="h-7 px-2"
-                          onClick={() => renameFolder(folder)}
-                        >
-                          <Pencil size={12} />
-                        </Button>
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="sm"
-                          className="h-7 px-2 text-destructive"
-                          onClick={() => deleteFolder(folder)}
-                        >
-                          <Trash2 size={12} />
-                        </Button>
-                      </div>
-                    </div>
-                    {!isCollapsed && (
-                      <div className="space-y-2">
-                        {folderCollections.map((collection) => renderCollectionItem(collection))}
-                        {folderCollections.length === 0 && (
-                          <p className="text-xs text-muted-foreground">Drop collections here</p>
-                        )}
-                      </div>
-                    )}
-                  </div>
-                )
-              })}
-
-              {collections.length === 0 && <p className="text-sm text-muted-foreground">No collections yet</p>}
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-lg">New Collection</CardTitle>
             </CardHeader>
-            <CardContent>
-              <form className="space-y-3" onSubmit={handleImport}>
-                <Input
-                  placeholder="Collection name"
-                  value={nameInput}
-                  onChange={(e) => setNameInput(e.target.value)}
-                  disabled={loading}
-                />
-                <label className="block">
-                  <span className="mb-2 block text-sm text-muted-foreground">JSON file</span>
-                  <Input
-                    type="file"
-                    accept="application/json,.json,text/json,text/plain"
-                    onChange={(e) => setJsonFile(e.target.files?.[0] || null)}
-                    disabled={loading}
-                  />
-                </label>
-                <Button type="submit" className="w-full" disabled={loading}>
-                  <Upload size={16} /> Create and import
-                </Button>
-              </form>
+            <CardContent className="overflow-y-auto lg:h-[calc(100vh-13.5rem)]">
+              {renderCollectionsList()}
             </CardContent>
           </Card>
         </aside>
 
         <main className="space-y-4">
           {!selectedCollectionStats && (
-            <Card>
+            <Card className="glass-panel">
               <CardHeader>
                 <CardTitle>Upload your first JSON collection</CardTitle>
               </CardHeader>
@@ -933,7 +983,7 @@ export default function App() {
 
           {selectedCollectionStats && (
             <>
-              <Card>
+              <Card className="glass-panel">
                 <CardHeader>
                   <div className="flex flex-wrap items-center justify-between gap-3">
                     <div>
@@ -943,11 +993,11 @@ export default function App() {
                         {selectedCollectionStats.remaining_cards}
                       </CardDescription>
                     </div>
-                    <div className="flex flex-wrap gap-2">
-                      <Button variant="outline" onClick={reloadSession}><RefreshCcw size={16} /> Reload session</Button>
-                      <Button variant="outline" onClick={resetProgress}><RotateCcw size={16} /> Reset progress</Button>
-                      <Button variant="outline" onClick={exportCollection}><Download size={16} /> Export</Button>
-                      <Button variant="destructive" onClick={removeCollection}><Trash2 size={16} /> Delete</Button>
+                    <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row sm:flex-wrap">
+                      <Button className="w-full sm:w-auto" variant="outline" onClick={reloadSession}><RefreshCcw size={16} /> Reload session</Button>
+                      <Button className="w-full sm:w-auto" variant="outline" onClick={resetProgress}><RotateCcw size={16} /> Reset progress</Button>
+                      <Button className="w-full sm:w-auto" variant="outline" onClick={exportCollection}><Download size={16} /> Export</Button>
+                      <Button className="w-full sm:w-auto" variant="destructive" onClick={removeCollection}><Trash2 size={16} /> Delete</Button>
                     </div>
                   </div>
                 </CardHeader>
@@ -960,7 +1010,7 @@ export default function App() {
                 </CardContent>
               </Card>
 
-              <Card>
+              <Card className="glass-panel">
                 <CardContent className="flex flex-col items-center gap-6 pt-6">
                   {!currentCard && <p className="text-xl font-semibold">No cards left for this session</p>}
                   {currentCard && (
@@ -972,11 +1022,11 @@ export default function App() {
                         onEdit={() => openEditDialog(currentCard)}
                         onDelete={() => removeCard(currentCard.id)}
                       />
-                      <div className="flex gap-3">
-                        <Button variant="outline" className="border-amber-500 text-amber-600 hover:bg-amber-50" onClick={() => markCurrentCard(false)}>
+                      <div className="flex w-full max-w-2xl flex-col gap-3 sm:flex-row">
+                        <Button variant="outline" className="w-full border-amber-500 text-amber-600 hover:bg-amber-50 sm:w-auto" onClick={() => markCurrentCard(false)}>
                           Don't Know
                         </Button>
-                        <Button variant="secondary" onClick={() => markCurrentCard(true)}>Know</Button>
+                        <Button className="w-full sm:w-auto" variant="secondary" onClick={() => markCurrentCard(true)}>Know</Button>
                       </div>
                     </>
                   )}
@@ -989,8 +1039,65 @@ export default function App() {
       </div>
       )}
 
+      <Dialog open={collectionDialogOpen} onOpenChange={setCollectionDialogOpen}>
+        <DialogContent className="glass-panel">
+          <DialogHeader>
+            <DialogTitle>Add Collection</DialogTitle>
+          </DialogHeader>
+          <form className="space-y-3" onSubmit={handleImport}>
+            <Input
+              placeholder="Collection name"
+              value={nameInput}
+              onChange={(e) => setNameInput(e.target.value)}
+              disabled={loading}
+            />
+            <label className="block">
+              <span className="mb-2 block text-sm text-muted-foreground">JSON file</span>
+              <Input
+                type="file"
+                accept="application/json,.json,text/json,text/plain"
+                onChange={(e) => setJsonFile(e.target.files?.[0] || null)}
+                disabled={loading}
+              />
+            </label>
+            <DialogFooter>
+              <Button type="button" variant="outline" onClick={() => setCollectionDialogOpen(false)}>
+                Cancel
+              </Button>
+              <Button type="submit" disabled={loading}>
+                <Upload size={16} /> Add
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={folderDialogOpen} onOpenChange={setFolderDialogOpen}>
+        <DialogContent className="glass-panel">
+          <DialogHeader>
+            <DialogTitle>Add Folder</DialogTitle>
+          </DialogHeader>
+          <form className="space-y-3" onSubmit={createFolder}>
+            <Input
+              placeholder="Folder name"
+              value={folderNameInput}
+              onChange={(e) => setFolderNameInput(e.target.value)}
+              disabled={loading}
+            />
+            <DialogFooter>
+              <Button type="button" variant="outline" onClick={() => setFolderDialogOpen(false)}>
+                Cancel
+              </Button>
+              <Button type="submit" disabled={loading}>
+                <FolderPlus size={16} /> Create
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
+
       <Dialog open={Boolean(editCard)} onOpenChange={(isOpen) => !isOpen && setEditCard(null)}>
-        <DialogContent>
+        <DialogContent className="glass-panel">
           <DialogHeader>
             <DialogTitle>Edit card</DialogTitle>
           </DialogHeader>
