@@ -1,0 +1,98 @@
+[
+  {
+    "collection_name": "CSS v2",
+    "source_markdown": "Sources/Theory/CSS_v2.md",
+    "json_file": "Sources/PreloadCollections/CSS_v2.json",
+    "cards": 20
+  },
+  {
+    "collection_name": "Docker",
+    "source_markdown": "Sources/Theory/Docker.md",
+    "json_file": "Sources/PreloadCollections/Docker.json",
+    "cards": 24
+  },
+  {
+    "collection_name": "Git",
+    "source_markdown": "Sources/Theory/Git.md",
+    "json_file": "Sources/PreloadCollections/Git.json",
+    "cards": 22
+  },
+  {
+    "collection_name": "HTML.CSS",
+    "source_markdown": "Sources/Theory/HTML.CSS.md",
+    "json_file": "Sources/PreloadCollections/HTML.CSS.json",
+    "cards": 41
+  },
+  {
+    "collection_name": "HTML v2",
+    "source_markdown": "Sources/Theory/HTML_v2.md",
+    "json_file": "Sources/PreloadCollections/HTML_v2.json",
+    "cards": 20
+  },
+  {
+    "collection_name": "JS",
+    "source_markdown": "Sources/Theory/JS.md",
+    "json_file": "Sources/PreloadCollections/JS.json",
+    "cards": 70
+  },
+  {
+    "collection_name": "JSQuiz",
+    "source_markdown": "Sources/Theory/JSQuiz.md",
+    "json_file": "Sources/PreloadCollections/JSQuiz.json",
+    "cards": 210
+  },
+  {
+    "collection_name": "Patterns",
+    "source_markdown": "Sources/Theory/Patterns.md",
+    "json_file": "Sources/PreloadCollections/Patterns.json",
+    "cards": 16
+  },
+  {
+    "collection_name": "Python",
+    "source_markdown": "Sources/Theory/Python.md",
+    "json_file": "Sources/PreloadCollections/Python.json",
+    "cards": 46
+  },
+  {
+    "collection_name": "React",
+    "source_markdown": "Sources/Theory/React.md",
+    "json_file": "Sources/PreloadCollections/React.json",
+    "cards": 47
+  },
+  {
+    "collection_name": "Redux",
+    "source_markdown": "Sources/Theory/Redux.md",
+    "json_file": "Sources/PreloadCollections/Redux.json",
+    "cards": 3
+  },
+  {
+    "collection_name": "SQL",
+    "source_markdown": "Sources/Theory/SQL.md",
+    "json_file": "Sources/PreloadCollections/SQL.json",
+    "cards": 66
+  },
+  {
+    "collection_name": "TS",
+    "source_markdown": "Sources/Theory/TS.md",
+    "json_file": "Sources/PreloadCollections/TS.json",
+    "cards": 23
+  },
+  {
+    "collection_name": "Web",
+    "source_markdown": "Sources/Theory/Web.md",
+    "json_file": "Sources/PreloadCollections/Web.json",
+    "cards": 22
+  },
+  {
+    "collection_name": "YeaHub - Backend",
+    "source_markdown": "Sources/Theory/YeaHub/Backend.md",
+    "json_file": "Sources/PreloadCollections/YeaHub/Backend.json",
+    "cards": 1089
+  },
+  {
+    "collection_name": "YeaHub - Frontend",
+    "source_markdown": "Sources/Theory/YeaHub/Frontend.md",
+    "json_file": "Sources/PreloadCollections/YeaHub/Frontend.json",
+    "cards": 840
+  }
+]

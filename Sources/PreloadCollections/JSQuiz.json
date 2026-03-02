@@ -1,0 +1,842 @@
+[
+  {
+    "question": "What is the result of this code?\n\n```javascript\nconsole.log(typeof undefined);\nconsole.log(typeof null);\n```",
+    "answer": "В JavaScript `undefined` — это тип данных, который представляет собой неопределенное значение. `null` — это специальное значение, которое представляет собой \"ничего\", но, тем не менее, `typeof null` возвращает \"object\" из-за исторических причин в языке JavaScript.\n**Output:**\n```\nundefined\nobject\n```"
+  },
+  {
+    "question": "What is the result of this code?\n\n```javascript\nvar a = 1;\nvar b = 2;\nvar c = 3;\nconsole.log({a, b, c});\n```",
+    "answer": "Это пример сокращенного синтаксиса объектного литерала в ES6. Когда имя переменной совпадает с именем свойства, можно использовать сокращенную запись {a} вместо {a: a}.\n**Output:**\n```\n{a: 1, b: 2, c: 3}\n```"
+  },
+  {
+    "question": "What is the result of this code?\n\n```javascript\nlet x;\nconsole.log(x);\nconsole.log(y);\nvar y;\n```",
+    "answer": "Переменная `x` объявлена с помощью `let`, но не инициализирована, поэтому она имеет значение `undefined`. Переменная `y` объявлена с помощью `var`, но также не инициализирована. Из-за поднятия (`hoisting`) переменной `var` она существует в начале выполнения функции, но имеет значение `undefined`.\n**Output:**\n```\nundefined\nundefined\n```"
+  },
+  {
+    "question": "What is the result of this code?\n\n```javascript\nconsole.log(1 + \"2\" + \"2\");\nconsole.log(1 + +\"2\" + \"2\");\nconsole.log(\"A\" - \"B\" + 2);\n```",
+    "answer": "В первом выражении происходит конкатенация строк: 1 преобразуется в строку и соединяется с \"2\" и \"2\". Во втором выражении унарный оператор + преобразует \"2\" в число, поэтому 1 + 2 = 3, затем 3 преобразуется в строку и соединяется с \"2\". В третьем выражении \"A\" - \"B\" возвращает NaN, который затем конкатенируется с \"2\".\n**Output:**\n```\n122\n32\nNaN2\n```"
+  },
+  {
+    "question": "What is the result of this code?\n\n```javascript\nconsole.log(0.1 + 0.2 == 0.3);\nconsole.log(0.1 + 0.2);\n```",
+    "answer": "Это знаменитая проблема точности чисел с плавающей запятой в JavaScript (и большинстве языков программирования). Из-за способа представления чисел в двоичном виде, 0.1 + 0.2 не равно в точности 0.3.\n**Output:**\n```\nfalse\n0.30000000000000004\n```"
+  },
+  {
+    "question": "What is the result of this code?\n\n```javascript\nconsole.log(Number(\"123\"));\nconsole.log(Number(\"\"));\nconsole.log(Number(\"  \"));\nconsole.log(Number(\"12s\"));\n```",
+    "answer": "Конструктор `Number()` пытается преобразовать значение в число. \"123\" становится 123, пустая строка и строка с пробелами становятся 0, а \"12s\" возвращает NaN, потому что содержит недопустимые символы.\n**Output:**\n```\n123\n0\n0\nNaN\n```"
+  },
+  {
+    "question": "What is the result of this code?\n\n```javascript\nconsole.log(Boolean(0));\nconsole.log(Boolean(\"\"));\nconsole.log(Boolean([]));\nconsole.log(Boolean({}));\n```",
+    "answer": "В JavaScript есть 6 ложных (falsy) значений: false, 0, \"\", null, undefined, NaN. Все остальные значения, включая пустые массивы и объекты, считаются истинными.\n**Output:**\n```\nfalse\nfalse\ntrue\ntrue\n```"
+  },
+  {
+    "question": "What is the result of this code?\n\n```javascript\nlet obj = {};\nconsole.log(obj.a);\nconsole.log(delete obj.a);\nconsole.log(obj.a);\n```",
+    "answer": "`obj.a` возвращает undefined, потому что свойство 'a' не было определено. Оператор `delete` пытается удалить свойство 'a', но так как его не существует, операция возвращает true. `obj.a` снова возвращает undefined.\n**Output:**\n```\nundefined\ntrue\nundefined\n```"
+  },
+  {
+    "question": "What is the result of this code?\n\n```javascript\nconst arr = [1, 2, 3];\nconst obj = {a: 1, b: 2};\nconsole.log(typeof arr);\nconsole.log(typeof obj);\nconsole.log(Array.isArray(arr));\nconsole.log(Array.isArray(obj));\n```",
+    "answer": "В JavaScript массивы также являются объектами, поэтому `typeof` возвращает \"object\" как для массивов, так и для объектов. Для проверки является ли значение массивом, нужно использовать `Array.isArray()`.\n**Output:**\n```\nobject\nobject\ntrue\nfalse\n```"
+  },
+  {
+    "question": "What is the result of this code?\n\n```javascript\nconsole.log(null == undefined);\nconsole.log(null === undefined);\nconsole.log(\"\" == false);\nconsole.log(\"\" === false);\n```",
+    "answer": "Оператор `==` выполняет приведение типов (coercion), поэтому null и undefined равны. Оператор `===` не приводит типы, поэтому null и undefined не равны. Пустая строка и false равны при сравнении ==, но различаются при строгом сравнении.\n**Output:**\n```\ntrue\nfalse\ntrue\nfalse\n```\n\n---"
+  },
+  {
+    "question": "What is the result of this code?\n\n```javascript\nfunction sayHello() {\n    return \"Hello\";\n}\nconsole.log(sayHello());\nconsole.log(typeof sayHello);\n```",
+    "answer": "Здесь объявлена функция `sayHello`, которая возвращает строку \"Hello\". При вызове `sayHello()` функция возвращает \"Hello\". При использовании `typeof` для функции возвращается \"function\".\n**Output:**\n```\nHello\nfunction\n```"
+  },
+  {
+    "question": "What is the result of this code?\n\n```javascript\nvar x = 21;\nvar fun = function () {\n    console.log(this.x);\n};\nfun();\n```",
+    "answer": "В строгом режиме `this` внутри функции будет `undefined`, а не глобальным объектом. В нестрогом режиме `this` указывает на глобальный объект (window в браузере), но у глобального объекта нет свойства x. В любом случае результат будет `undefined`.\n**Output:**\n```\nundefined\n```"
+  },
+  {
+    "question": "What is the result of this code?\n\n```javascript\nfunction foo() {\n    return \n    {\n        message: \"Hello\"\n    };\n}\nconsole.log(foo());\n```",
+    "answer": "Автоматическая вставка точки с запятой происходит после ключевого слова `return`, так что функция возвращает `undefined`, а объект игнорируется.\n**Output:**\n```\nundefined\n```"
+  },
+  {
+    "question": "What is the result of this code?\n\n```javascript\nvar bar = function(x) { return x; };\nconsole.log(bar(5));\n```",
+    "answer": "Анонимная функция присваивается переменной `bar`. Функция принимает один аргумент и возвращает его. При вызове с аргументом 5, функция возвращает 5.\n**Output:**\n```\n5\n```"
+  },
+  {
+    "question": "What is the result of this code?\n\n```javascript\nfunction checkType(x) {\n    if (typeof x === 'function') {\n        return x();\n    } else {\n        return x;\n    }\n}\nconsole.log(checkType(5));\nconsole.log(checkType(function() { return 10; }));\n```",
+    "answer": "Функция проверяет тип аргумента. Если это функция, она вызывается и возвращается результат. Иначе возвращается сам аргумент. В первом случае возвращается 5, во втором - результат выполнения анонимной функции (10).\n**Output:**\n```\n5\n10\n```"
+  },
+  {
+    "question": "What is the result of this code?\n\n```javascript\nfunction createCounter() {\n    let count = 0;\n    return function() {\n        count++;\n        return count;\n    };\n}\nconst counter = createCounter();\nconsole.log(counter());\nconsole.log(counter());\nconsole.log(counter());\n```",
+    "answer": "Это пример замыкания. Внутренняя функция сохраняет ссылку на переменную `count` из внешней функции, позволяя сохранить состояние между вызовами.\n**Output:**\n```\n1\n2\n3\n```"
+  },
+  {
+    "question": "What is the result of this code?\n\n```javascript\nfunction duplicate(arr) {\n    return arr.concat(arr);\n}\nconsole.log(duplicate([1, 2, 3]));\n```",
+    "answer": "Метод `concat()` создает новый массив, объединяя элементы массива, для которого он вызван, с другими массивами и/или значениями. В данном случае объединяется массив сам с собой.\n**Output:**\n```\n[1, 2, 3, 1, 2, 3]\n```"
+  },
+  {
+    "question": "What is the result of this code?\n\n```javascript\nfunction greet(name, greeting) {\n    return `${greeting || 'Hello'}, ${name}!`;\n}\nconsole.log(greet('John'));\nconsole.log(greet('Jane', 'Hi'));\n```",
+    "answer": "Используется логический оператор ИЛИ (||) для предоставления значения по умолчанию. Если `greeting` не определен или является falsy значением, используется 'Hello'.\n**Output:**\n```\nHello, John!\nHi, Jane!\n```"
+  },
+  {
+    "question": "What is the result of this code?\n\n```javascript\nfunction multiply(a, b = 2) {\n    return a * b;\n}\nconsole.log(multiply(5));\nconsole.log(multiply(5, 3));\n```",
+    "answer": "Это пример параметра по умолчанию. Когда аргумент `b` не передается, используется значение 2. В первом вызове `b` равно 2, во втором `b` равно 3.\n**Output:**\n```\n10\n15\n```"
+  },
+  {
+    "question": "What is the result of this code?\n\n```javascript\nconst square = x => x * x;\nconst add = (a, b) => a + b;\nconsole.log(square(5));\nconsole.log(add(3, 4));\n```",
+    "answer": "Это стрелочные функции ES6. Они обеспечивают более короткий синтаксис для написания функций. Первая функция возводит число в квадрат, вторая складывает два числа.\n**Output:**\n```\n25\n7\n```\n\n---"
+  },
+  {
+    "question": "What is the result of this code?\n\n```javascript\nfunction outer() {\n    var x = 10;\n    function inner() {\n        console.log(x);\n    }\n    inner();\n}\nouter();\n```",
+    "answer": "Внутренняя функция имеет доступ к переменной `x` из внешней функции благодаря замыканию. Это позволяет внутренней функции \"запомнить\" контекст, в котором она была создана.\n**Output:**\n```\n10\n```"
+  },
+  {
+    "question": "What is the result of this code?\n\n```javascript\nvar x = 10;\nfunction foo() {\n    console.log(x);\n    var x = 20;\n    console.log(x);\n}\nfoo();\n```",
+    "answer": "Из-за поднятия переменной `var x` внутри функции, `x` становится локальной переменной. В начале выполнения функции `x` инициализирована как `undefined`, поэтому первый `console.log` выводит `undefined`. Затем `x` получает значение 20.\n**Output:**\n```\nundefined\n20\n```"
+  },
+  {
+    "question": "What is the result of this code?\n\n```javascript\nfor (var i = 0; i < 3; i++) {\n    setTimeout(() => console.log(i), 0);\n}\n```",
+    "answer": "Из-за поднятия и общего замыкания, все функции setTimeout ссылаются на одну и ту же переменную `i`. К моменту выполнения setTimeout, цикл уже завершился, и `i` равно 3.\n**Output:**\n```\n3\n3\n3\n```"
+  },
+  {
+    "question": "What is the result of this code?\n\n```javascript\nfor (let i = 0; i < 3; i++) {\n    setTimeout(() => console.log(i), 0);\n}\n```",
+    "answer": "`let` создает отдельное привязывание для каждой итерации цикла. Каждая функция setTimeout получает свою собственную копию переменной `i`.\n**Output:**\n```\n0\n1\n2\n```"
+  },
+  {
+    "question": "What is the result of this code?\n\n```javascript\nfunction createFunctions() {\n    var result = [];\n    for (var i = 0; i < 3; i++) {\n        result[i] = function() {\n            return i;\n        };\n    }\n    return result;\n}\nvar funcs = createFunctions();\nconsole.log(funcs[0]());\nconsole.log(funcs[1]());\nconsole.log(funcs[2]());\n```",
+    "answer": "Все функции в массиве ссылаются на одну и ту же переменную `i` из внешнего замыкания. К моменту вызова функций цикл уже завершился, и `i` содержит значение 3.\n**Output:**\n```\n3\n3\n3\n```"
+  },
+  {
+    "question": "What is the result of this code?\n\n```javascript\nfunction createFunctions() {\n    var result = [];\n    for (var i = 0; i < 3; i++) {\n        result[i] = (function(x) {\n            return function() {\n                return x;\n            };\n        })(i);\n    }\n    return result;\n}\nvar funcs = createFunctions();\nconsole.log(funcs[0]());\nconsole.log(funcs[1]());\nconsole.log(funcs[2]());\n```",
+    "answer": "Здесь используется IIFE (Immediately Invoked Function Expression) для создания отдельного замыкания для каждого значения `i`. Каждая внутренняя функция захватывает своё собственное значение `x`.\n**Output:**\n```\n0\n1\n2\n```"
+  },
+  {
+    "question": "What is the result of this code?\n\n```javascript\nvar globalVar = \"global\";\n\nfunction checkScope() {\n    console.log(globalVar);\n    var globalVar = \"local\";\n    console.log(globalVar);\n}\ncheckScope();\n```",
+    "answer": "Из-за поднятия переменной `globalVar` внутри функции, она становится локальной. В начале выполнения функции `globalVar` инициализирована как `undefined`, поэтому первый `console.log` выводит `undefined`. Затем присваивается \"local\".\n**Output:**\n```\nundefined\nlocal\n```"
+  },
+  {
+    "question": "What is the result of this code?\n\n```javascript\nlet x = 1;\n{\n    console.log(x);\n    let x = 2;\n    console.log(x);\n}\n```",
+    "answer": "Это вызывает ошибку, потому что переменная `x` в блоке находится в \"временной мертвой зоне\" от начала блока до точки, где она объявлена. Попытка доступа к `x` до объявления вызывает ошибку.\n**Output:**\n```\nError: Cannot access 'x' before initialization\n```"
+  },
+  {
+    "question": "What is the result of this code?\n\n```javascript\nvar a = 1;\nfunction b() {\n    a = 10;\n    return;\n    function a() {}\n}\nb();\nconsole.log(a);\n```",
+    "answer": "Функция `a` поднимается внутри функции `b`, становясь локальной переменной. Присваивание `a = 10` изменяет локальную переменную, а не глобальную.\n**Output:**\n```\n1\n```"
+  },
+  {
+    "question": "What is the result of this code?\n\n```javascript\nvar x = 10;\nfunction test() {\n    if (false) {\n        var x = 20;\n    }\n    console.log(x);\n}\ntest();\n```",
+    "answer": "Даже если условие false, переменная `var x` поднимается к началу функции, перекрывая глобальную переменную. Но поскольку внутри блока не происходит присваивания, `x` остается `undefined`.\n**Output:**\n```\nundefined\n```\n\n---"
+  },
+  {
+    "question": "What is the result of this code?\n\n```javascript\nconst obj = { a: 1, b: 2 };\nobj.c = 3;\nconsole.log(obj);\ndelete obj.a;\nconsole.log(obj);\n```",
+    "answer": "Объекты в JavaScript изменяемы (mutable) даже при объявлении с `const`. Мы можем добавлять и удалять свойства. Оператор `delete` удаляет свойство из объекта.\n**Output:**\n```\n{ a: 1, b: 2, c: 3 }\n{ b: 2, c: 3 }\n```"
+  },
+  {
+    "question": "What is the result of this code?\n\n```javascript\nconst person = { name: 'John', age: 30 };\nconsole.log(Object.keys(person));\nconsole.log(Object.values(person));\nconsole.log(Object.entries(person));\n```",
+    "answer": "`Object.keys()` возвращает массив с именами свойств объекта. `Object.values()` возвращает массив значений свойств. `Object.entries()` возвращает массив пар [ключ, значение] для каждого свойства.\n**Output:**\n```\n['name', 'age']\n['John', 30]\n[['name', 'John'], ['age', 30]]\n```"
+  },
+  {
+    "question": "What is the result of this code?\n\n```javascript\nconst obj1 = { a: 1 };\nconst obj2 = obj1;\nobj2.a = 2;\nconsole.log(obj1.a);\nconsole.log(obj2.a);\n```",
+    "answer": "`obj1` и `obj2` ссылаются на один и тот же объект в памяти. Изменение одного из них влияет на другой. Это демонстрирует, как объекты передаются по ссылке.\n**Output:**\n```\n2\n2\n```"
+  },
+  {
+    "question": "What is the result of this code?\n\n```javascript\nconst obj = { a: 1, b: { c: 2 } };\nconst copy = Object.assign({}, obj);\nobj.b.c = 3;\nconsole.log(obj.b.c);\nconsole.log(copy.b.c);\n```",
+    "answer": "`Object.assign()` создает поверхностную (shallow) копию объекта. Вложенные объекты копируются по ссылке, поэтому изменение obj.b.c также изменяет copy.b.c.\n**Output:**\n```\n3\n3\n```"
+  },
+  {
+    "question": "What is the result of this code?\n\n```javascript\nconst obj = { a: 1, b: 2 };\nconsole.log('a' in obj);\nconsole.log('c' in obj);\nconsole.log(obj.hasOwnProperty('a'));\nconsole.log(obj.hasOwnProperty('toString'));\n```",
+    "answer": "Оператор `in` проверяет наличие свойства в объекте или в его прототипной цепочке. `hasOwnProperty()` проверяет только собственные свойства объекта, исключая наследуемые.\n**Output:**\n```\ntrue\nfalse\ntrue\nfalse\n```"
+  },
+  {
+    "question": "What is the result of this code?\n\n```javascript\nfunction Person(name) {\n    this.name = name;\n}\nPerson.prototype.getName = function() {\n    return this.name;\n};\nconst person = new Person('John');\nconsole.log(person.getName());\nconsole.log(person.hasOwnProperty('name'));\nconsole.log(person.hasOwnProperty('getName'));\n```",
+    "answer": "Свойство `name` определено как собственное свойство объекта, поэтому `hasOwnProperty` возвращает true. `getName` - метод прототипа, поэтому `hasOwnProperty` возвращает false.\n**Output:**\n```\nJohn\ntrue\nfalse\n```"
+  },
+  {
+    "question": "What is the result of this code?\n\n```javascript\nconst obj = { a: 1, b: 2 };\nfor (let key in obj) {\n    console.log(key + ': ' + obj[key]);\n}\n```",
+    "answer": "Цикл `for...in` перебирает все перечисляемые свойства объекта, включая унаследованные. В данном случае перебираются только собственные свойства объекта.\n**Output:**\n```\na: 1\nb: 2\n```"
+  },
+  {
+    "question": "What is the result of this code?\n\n```javascript\nconst obj = { a: 1, b: 2 };\nObject.defineProperty(obj, 'c', {\n    value: 3,\n    enumerable: false\n});\nconsole.log(obj.c);\nconsole.log(Object.keys(obj));\n```",
+    "answer": "`Object.defineProperty()` позволяет точно настраивать поведение свойств. В данном случае свойство `c` не является перечисляемым (`enumerable: false`), поэтому оно не появляется в `Object.keys()`.\n**Output:**\n```\n3\n['a', 'b']\n```"
+  },
+  {
+    "question": "What is the result of this code?\n\n```javascript\nconst obj = { a: 1, b: 2 };\nconst proto = { c: 3 };\nObject.setPrototypeOf(obj, proto);\nconsole.log(obj.c);\n```",
+    "answer": "`Object.setPrototypeOf()` устанавливает прототип объекта. Теперь obj наследует свойства от proto, и мы можем получить доступ к свойству `c` через obj, даже если оно не является его собственным свойством.\n**Output:**\n```\n3\n```"
+  },
+  {
+    "question": "What is the result of this code?\n\n```javascript\nconst obj1 = { a: 1 };\nconst obj2 = { b: 2 };\nconst merged = Object.assign(obj1, obj2);\nconsole.log(merged);\nconsole.log(obj1);\nconsole.log(obj1 === merged);\n```",
+    "answer": "`Object.assign()` копирует значения всех перечисляемых собственных свойств из одного или более исходных объектов в целевой объект. Целевой объект изменяется и возвращается.\n**Output:**\n```\n{ a: 1, b: 2 }\n{ a: 1, b: 2 }\ntrue\n```\n\n---"
+  },
+  {
+    "question": "What is the result of this code?\n\n```javascript\nconst arr = [1, 2, 3];\narr[10] = 10;\nconsole.log(arr.length);\nconsole.log(arr[5]);\n```",
+    "answer": "В JavaScript можно присваивать значения элементам массива с любыми индексами. Если индекс превышает текущую длину массива, длина обновляется. Элементы между старой и новой длиной становятся `undefined`.\n**Output:**\n```\n11\nundefined\n```"
+  },
+  {
+    "question": "What is the result of this code?\n\n```javascript\nconst arr1 = [1, 2, 3];\nconst arr2 = [4, 5, 6];\nconsole.log(arr1.concat(arr2));\nconsole.log([...arr1, ...arr2]);\n```",
+    "answer": "И `concat()` и синтаксис spread создают новый массив, объединяя элементы двух массивов. Spread-оператор - это более современный способ объединения массивов.\n**Output:**\n```\n[1, 2, 3, 4, 5, 6]\n[1, 2, 3, 4, 5, 6]\n```"
+  },
+  {
+    "question": "What is the result of this code?\n\n```javascript\nconst arr = [1, 2, 3, 4, 5];\nconsole.log(arr.slice(1, 3));\nconsole.log(arr.splice(1, 2));\nconsole.log(arr);\n```",
+    "answer": "`slice(1, 3)` возвращает новый массив с элементами с индекса 1 до (но не включая) индекса 3. `splice(1, 2)` изменяет исходный массив, удаляя 2 элемента, начиная с индекса 1, и возвращает удаленные элементы.\n**Output:**\n```\n[2, 3]\n[2, 3]\n[1, 4, 5]\n```"
+  },
+  {
+    "question": "What is the result of this code?\n\n```javascript\nconst arr = [1, 2, 3, 4, 5];\nconsole.log(arr.map(x => x * 2));\nconsole.log(arr.filter(x => x % 2 === 0));\nconsole.log(arr.reduce((acc, x) => acc + x, 0));\n```",
+    "answer": "`map()` создает новый массив, применяя функцию к каждому элементу. `filter()` создает новый массив с элементами, удовлетворяющими условию. `reduce()` объединяет все элементы массива в одно значение.\n**Output:**\n```\n[2, 4, 6, 8, 10]\n[2, 4]\n15\n```"
+  },
+  {
+    "question": "What is the result of this code?\n\n```javascript\nconst arr = [1, [2, 3], [4, [5, 6]]];\nconsole.log(arr.flat());\nconsole.log(arr.flat(2));\n```",
+    "answer": "`flat()` создаёт новый массив со всеми подмассивами, соединёнными в нём рекурсивно до указанной глубины. `flat()` без аргумента сглаживает только на 1 уровень, `flat(2)` сглаживает на 2 уровня.\n**Output:**\n```\n[1, 2, 3, 4, [5, 6]]\n[1, 2, 3, 4, 5, 6]\n```"
+  },
+  {
+    "question": "What is the result of this code?\n\n```javascript\nconst arr = [1, 2, 3];\narr.forEach(x => console.log(x * 2));\n```",
+    "answer": "`forEach()` выполняет указанную функцию для каждого элемента массива. В отличие от `map()`, `forEach()` не возвращает новый массив, а просто выполняет операцию.\n**Output:**\n```\n2\n4\n6\n```"
+  },
+  {
+    "question": "What is the result of this code?\n\n```javascript\nconst arr = [1, 2, 3, 4, 5];\nconsole.log(arr.some(x => x > 3));\nconsole.log(arr.every(x => x > 0));\nconsole.log(arr.find(x => x > 2));\n```",
+    "answer": "`some()` проверяет, удовлетворяет ли хотя бы один элемент условию. `every()` проверяет, удовлетворяют ли все элементы условию. `find()` возвращает первый элемент, удовлетворяющий условию, или `undefined`.\n**Output:**\n```\ntrue\ntrue\n3\n```"
+  },
+  {
+    "question": "What is the result of this code?\n\n```javascript\nconst arr = [3, 1, 4, 1, 5];\nconsole.log(arr.sort());\nconsole.log(arr.reverse());\n```",
+    "answer": "`sort()` и `reverse()` изменяют исходный массив (мутируют его) и возвращают изменённый массив. По умолчанию `sort()` преобразует элементы в строки и сортирует их в лексикографическом порядке.\n**Output:**\n```\n[1, 1, 3, 4, 5]\n[5, 4, 3, 1, 1]\n```"
+  },
+  {
+    "question": "What is the result of this code?\n\n```javascript\nconst arr = [1, 2, 3];\nconsole.log(Array.isArray(arr));\nconsole.log(Array.from('hello'));\nconsole.log(Array.of(1, 2, 3));\n```",
+    "answer": "`Array.isArray()` проверяет, является ли значение массивом. `Array.from()` создаёт новый экземпляр Array из массивоподобного или итерируемого объекта. `Array.of()` создаёт новый экземпляр Array с переменным числом аргументов.\n**Output:**\n```\ntrue\n['h', 'e', 'l', 'l', 'o']\n[1, 2, 3]\n```"
+  },
+  {
+    "question": "What is the result of this code?\n\n```javascript\nconst matrix = [[1, 2], [3, 4]];\nconsole.log(matrix[0][1]);\nconst flattened = matrix.flat();\nconsole.log(flattened);\n```",
+    "answer": "`matrix[0][1]` обращается к элементу [0][1] двумерного массива. `flat()` сглаживает вложенные массивы в один плоский массив.\n**Output:**\n```\n2\n[1, 2, 3, 4]\n```\n\n---"
+  },
+  {
+    "question": "What is the result of this code?\n\n```javascript\nconsole.log(x);\nvar x = 5;\n```",
+    "answer": "Поднятие переменных `var` означает, что объявление переменной поднимается к началу области видимости, но присваивание остается на месте. `x` объявляется как `undefined` до присваивания.\n**Output:**\n```\nundefined\n```"
+  },
+  {
+    "question": "What is the result of this code?\n\n```javascript\nconsole.log(getName());\nfunction getName() {\n    return \"John\";\n}\n```",
+    "answer": "Объявления функций полностью поднимаются, поэтому функцию можно вызвать до её объявления. Функция будет доступна сразу.\n**Output:**\n```\nJohn\n```"
+  },
+  {
+    "question": "What is the result of this code?\n\n```javascript\nconsole.log(getName);\nvar getName = function() {\n    return \"Jane\";\n};\n```",
+    "answer": "Только объявление переменной `getName` поднимается, но не присваивание функции. На момент вызова `getName` равен `undefined`.\n**Output:**\n```\nundefined\n```"
+  },
+  {
+    "question": "What is the result of this code?\n\n```javascript\nvar temp = 10;\nfunction hoistTest() {\n    console.log(temp);\n    var temp = 20;\n    console.log(temp);\n}\nhoistTest();\n```",
+    "answer": "Переменная `temp` внутри функции поднимается, становясь локальной. В начале выполнения функции `temp` равна `undefined`, затем получает значение 20.\n**Output:**\n```\nundefined\n20\n```"
+  },
+  {
+    "question": "What is the result of this code?\n\n```javascript\ngetName();\nvar getName = function() {\n    console.log(\"Function expression\");\n};\nfunction getName() {\n    console.log(\"Function declaration\");\n}\n```",
+    "answer": "Объявления функций поднимаются до объявления переменных. Поэтому сначала поднимается функция `getName`, но затем переменная `getName` перезаписывает её своим значением `undefined`.\n**Output:**\n```\nFunction declaration\n```"
+  },
+  {
+    "question": "What is the result of this code?\n\n```javascript\nfunction test() {\n    console.log(a);\n    console.log(foo());\n    \n    var a = 1;\n    function foo() {\n        return 2;\n    }\n}\ntest();\n```",
+    "answer": "Функция `foo` полностью поднимается, поэтому её можно вызвать до объявления. Переменная `a` поднимается как `undefined`, прежде чем получить значение 1.\n**Output:**\n```\nundefined\n2\n```"
+  },
+  {
+    "question": "What is the result of this code?\n\n```javascript\nvar myVar = 'my value';\n(function() {\n    console.log(myVar);\n    var myVar = 'local value';\n    console.log(myVar);\n})();\n```",
+    "answer": "Переменная `myVar` внутри IIFE поднимается, становясь локальной. Глобальная переменная не используется.\n**Output:**\n```\nundefined\nlocal value\n```"
+  },
+  {
+    "question": "What is the result of this code?\n\n```javascript\nconsole.log(foo);\nconsole.log(bar);\nvar foo = 1;\nlet bar = 2;\n```",
+    "answer": "Переменные `var` поднимаются и инициализируются как `undefined`. Переменные `let` и `const` поднимаются, но не инициализируются до точки объявления (временная мертвая зона).\n**Output:**\n```\nundefined\nError: Cannot access 'bar' before initialization\n```"
+  },
+  {
+    "question": "What is the result of this code?\n\n```javascript\nconst a = 1;\nfunction f() {\n    console.log(a);\n    const a = 2;\n}\nf();\n```",
+    "answer": "Переменная `a` находится в временной мертвой зоне до объявления `const a = 2`. Даже если снаружи существует переменная `a`, внутри функции происходит ошибка.\n**Output:**\n```\nError: Cannot access 'a' before initialization\n```"
+  },
+  {
+    "question": "What is the result of this code?\n\n```javascript\nvar x = 1;\nfunction foo() {\n    console.log(x);\n    var x = 2;\n    console.log(x);\n}\nfoo();\n```",
+    "answer": "Переменная `x` внутри функции поднимается, становясь локальной и инициализируясь как `undefined`. Поэтому первый `console.log` выводит `undefined`.\n**Output:**\n```\nundefined\n2\n```\n\n---"
+  },
+  {
+    "question": "What is the result of this code?\n\n```javascript\nconsole.log(\"Start\");\nsetTimeout(() => console.log(\"Timeout\"), 0);\nPromise.resolve().then(() => console.log(\"Promise\"));\nconsole.log(\"End\");\n```",
+    "answer": "Макрозадачи (setTimeout) выполняются после микрозадач (Promise). Сначала выполняется синхронный код, затем микрозадачи, затем макрозадачи.\n**Output:**\n```\nStart\nEnd\nPromise\nTimeout\n```"
+  },
+  {
+    "question": "What is the result of this code?\n\n```javascript\nfor (var i = 0; i < 3; i++) {\n    setTimeout(() => console.log(i), 1);\n}\n```",
+    "answer": "Все таймеры используют одну и ту же переменную `i` из замыкания. К моменту выполнения таймеров цикл уже завершился, и `i` содержит значение 3.\n**Output:**\n```\n3\n3\n3\n```"
+  },
+  {
+    "question": "What is the result of this code?\n\n```javascript\nconsole.log(\"1\");\nsetTimeout(() => console.log(\"2\"), 0);\nconsole.log(\"3\");\nPromise.resolve().then(() => console.log(\"4\"));\nconsole.log(\"5\");\n```",
+    "answer": "Сначала выполняется синхронный код (1, 3, 5), затем микрозадачи (Promise: 4), затем макрозадачи (setTimeout: 2).\n**Output:**\n```\n1\n3\n5\n4\n2\n```"
+  },
+  {
+    "question": "What is the result of this code?\n\n```javascript\nconst promise = new Promise((resolve, reject) => {\n    console.log(\"Promise constructor\");\n    resolve();\n});\npromise.then(() => console.log(\"Resolved\"));\nconsole.log(\"After promise\");\n```",
+    "answer": "Конструктор промиса выполняется синхронно, затем весь синхронный код, а затем обработчики промисов.\n**Output:**\n```\nPromise constructor\nAfter promise\nResolved\n```"
+  },
+  {
+    "question": "What is the result of this code?\n\n```javascript\nsetTimeout(() => console.log(\"A\"), 0);\nconst b = new Promise((resolve, reject) => {\n    resolve(\"B\");\n});\nb.then(val => console.log(val));\nsetTimeout(() => console.log(\"C\"), 0);\n```",
+    "answer": "Сначала создается промис и сразу же разрешается. Затем создаются таймеры. Обработчики промисов (микрозадачи) выполняются перед таймерами (макрозадачи).\n**Output:**\n```\nB\nA\nC\n```"
+  },
+  {
+    "question": "What is the result of this code?\n\n```javascript\nasync function asyncFunc() {\n    console.log(\"Start\");\n    await Promise.resolve(\"Resolved\");\n    console.log(\"End\");\n}\nasyncFunc();\nconsole.log(\"After async\");\n```",
+    "answer": "await приостанавливает выполнение функции до тех пор, пока промис не будет разрешен. Но это не блокирует выполнение остального кода.\n**Output:**\n```\nStart\nAfter async\nEnd\n```"
+  },
+  {
+    "question": "What is the result of this code?\n\n```javascript\nconsole.log(\"Script start\");\n\nsetTimeout(function() {\n    console.log(\"setTimeout\");\n}, 0);\n\nPromise.resolve().then(function() {\n    console.log(\"promise1\");\n}).then(function() {\n    console.log(\"promise2\");\n});\nconsole.log(\"Script end\");\n```",
+    "answer": "Выполняется синхронный код (Script start, Script end), затем микрозадачи (promise1, promise2), затем макрозадачи (setTimeout).\n**Output:**\n```\nScript start\nScript end\npromise1\npromise2\nsetTimeout\n```"
+  },
+  {
+    "question": "What is the result of this code?\n\n```javascript\nfunction resolveAfter2Seconds() {\n    return new Promise(resolve => {\n        setTimeout(() => {\n            resolve('resolved');\n        }, 2000);\n    });\n}\n\nasync function asyncCall() {\n    console.log('calling');\n    const result = await resolveAfter2Seconds();\n    console.log(result);\n}\nasyncCall();\n```",
+    "answer": "`asyncCall` возвращает управление сразу после первого `await`, позволяя другому коду выполниться. Результат будет доступен через 2 секунды.\n**Output:**\n```\ncalling\nresolved  // after 2 seconds\n```"
+  },
+  {
+    "question": "What is the result of this code?\n\n```javascript\nconst first = () => (new Promise((resolve, reject) => {\n    console.log(3);\n    let p = new Promise((resolve, reject) => {\n        console.log(7);\n        setTimeout(() => {\n            console.log(5);\n            resolve(6);\n        }, 0);\n        resolve(1);\n    });\n    resolve(2);\n    p.then(arg => console.log(arg));\n}));\n\nfirst().then(arg => console.log(arg));\nconsole.log(4);\n```",
+    "answer": "Сначала выполняется синхронный код (3, 7, 4), затем микрозадачи (1, 2), затем макрозадачи (5). Промис `p` сразу разрешается значением 1.\n**Output:**\n```\n3\n7\n4\n1\n2\n5\n```"
+  },
+  {
+    "question": "What is the result of this code?\n\n```javascript\nconsole.log(\"Start\");\nPromise.resolve().then(() => {\n    console.log(\"Promise 1\");\n    Promise.resolve().then(() => {\n        console.log(\"Promise 2\");\n    });\n});\nconsole.log(\"End\");\n```",
+    "answer": "Сначала выполняется синхронный код (Start, End), затем первая микрозадача (Promise 1), затем вторая микрозадача (Promise 2).\n**Output:**\n```\nStart\nEnd\nPromise 1\nPromise 2\n```\n\n---"
+  },
+  {
+    "question": "What is the result of this code?\n\n```javascript\nPromise.resolve(1)\n    .then(value => value * 2)\n    .then(value => value + 3)\n    .then(value => console.log(value));\n```",
+    "answer": "Цепочка промисов, где результат одного обработчика передается в следующий. 1 * 2 = 2, затем 2 + 3 = 5.\n**Output:**\n```\n5\n```"
+  },
+  {
+    "question": "What is the result of this code?\n\n```javascript\nPromise.resolve()\n    .then(() => {\n        throw new Error(\"Error\");\n    })\n    .catch(err => console.log(err.message));\n```",
+    "answer": "Если в цепочке промисов происходит ошибка, она передается в ближайший блок catch.\n**Output:**\n```\nError\n```"
+  },
+  {
+    "question": "What is the result of this code?\n\n```javascript\nconst promise1 = Promise.resolve('Promise 1');\nconst promise2 = Promise.resolve('Promise 2');\nPromise.all([promise1, promise2]).then(values => console.log(values));\n```",
+    "answer": "`Promise.all` ждет разрешения всех промисов и возвращает массив результатов. Если все промисы успешно разрешены.\n**Output:**\n```\n['Promise 1', 'Promise 2']\n```"
+  },
+  {
+    "question": "What is the result of this code?\n\n```javascript\nasync function test() {\n    const result = await Promise.resolve('Hello');\n    console.log(result);\n}\ntest();\n```",
+    "answer": "`await` ожидает разрешения промиса. В данном случае промис разрешается немедленно значением 'Hello'.\n**Output:**\n```\nHello\n```"
+  },
+  {
+    "question": "What is the result of this code?\n\n```javascript\nasync function foo() {\n    return 'Hello';\n}\nfoo().then(result => console.log(result));\n```",
+    "answer": "Функция, объявленная с `async`, всегда возвращает промис. Даже если возвращаемое значение не является промисом, оно оборачивается в промис.\n**Output:**\n```\nHello\n```"
+  },
+  {
+    "question": "What is the result of this code?\n\n```javascript\nasync function test() {\n    try {\n        const result = await Promise.reject('Error');\n        console.log(result);\n    } catch (error) {\n        console.log(error);\n    }\n}\ntest();\n```",
+    "answer": "Если промис, переданный в `await`, отклоняется, возникает ошибка, которую можно перехватить с помощью `try...catch`.\n**Output:**\n```\nError\n```"
+  },
+  {
+    "question": "What is the result of this code?\n\n```javascript\nconst promise = new Promise((resolve, reject) => {\n    setTimeout(() => resolve(\"Resolved!\"), 1000);\n});\nconsole.log(\"Before await\");\nconsole.log(await promise); // This won't work without async context\nconsole.log(\"After await\");\n```",
+    "answer": "`await` можно использовать только внутри асинхронной функции (`async`).\n**Output:**\n```\nError: Unexpected await outside async function\n```"
+  },
+  {
+    "question": "What is the result of this code?\n\n```javascript\nasync function asyncFunc() {\n    await null;\n    return \"Done\";\n}\nasyncFunc().then(result => console.log(result));\n```",
+    "answer": "`await null` возвращает `null`. `await` также преобразует не-промисы в промисы с этим значением.\n**Output:**\n```\nDone\n```"
+  },
+  {
+    "question": "What is the result of this code?\n\n```javascript\nPromise.race([\n    Promise.resolve('first'),\n    Promise.reject('error'),\n    Promise.resolve('second')\n]).then(result => console.log(result));\n```",
+    "answer": "`Promise.race` возвращает промис, который разрешается или отклоняется с результатом/ошибкой первого завершившегося промиса.\n**Output:**\n```\nfirst\n```"
+  },
+  {
+    "question": "What is the result of this code?\n\n```javascript\nconst p1 = new Promise((resolve) => {\n    setTimeout(() => resolve('first'), 1000);\n});\nconst p2 = new Promise((resolve, reject) => {\n    setTimeout(() => resolve('second'), 0);\n});\nPromise.all([p1, p2]).then(result => console.log(result));\n```",
+    "answer": "`Promise.all` ждет, пока все промисы не будут разрешены. Даже если p2 разрешается быстрее, результат будет доступен только после разрешения p1.\n**Output:**\n```\n['first', 'second']  // after 1 second\n```\n\n---"
+  },
+  {
+    "question": "What is the result of this code?\n\n```javascript\nconst obj = {\n    name: 'John',\n    greet: function() {\n        console.log(this.name);\n    }\n};\nobj.greet();\n```",
+    "answer": "В методе объекта `this` ссылается на сам объект. Поэтому `this.name` возвращает 'John'.\n**Output:**\n```\nJohn\n```"
+  },
+  {
+    "question": "What is the result of this code?\n\n```javascript\nconst obj = {\n    name: 'John',\n    greet: () => {\n        console.log(this.name);\n    }\n};\nobj.greet();\n```",
+    "answer": "У стрелочных функций нет собственного `this`. Они захватывают `this` из окружающего контекста (в данном случае глобальный объект).\n**Output:**\n```\nundefined\n```"
+  },
+  {
+    "question": "What is the result of this code?\n\n```javascript\nfunction Person(name) {\n    this.name = name;\n}\nPerson.prototype.getName = function() {\n    return this.name;\n};\nconst person = new Person('Jane');\nconsole.log(person.getName());\n```",
+    "answer": "Конструктор `Person` создает объект с именем 'Jane'. Метод `getName` в прототипе возвращает `this.name`, где `this` ссылается на экземпляр объекта.\n**Output:**\n```\nJane\n```"
+  },
+  {
+    "question": "What is the result of this code?\n\n```javascript\nconst obj = {\n    name: 'John',\n    friends: ['Jane', 'Bob'],\n    printFriends: function() {\n        this.friends.forEach(function(friend) {\n            console.log(this.name + ' knows ' + friend);\n        });\n    }\n};\nobj.printFriends();\n```",
+    "answer": "Внутри обычной функции `this` теряет связь с объектом и становится `undefined` в строгом режиме или глобальным объектом в нестрогом.\n**Output:**\n```\nundefined knows Jane\nundefined knows Bob\n```"
+  },
+  {
+    "question": "What is the result of this code?\n\n```javascript\nconst obj = {\n    name: 'John',\n    friends: ['Jane', 'Bob'],\n    printFriends: function() {\n        this.friends.forEach((friend) => {\n            console.log(this.name + ' knows ' + friend);\n        });\n    }\n};\nobj.printFriends();\n```",
+    "answer": "Стрелочная функция сохраняет `this` из внешнего контекста, поэтому `this.name` правильно ссылается на 'John'.\n**Output:**\n```\nJohn knows Jane\nJohn knows Bob\n```"
+  },
+  {
+    "question": "What is the result of this code?\n\n```javascript\nconst obj = {\n    a: function() {\n        console.log(this);\n        const b = function() {\n            console.log(this);\n        }\n        b();\n    }\n};\nobj.a();\n```",
+    "answer": "В функции `a()` `this` ссылается на объект `obj`. Внутри функции `b()` `this` равен `undefined` в строгом режиме или глобальному объекту в нестрогом.\n**Output:**\n```\n{ a: [Function: a] }\nundefined  // or global object in non-strict mode\n```"
+  },
+  {
+    "question": "What is the result of this code?\n\n```javascript\nfunction foo() {\n    console.log(this);\n}\nconst obj = { method: foo };\nfoo();\nobj.method();\n```",
+    "answer": "При прямом вызове `foo()` `this` равен `undefined` в строгом режиме. При вызове как метода `obj.method()` `this` ссылается на `obj`.\n**Output:**\n```\nundefined  // strict mode\n{ method: [Function: foo] }\n```"
+  },
+  {
+    "question": "What is the result of this code?\n\n```javascript\nconst obj = {\n    name: 'John',\n    log: function() {\n        console.log(this.name);\n        function inner() {\n            console.log(this.name);\n        }\n        inner();\n    }\n};\nobj.log();\n```",
+    "answer": "Внешняя функция правильно использует `this.name` ('John'), но внутренняя функция теряет контекст, и `this` не содержит свойства `name`.\n**Output:**\n```\nJohn\nundefined  // strict mode, or global object in non-strict mode\n```"
+  },
+  {
+    "question": "What is the result of this code?\n\n```javascript\nconst obj = {\n    name: 'John',\n    getName: function() {\n        return this.name;\n    }\n};\nconst getName = obj.getName;\nconsole.log(getName());\nconsole.log(obj.getName());\n```",
+    "answer": "При присваивании метода переменной теряется связь с объектом. При вызове `getName()` `this` не ссылается на `obj`.\n**Output:**\n```\nundefined\nJohn\n```"
+  },
+  {
+    "question": "What is the result of this code?\n\n```javascript\nfunction Person(name) {\n    this.name = name;\n    setTimeout(function() {\n        console.log(this.name);\n    }, 0);\n}\nnew Person('John');\n```",
+    "answer": "Функция в `setTimeout` не сохраняет контекст `this` конструктора. В строгом режиме `this` будет `undefined`.\n**Output:**\n```\nundefined  // or global object in non-strict mode\n```\n\n---"
+  },
+  {
+    "question": "What is the result of this code?\n\n```javascript\nclass Person {\n    constructor(name) {\n        this.name = name;\n    }\n    greet() {\n        return `Hello, I'm ${this.name}`;\n    }\n}\nconst person = new Person('John');\nconsole.log(person.greet());\n```",
+    "answer": "ES6 классы работают похоже на функции-конструкторы, но с более чистым синтаксисом. `constructor` вызывается при создании экземпляра.\n**Output:**\n```\nHello, I'm John\n```"
+  },
+  {
+    "question": "What is the result of this code?\n\n```javascript\nclass Animal {\n    constructor(name) {\n        this.name = name;\n    }\n}\nclass Dog extends Animal {\n    constructor(name, breed) {\n        super(name);\n        this.breed = breed;\n    }\n    getInfo() {\n        return `${this.name} is a ${this.breed}`;\n    }\n}\nconst dog = new Dog('Buddy', 'Golden Retriever');\nconsole.log(dog.getInfo());\n```",
+    "answer": "Класс `Dog` наследует от `Animal` через `extends`. `super()` вызывает конструктор родительского класса.\n**Output:**\n```\nBuddy is a Golden Retriever\n```"
+  },
+  {
+    "question": "What is the result of this code?\n\n```javascript\nclass Rectangle {\n    constructor(width, height) {\n        this.width = width;\n        this.height = height;\n    }\n    get area() {\n        return this.width * this.height;\n    }\n}\nconst rect = new Rectangle(5, 10);\nconsole.log(rect.area);\n```",
+    "answer": "Геттер (`get`) позволяет обращаться к вычисляемому свойству как к обычному свойству, без круглых скобок.\n**Output:**\n```\n50\n```"
+  },
+  {
+    "question": "What is the result of this code?\n\n```javascript\nclass Shape {\n    static createCircle(radius) {\n        return new Shape('circle', radius);\n    }\n    constructor(type, size) {\n        this.type = type;\n        this.size = size;\n    }\n    static get PI() {\n        return 3.14159;\n    }\n}\nconsole.log(Shape.PI);\nconst circle = Shape.createCircle(5);\nconsole.log(circle.type);\n```",
+    "answer": "Статические методы и свойства принадлежат классу, а не экземплярам. Они вызываются на классе, а не на экземплярах.\n**Output:**\n```\n3.14159\ncircle\n```"
+  },
+  {
+    "question": "What is the result of this code?\n\n```javascript\nclass Vehicle {\n    constructor(brand) {\n        this.brand = brand;\n    }\n    start() {\n        return `${this.brand} vehicle started`;\n    }\n}\nclass Car extends Vehicle {\n    start() {\n        return super.start() + ' and car is ready';\n    }\n}\nconst car = new Car('Toyota');\nconsole.log(car.start());\n```",
+    "answer": "Метод `start` в классе `Car` переопределяет метод родительского класса. `super.start()` вызывает родительскую реализацию.\n**Output:**\n```\nToyota vehicle started and car is ready\n```"
+  },
+  {
+    "question": "What is the result of this code?\n\n```javascript\nclass Parent {\n    constructor() {\n        this.name = 'parent';\n    }\n    static staticMethod() {\n        return 'static';\n    }\n}\nclass Child extends Parent {\n    constructor() {\n        super();\n        this.name = 'child';\n    }\n}\nconsole.log(Child.staticMethod());\nconst child = new Child();\nconsole.log(child.name);\n```",
+    "answer": "Статические методы наследуются дочерними классами. `super()` вызывает конструктор родительского класса.\n**Output:**\n```\nstatic\nchild\n```"
+  },
+  {
+    "question": "What is the result of this code?\n\n```javascript\nclass MyClass {\n    #privateField = 'private';\n    getPrivateField() {\n        return this.#privateField;\n    }\n}\nconst instance = new MyClass();\nconsole.log(instance.getPrivateField());\n// console.log(instance.#privateField); // This would cause an error\n```",
+    "answer": "Поля, начинающиеся с `#`, являются приватными и доступны только внутри класса.\n**Output:**\n```\nprivate\n```"
+  },
+  {
+    "question": "What is the result of this code?\n\n```javascript\nfunction createClass() {\n    return class {\n        constructor(value) {\n            this.value = value;\n        }\n        getValue() {\n            return this.value;\n        }\n    };\n}\nconst DynamicClass = createClass();\nconst instance = new DynamicClass('Hello');\nconsole.log(instance.getValue());\n```",
+    "answer": "Классы могут быть анонимными и динамически создаваться внутри функций, как и функции-конструкторы.\n**Output:**\n```\nHello\n```"
+  },
+  {
+    "question": "What is the result of this code?\n\n```javascript\nclass A {\n    constructor() {\n        this.x = 1;\n    }\n}\nclass B extends A {\n    constructor() {\n        super();\n        this.y = 2;\n    }\n}\nconst b = new B();\nconsole.log(b instanceof A);\nconsole.log(b instanceof B);\n```",
+    "answer": "Оператор `instanceof` проверяет, был ли объект создан с использованием указанного конструктора. Экземпляр дочернего класса также является экземпляром родительского.\n**Output:**\n```\ntrue\ntrue\n```"
+  },
+  {
+    "question": "What is the result of this code?\n\n```javascript\nclass MyClass {\n    constructor() {\n        this.prop = 'value';\n    }\n    method() {\n        return this.prop;\n    }\n}\nMyClass.prototype.newMethod = function() {\n    return 'new method';\n};\nconst instance = new MyClass();\nconsole.log(instance.newMethod());\n```",
+    "answer": "Классы по сути являются функциями, и с их прототипами можно работать так же, как с функциями-конструкторами.\n**Output:**\n```\nnew method\n```\n\n---"
+  },
+  {
+    "question": "What is the result of this code?\n\n```javascript\nconst numbers = [1, 2, 3, 4, 5];\nconst doubled = numbers.map(num => num * 2);\nconsole.log(doubled);\n```",
+    "answer": "`map()` — это метод высшего порядка, который принимает функцию и применяет её к каждому элементу массива, создавая новый массив.\n**Output:**\n```\n[2, 4, 6, 8, 10]\n```"
+  },
+  {
+    "question": "What is the result of this code?\n\n```javascript\nconst numbers = [1, 2, 3, 4, 5, 6];\nconst evens = numbers.filter(num => num % 2 === 0);\nconsole.log(evens);\n```",
+    "answer": "`filter()` — это метод высшего порядка, который создает новый массив с элементами, прошедшими проверку, заданную в функции.\n**Output:**\n```\n[2, 4, 6]\n```"
+  },
+  {
+    "question": "What is the result of this code?\n\n```javascript\nconst numbers = [1, 2, 3, 4, 5];\nconst sum = numbers.reduce((acc, num) => acc + num, 0);\nconsole.log(sum);\n```",
+    "answer": "`reduce()` — это метод высшего порядка, который применяет функцию к аккумулятору и каждому значению массива, сводя его к одному значению.\n**Output:**\n```\n15\n```"
+  },
+  {
+    "question": "What is the result of this code?\n\n```javascript\nconst words = ['Hello', 'world'];\nconst sentence = words.reduce((acc, word) => acc + ' ' + word);\nconsole.log(sentence);\n```",
+    "answer": "`reduce()` без начального значения использует первый элемент в качестве начального аккумулятора, затем обрабатывает остальные элементы.\n**Output:**\n```\nHello world\n```"
+  },
+  {
+    "question": "What is the result of this code?\n\n```javascript\nconst data = [1, 2, 3, 4, 5];\nconst result = data\n    .filter(x => x % 2 === 1)\n    .map(x => x * x)\n    .reduce((acc, x) => acc + x, 0);\nconsole.log(result);\n```",
+    "answer": "Цепочка методов высшего порядка: сначала фильтруем нечетные числа (1, 3, 5), затем возводим их в квадрат (1, 9, 25), затем суммируем (35).\n**Output:**\n```\n35  // 1^2 + 3^2 + 5^2 = 1 + 9 + 25 = 35\n```"
+  },
+  {
+    "question": "What is the result of this code?\n\n```javascript\nconst nums = [1, 2, 3];\nconst result = nums.forEach(num => num * 2);\nconsole.log(result);\n```",
+    "answer": "`forEach()` не возвращает новый массив, а возвращает `undefined`. Он просто выполняет функцию для каждого элемента.\n**Output:**\n```\nundefined\n```"
+  },
+  {
+    "question": "What is the result of this code?\n\n```javascript\nconst animals = [\n    { name: 'Fluffykins', species: 'cat' },\n    { name: 'Caro', species: 'dog' }\n];\nconst names = animals.map(animal => animal.name);\nconsole.log(names);\n```",
+    "answer": "Используем `map()` для извлечения определенного свойства из каждого объекта массива.\n**Output:**\n```\n['Fluffykins', 'Caro']\n```"
+  },
+  {
+    "question": "What is the result of this code?\n\n```javascript\nconst isDog = (animal) => animal.species === 'dog';\nconst animals = [\n    { name: 'Fluffykins', species: 'cat' },\n    { name: 'Caro', species: 'dog' }\n];\nconst dogs = animals.filter(isDog);\nconsole.log(dogs);\n```",
+    "answer": "Функция `isDog` передается в `filter()` как аргумент. Функция высшего порядка принимает другую функцию в качестве параметра.\n**Output:**\n```\n[{ name: 'Caro', species: 'dog' }]\n```"
+  },
+  {
+    "question": "What is the result of this code?\n\n```javascript\nconst orders = [\n    { amount: 250 },\n    { amount: 400 },\n    { amount: 100 },\n    { amount: 325 }\n];\nconst totalAmount = orders\n    .map(order => order.amount)\n    .reduce((sum, amount) => sum + amount, 0);\nconsole.log(totalAmount);\n```",
+    "answer": "Сначала извлекаем все суммы, затем складываем их. Комбинация методов высшего порядка для сложных преобразований данных.\n**Output:**\n```\n1075\n```"
+  },
+  {
+    "question": "What is the result of this code?\n\n```javascript\nconst people = [\n    { name: 'Alice', age: 25 },\n    { name: 'Bob', age: 30 },\n    { name: 'Charlie', age: 35 }\n];\nconst names = people\n    .filter(person => person.age > 27)\n    .map(person => person.name);\nconsole.log(names);\n```",
+    "answer": "Фильтруем людей старше 27 лет, затем извлекаем их имена. Показывает, как можно комбинировать методы высшего порядка.\n**Output:**\n```\n['Bob', 'Charlie']\n```\n\n---"
+  },
+  {
+    "question": "What is the result of this code?\n\n```javascript\nconst person = { name: 'John', age: 30, city: 'New York' };\nconst { name, age } = person;\nconsole.log(name, age);\n```",
+    "answer": "Деструктуризация объекта позволяет извлекать свойства в переменные с тем же именем. Это более краткий способ получения значений из объекта.\n**Output:**\n```\nJohn 30\n```"
+  },
+  {
+    "question": "What is the result of this code?\n\n```javascript\nconst arr = [1, 2, 3];\nconst [a, b, c] = arr;\nconsole.log(a, b, c);\n```",
+    "answer": "Деструктуризация массива позволяет присваивать элементы массива переменным по позиции.\n**Output:**\n```\n1 2 3\n```"
+  },
+  {
+    "question": "What is the result of this code?\n\n```javascript\nconst person = { name: 'John', address: { city: 'New York', country: 'USA' } };\nconst { address: { city } } = person;\nconsole.log(city);\n```",
+    "answer": "Деструктуризация вложенных объектов позволяет извлекать вложенные свойства. `address: { city }` означает \"извлеки свойство address, затем из него извлеки city\".\n**Output:**\n```\nNew York\n```"
+  },
+  {
+    "question": "What is the result of this code?\n\n```javascript\nconst arr = [1, 2, 3, 4, 5];\nconst [first, , third, ...rest] = arr;\nconsole.log(first, third, rest);\n```",
+    "answer": "Пропуск элемента через пустую запятую (,), оператор остатка `...rest` собирает оставшиеся элементы в массив.\n**Output:**\n```\n1 3 [4, 5]\n```"
+  },
+  {
+    "question": "What is the result of this code?\n\n```javascript\nfunction displayUser({ name, age = 18 }) {\n    console.log(`Name: ${name}, Age: ${age}`);\n}\ndisplayUser({ name: 'John' });\n```",
+    "answer": "Деструктуризация параметров функции позволяет извлекать свойства переданного объекта. Параметр по умолчанию используется, если свойство отсутствует.\n**Output:**\n```\nName: John, Age: 18\n```"
+  },
+  {
+    "question": "What is the result of this code?\n\n```javascript\nconst user = { name: 'John', age: 30, location: 'New York' };\nconst { name, ...rest } = user;\nconsole.log(name);\nconsole.log(rest);\n```",
+    "answer": "Оператор остатка `...rest` собирает все остальные свойства в новый объект, кроме тех, что уже были деструктурированы.\n**Output:**\n```\nJohn\n{ age: 30, location: 'New York' }\n```"
+  },
+  {
+    "question": "What is the result of this code?\n\n```javascript\nconst data = [1, [2, 3], 4];\nconst [a, [b, c], d] = data;\nconsole.log(a, b, c, d);\n```",
+    "answer": "Деструктуризация вложенных массивов позволяет извлекать элементы из вложенных массивов.\n**Output:**\n```\n1 2 3 4\n```"
+  },
+  {
+    "question": "What is the result of this code?\n\n```javascript\nlet a = 1, b = 2;\n[a, b] = [b, a];\nconsole.log(a, b);\n```",
+    "answer": "Использование деструктуризации массива для обмена значений переменных без временной переменной.\n**Output:**\n```\n2 1\n```"
+  },
+  {
+    "question": "What is the result of this code?\n\n```javascript\nconst obj = { a: 1, b: 2 };\nconst { a: x, b: y } = obj;\nconsole.log(x, y);\n```",
+    "answer": "Синтаксис `a: x` означает \"извлеки свойство a и присвой его переменной x\". Позволяет присваивать переменным другое имя.\n**Output:**\n```\n1 2\n```"
+  },
+  {
+    "question": "What is the result of this code?\n\n```javascript\nconst user = { name: 'John', details: { age: 30, city: 'New York' } };\nconst { details: { age, city: location } } = user;\nconsole.log(age, location);\n```",
+    "answer": "Комбинированная деструктуризация: извлекаем вложенные свойства и переименовываем одно из них.\n**Output:**\n```\n30 New York\n```\n\n---"
+  },
+  {
+    "question": "What is the result of this code?\n\n```javascript\nconst arr1 = [1, 2, 3];\nconst arr2 = [4, 5, 6];\nconst combined = [...arr1, ...arr2];\nconsole.log(combined);\n```",
+    "answer": "Оператор spread (`...`) раскрывает элементы массива, позволяя объединять массивы или передавать элементы как отдельные аргументы.\n**Output:**\n```\n[1, 2, 3, 4, 5, 6]\n```"
+  },
+  {
+    "question": "What is the result of this code?\n\n```javascript\nconst original = { a: 1, b: 2 };\nconst copied = { ...original, c: 3 };\nconsole.log(copied);\n```",
+    "answer": "Оператор spread для объектов создает поверхностную копию, позволяет добавлять новые свойства или переопределять существующие.\n**Output:**\n```\n{ a: 1, b: 2, c: 3 }\n```"
+  },
+  {
+    "question": "What is the result of this code?\n\n```javascript\nfunction sum(...numbers) {\n    return numbers.reduce((acc, num) => acc + num, 0);\n}\nconsole.log(sum(1, 2, 3, 4));\n```",
+    "answer": "Оператор rest (`...numbers`) собирает все аргументы в массив, когда количество аргументов неизвестно заранее.\n**Output:**\n```\n10\n```"
+  },
+  {
+    "question": "What is the result of this code?\n\n```javascript\nconst str = \"hello\";\nconst chars = [...str];\nconsole.log(chars);\n```",
+    "answer": "Строки являются итерируемыми, поэтому оператор spread может разбить строку на массив символов.\n**Output:**\n```\n['h', 'e', 'l', 'l', 'o']\n```"
+  },
+  {
+    "question": "What is the result of this code?\n\n```javascript\nconst obj1 = { a: 1, b: 2 };\nconst obj2 = { b: 3, c: 4 };\nconst merged = { ...obj1, ...obj2 };\nconsole.log(merged);\n```",
+    "answer": "При объединении объектов с одинаковыми ключами последние значения перезаписывают предыдущие.\n**Output:**\n```\n{ a: 1, b: 3, c: 4 }\n```"
+  },
+  {
+    "question": "What is the result of this code?\n\n```javascript\nconst arr = [1, 2, 3];\nconst [first, ...rest] = arr;\nconsole.log(first, rest);\n```",
+    "answer": "В деструктуризации массива оператор rest собирает оставшиеся элементы в новый массив.\n**Output:**\n```\n1 [2, 3]\n```"
+  },
+  {
+    "question": "What is the result of this code?\n\n```javascript\nfunction logParams(first, ...others) {\n    console.log(first, others);\n}\nlogParams('a', 'b', 'c', 'd');\n```",
+    "answer": "Оператор rest в параметрах функции позволяет принимать переменное количество аргументов после определенных параметров.\n**Output:**\n```\na ['b', 'c', 'd']\n```"
+  },
+  {
+    "question": "What is the result of this code?\n\n```javascript\nconst arr1 = [1, 2];\nconst arr2 = [3, 4];\nconst result = [0, ...arr1, ...arr2, 5];\nconsole.log(result);\n```",
+    "answer": "Spread-оператор позволяет вставлять содержимое массивов в другую структуру, создавая новый массив.\n**Output:**\n```\n[0, 1, 2, 3, 4, 5]\n```"
+  },
+  {
+    "question": "What is the result of this code?\n\n```javascript\nconst original = [1, 2, 3];\nconst duplicate = [...original];\nduplicate.push(4);\nconsole.log(original);\nconsole.log(duplicate);\n```",
+    "answer": "Spread-оператор создает поверхностную копию массива. Изменения в копии не влияют на оригинальный массив.\n**Output:**\n```\n[1, 2, 3]\n[1, 2, 3, 4]\n```"
+  },
+  {
+    "question": "What is the result of this code?\n\n```javascript\nconst params = ['a', 'b', 'c'];\nconst result = params.join('-');\nconst [first, ...rest] = result.split('-');\nconsole.log(first, rest);\n```",
+    "answer": "Комбинация методов строк и деструктуризации массива. `split('-')` создает массив, который затем деструктурируется.\n**Output:**\n```\na ['b', 'c']\n```\n\n---"
+  },
+  {
+    "question": "What is the result of this code?\n\n```javascript\nconst template = `Hello, ${'World'}!`;\nconsole.log(template);\n```",
+    "answer": "Шаблонные строки (template literals) позволяют вставлять выражения внутрь строк с помощью `${expression}`.\n**Output:**\n```\nHello, World!\n```"
+  },
+  {
+    "question": "What is the result of this code?\n\n```javascript\nconst obj = { x: 1, y: 2 };\nconst { x, y } = obj;\nconst newObject = { x, y };\nconsole.log(newObject);\n```",
+    "answer": "Сокращенная нотация свойств объекта позволяет использовать переменные как свойства с тем же именем.\n**Output:**\n```\n{ x: 1, y: 2 }\n```"
+  },
+  {
+    "question": "What is the result of this code?\n\n```javascript\nconst greet = (name = 'Anonymous') => `Hello, ${name}!`;\nconsole.log(greet());\nconsole.log(greet('John'));\n```",
+    "answer": "Параметры по умолчанию позволяют задавать значения для параметров, если они не переданы при вызове функции.\n**Output:**\n```\nHello, Anonymous!\nHello, John!\n```"
+  },
+  {
+    "question": "What is the result of this code?\n\n```javascript\nconst numbers = [1, 2, 3, 4, 5];\nconst [first, , third, ...remaining] = numbers;\nconsole.log(first, third, remaining);\n```",
+    "answer": "Смешанное использование деструктуризации, пропуска элементов и оператора rest для извлечения нужных значений.\n**Output:**\n```\n1 3 [4, 5]\n```"
+  },
+  {
+    "question": "What is the result of this code?\n\n```javascript\nconst person = { name: 'John', age: 30 };\nconst updatedPerson = { ...person, age: 31, city: 'New York' };\nconsole.log(updatedPerson);\n```",
+    "answer": "Spread-оператор для объектов позволяет создавать новые объекты, изменяя или добавляя свойства.\n**Output:**\n```\n{ name: 'John', age: 31, city: 'New York' }\n```"
+  },
+  {
+    "question": "What is the result of this code?\n\n```javascript\nconst map = new Map();\nmap.set('name', 'John');\nmap.set('age', 30);\nconsole.log(map.get('name'));\nconsole.log(map.has('age'));\n```",
+    "answer": "Map - это коллекция пар ключ-значение, где ключом может быть любой тип данных, а не только строка.\n**Output:**\n```\nJohn\ntrue\n```"
+  },
+  {
+    "question": "What is the result of this code?\n\n```javascript\nconst set = new Set([1, 2, 3, 2, 1]);\nconsole.log(set.size);\nconsole.log([...set]);\n```",
+    "answer": "Set - это коллекция уникальных значений. Дубликаты автоматически удаляются.\n**Output:**\n```\n3\n[1, 2, 3]\n```"
+  },
+  {
+    "question": "What is the result of this code?\n\n```javascript\nconst weakMap = new WeakMap();\nconst obj = {};\nweakMap.set(obj, 'value');\nconsole.log(weakMap.has(obj));\n```",
+    "answer": "WeakMap - это Map, который позволяет использовать только объекты в качестве ключей и не препятствует сборке мусора.\n**Output:**\n```\ntrue\n```"
+  },
+  {
+    "question": "What is the result of this code?\n\n```javascript\nconst weakSet = new WeakSet();\nconst obj1 = {};\nconst obj2 = {};\nweakSet.add(obj1);\nweakSet.add(obj2);\nconsole.log(weakSet.has(obj1));\n```",
+    "answer": "WeakSet - это Set, который позволяет использовать только объекты и также не препятствует сборке мусора.\n**Output:**\n```\ntrue\n```"
+  },
+  {
+    "question": "What is the result of this code?\n\n```javascript\nconst sym1 = Symbol('description');\nconst sym2 = Symbol('description');\nconsole.log(sym1 === sym2);\nconsole.log(typeof sym1);\n```",
+    "answer": "Symbol - это примитивный тип данных, каждый символ уникален, даже если у них одинаковое описание.\n**Output:**\n```\nfalse\nsymbol\n```\n\n---"
+  },
+  {
+    "question": "What is the result of this code?\n\n```javascript\ntry {\n    throw new Error(\"Something went wrong\");\n} catch (err) {\n    console.log(err.message);\n}\n```",
+    "answer": "Блок `try...catch` позволяет перехватывать и обрабатывать ошибки, которые могут возникнуть в коде.\n**Output:**\n```\nSomething went wrong\n```"
+  },
+  {
+    "question": "What is the result of this code?\n\n```javascript\ntry {\n    console.log(\"Before error\");\n    throw \"String error\";\n    console.log(\"After error\");\n} catch (err) {\n    console.log(\"Caught:\", err);\n}\n```",
+    "answer": "В `catch` можно получить любое значение, а не только объекты ошибок. Код после `throw` не выполняется.\n**Output:**\n```\nBefore error\nCaught: String error\n```"
+  },
+  {
+    "question": "What is the result of this code?\n\n```javascript\ntry {\n    console.log(\"Try block\");\n} catch (err) {\n    console.log(\"Catch block\");\n} finally {\n    console.log(\"Finally block\");\n}\nconsole.log(\"After try-catch-finally\");\n```",
+    "answer": "Блок `finally` выполняется всегда, независимо от того, была ли ошибка или нет.\n**Output:**\n```\nTry block\nFinally block\nAfter try-catch-finally\n```"
+  },
+  {
+    "question": "What is the result of this code?\n\n```javascript\nfunction divide(a, b) {\n    if (b === 0) {\n        throw new Error(\"Division by zero\");\n    }\n    return a / b;\n}\ntry {\n    console.log(divide(10, 0));\n} catch (err) {\n    console.log(err.message);\n}\n```",
+    "answer": "Функция выбрасывает ошибку при попытке деления на ноль. Ошибка перехватывается в блоке `catch`.\n**Output:**\n```\nDivision by zero\n```"
+  },
+  {
+    "question": "What is the result of this code?\n\n```javascript\nconst promise = new Promise((resolve, reject) => {\n    reject(new Error(\"Promise error\"));\n});\npromise.catch(err => console.log(err.message));\n```",
+    "answer": "Ошибки в промисах перехватываются с помощью метода `.catch()`.\n**Output:**\n```\nPromise error\n```"
+  },
+  {
+    "question": "What is the result of this code?\n\n```javascript\nasync function asyncError() {\n    try {\n        await Promise.reject(new Error(\"Async error\"));\n    } catch (err) {\n        console.log(err.message);\n    }\n}\nasyncError();\n```",
+    "answer": "В асинхронных функциях ошибки можно перехватывать с помощью `try...catch` вместе с `await`.\n**Output:**\n```\nAsync error\n```"
+  },
+  {
+    "question": "What is the result of this code?\n\n```javascript\ntry {\n    JSON.parse(\"invalid json\");\n} catch (err) {\n    console.log(err.name);\n    console.log(err instanceof SyntaxError);\n}\n```",
+    "answer": "`JSON.parse()` выбрасывает ошибку SyntaxError при попытке разобрать некорректный JSON.\n**Output:**\n```\nSyntaxError\ntrue\n```"
+  },
+  {
+    "question": "What is the result of this code?\n\n```javascript\nconst obj = { name: \"Test\" };\ntry {\n    Object.freeze(obj);\n    obj.name = \"Changed\";\n    console.log(obj.name);\n} catch (err) {\n    console.log(\"Error:\", err.message);\n}\n```",
+    "answer": "В строгом режиме при попытке изменить замороженный объект будет ошибка. В нестрогом режиме изменения просто игнорируются.\n**Output:**\n```\nTest  // In non-strict mode, no error and property doesn't change\n```"
+  },
+  {
+    "question": "What is the result of this code?\n\n```javascript\ntry {\n    undeclaredVar = \"value\";\n} catch (err) {\n    console.log(\"Error:\", err.message);\n} finally {\n    console.log(\"Value:\", typeof undeclaredVar !== 'undefined' ? undeclaredVar : \"not defined\");\n}\n```",
+    "answer": "Присваивание необъявленной переменной создает глобальную переменную.\n**Output:**\n```\nValue: value  // This creates a global variable\n```"
+  },
+  {
+    "question": "What is the result of this code?\n\n```javascript\nfunction* generator() {\n    try {\n        yield 1;\n        yield 2;\n    } finally {\n        console.log(\"Generator cleanup\");\n    }\n}\nconst gen = generator();\nconsole.log(gen.next().value);\nconsole.log(gen.next().value);\ngen.return();  // This will trigger the finally block\n```",
+    "answer": "Блок `finally` в генераторе выполняется при завершении генератора с помощью `return()`.\n**Output:**\n```\n1\n2\nGenerator cleanup\n```\n\n---"
+  },
+  {
+    "question": "What is the result of this code?\n\n```javascript\nconst person = {\n    name: 'John',\n    greet: function() {\n        return `Hello, ${this.name}`;\n    }\n};\nconst anotherPerson = { name: 'Jane' };\nconsole.log(person.greet.call(anotherPerson));\n```",
+    "answer": "Метод `call()` вызывает функцию с указанным значением `this` и отдельными аргументами.\n**Output:**\n```\nHello, Jane\n```"
+  },
+  {
+    "question": "What is the result of this code?\n\n```javascript\nconst person = {\n    name: 'John',\n    greet: function(greeting, punctuation) {\n        return `${greeting}, ${this.name}${punctuation}`;\n    }\n};\nconst boundGreet = person.greet.bind({ name: 'Bob' }, 'Hi');\nconsole.log(boundGreet('!'));\n```",
+    "answer": "Метод `bind()` создает новую функцию с привязанным значением `this` и частично примененными аргументами.\n**Output:**\n```\nHi, Bob!\n```"
+  },
+  {
+    "question": "What is the result of this code?\n\n```javascript\nfunction greet() {\n    console.log(`Hello, ${this.name}`);\n}\nconst obj = { name: 'Alice' };\ngreet.call(obj);\ngreet.apply(obj);\n```",
+    "answer": "`call()` и `apply()` работают одинаково, но `apply()` принимает аргументы в виде массива.\n**Output:**\n```\nHello, Alice\nHello, Alice\n```"
+  },
+  {
+    "question": "What is the result of this code?\n\n```javascript\nfunction multiply(a, b) {\n    return a * b * this.factor;\n}\nconst obj = { factor: 5 };\nconsole.log(multiply.call(obj, 2, 3));\nconsole.log(multiply.apply(obj, [2, 3]));\n```",
+    "answer": "`call()` принимает аргументы отдельно, `apply()` принимает аргументы в массиве. Оба устанавливают `this`.\n**Output:**\n```\n30\n30\n```"
+  },
+  {
+    "question": "What is the result of this code?\n\n```javascript\nfunction add(a, b, c) {\n    return a + b + c + this.base;\n}\nconst boundAdd = add.bind({ base: 10 });\n// This won't work as expected because 'this' will be undefined\nconsole.log(boundAdd(1, 2, 3));\n```",
+    "answer": "В строгом режиме `this` будет `undefined` внутри привязанной функции, если не указан объект.\n**Output:**\n```\nNaN  // (1 + 2 + 3 + undefined)\n```"
+  },
+  {
+    "question": "What is the result of this code?\n\n```javascript\nconst obj1 = { name: 'Obj1', value: 10 };\nconst obj2 = { name: 'Obj2', value: 20 };\nfunction display() {\n    return `${this.name}: ${this.value}`;\n}\nconsole.log(display.call(obj1));\nconsole.log(display.apply(obj2));\n```",
+    "answer": "Изменение контекста `this` с помощью `call()` и `apply()` позволяет использовать одну функцию с разными объектами.\n**Output:**\n```\nObj1: 10\nObj2: 20\n```"
+  },
+  {
+    "question": "What is the result of this code?\n\n```javascript\nfunction Product(name, price) {\n    this.name = name;\n    this.price = price;\n}\nfunction Food(name, price) {\n    Product.call(this, name, price);\n    this.category = 'food';\n}\nconst cheese = new Food('feta', 5);\nconsole.log(cheese.name, cheese.price, cheese.category);\n```",
+    "answer": "`call()` используется для вызова конструктора родительского класса с текущим контекстом `this`.\n**Output:**\n```\nfeta 5 food\n```"
+  },
+  {
+    "question": "What is the result of this code?\n\n```javascript\nconst numbers = [1, 2, 3, 4, 5];\nconst max = Math.max.apply(null, numbers);\nconst min = Math.min.apply(null, numbers);\nconsole.log(max, min);\n```",
+    "answer": "`apply()` позволяет передать массив в качестве аргументов функции, которая ожидает отдельные значения.\n**Output:**\n```\n5 1\n```"
+  },
+  {
+    "question": "What is the result of this code?\n\n```javascript\nconst obj = { name: 'Test' };\nfunction introduce(age) {\n    return `I'm ${this.name} and I'm ${age} years old`;\n}\nconst boundIntroduce = introduce.bind(obj);\nconsole.log(boundIntroduce(25));\n```",
+    "answer": "`bind()` создает новую функцию с привязанным `this`, которая может быть вызвана позже.\n**Output:**\n```\nI'm Test and I'm 25 years old\n```"
+  },
+  {
+    "question": "What is the result of this code?\n\n```javascript\nconst obj = { multiplier: 3 };\nfunction calculate(a, b) {\n    return (a + b) * this.multiplier;\n}\nconst result1 = calculate.call(obj, 2, 4);\nconst result2 = calculate.apply(obj, [2, 4]);\nconsole.log(result1, result2);\n```",
+    "answer": "`call()` и `apply()` позволяют установить контекст `this` и передать аргументы в функцию.\n**Output:**\n```\n18 18\n```\n\n---"
+  },
+  {
+    "question": "What is the result of this code?\n\n```javascript\nfunction Animal(name) {\n    this.name = name;\n}\nAnimal.prototype.speak = function() {\n    return `${this.name} makes a noise.`;\n};\nconst dog = new Animal('Dog');\nconsole.log(dog.speak());\n```",
+    "answer": "Прототипное наследование позволяет объектам наследовать свойства и методы от прототипа конструктора.\n**Output:**\n```\nDog makes a noise.\n```"
+  },
+  {
+    "question": "What is the result of this code?\n\n```javascript\nfunction Animal(name) {\n    this.name = name;\n}\nAnimal.prototype.speak = function() {\n    return `${this.name} makes a noise.`;\n};\nfunction Dog(name) {\n    Animal.call(this, name);\n}\nDog.prototype = Object.create(Animal.prototype);\nDog.prototype.constructor = Dog;\nDog.prototype.speak = function() {\n    return `${this.name} barks.`;\n};\nconst dog = new Dog('Rex');\nconsole.log(dog.speak());\n```",
+    "answer": "Наследование от другого конструктора с переопределением метода. `Object.create()` создает новый объект с указанным прототипом.\n**Output:**\n```\nRex barks.\n```"
+  },
+  {
+    "question": "What is the result of this code?\n\n```javascript\nconst animal = {\n    name: 'Animal',\n    getName: function() {\n        return this.name;\n    }\n};\nconst dog = Object.create(animal);\ndog.name = 'Dog';\nconsole.log(dog.getName());\n```",
+    "answer": "`Object.create()` создает новый объект, используя существующий объект в качестве прототипа нового объекта.\n**Output:**\n```\nDog\n```"
+  },
+  {
+    "question": "What is the result of this code?\n\n```javascript\nfunction Parent() {\n    this.name = 'Parent';\n}\nParent.prototype.getName = function() {\n    return this.name;\n};\nfunction Child() {\n    Parent.call(this);\n    this.name = 'Child';\n}\nChild.prototype = Object.create(Parent.prototype);\nChild.prototype.constructor = Child;\nconst child = new Child();\nconsole.log(child.getName());\nconsole.log(child instanceof Child);\nconsole.log(child instanceof Parent);\n```",
+    "answer": "Правильная реализация наследования с использованием `Object.create()` для прототипа.\n**Output:**\n```\nChild\ntrue\ntrue\n```"
+  },
+  {
+    "question": "What is the result of this code?\n\n```javascript\nconst parent = {\n    value: 10\n};\nconst child = Object.create(parent);\nchild.value = 20;\nconsole.log(parent.value);\nconsole.log(child.value);\n```",
+    "answer": "При присваивании значения свойства в наследуемом объекте создается собственное свойство, не изменяя родительское.\n**Output:**\n```\n10\n20\n```"
+  },
+  {
+    "question": "What is the result of this code?\n\n```javascript\nfunction Vehicle() {}\nVehicle.prototype.type = 'Generic Vehicle';\nVehicle.prototype.start = function() {\n    return 'Vehicle started';\n};\nfunction Car() {}\nCar.prototype = Object.create(Vehicle.prototype);\nCar.prototype.constructor = Car;\nCar.prototype.type = 'Car';\nconst car = new Car();\nconsole.log(car.type);\nconsole.log(car.start());\n```",
+    "answer": "Наследование прототипа позволяет дочернему классу использовать методы родительского класса, а также переопределять свойства.\n**Output:**\n```\nCar\nVehicle started\n```"
+  },
+  {
+    "question": "What is the result of this code?\n\n```javascript\nconst obj1 = { a: 1 };\nconst obj2 = Object.create(obj1);\nobj2.b = 2;\nconst obj3 = Object.create(obj2);\nobj3.c = 3;\nconsole.log(obj3.a, obj3.b, obj3.c);\nconsole.log(obj3.hasOwnProperty('a'), obj3.hasOwnProperty('b'), obj3.hasOwnProperty('c'));\n```",
+    "answer": "Проверка принадлежности свойств к объекту с помощью `hasOwnProperty()`. Свойства могут наследоваться по цепочке прототипов.\n**Output:**\n```\n1 2 3\nfalse false true\n```"
+  },
+  {
+    "question": "What is the result of this code?\n\n```javascript\nfunction MyConstructor() {}\nMyConstructor.prototype.someMethod = function() {\n    return 'Hello from prototype';\n};\nconst instance = new MyConstructor();\nconsole.log(instance.someMethod());\nconsole.log(instance.__proto__ === MyConstructor.prototype);\n```",
+    "answer": "`__proto__` указывает на прототип объекта. Свойства и методы из прототипа доступны через экземпляр.\n**Output:**\n```\nHello from prototype\ntrue\n```"
+  },
+  {
+    "question": "What is the result of this code?\n\n```javascript\nconst proto = {\n    speak: function() {\n        return 'Speaking';\n    }\n};\nconst obj = Object.create(proto);\nObject.setPrototypeOf(obj, { move: function() {\n    return 'Moving';\n}});\nconsole.log(obj.move());\n// obj.speak() would throw an error as it's no longer in prototype chain\n```",
+    "answer": "`Object.setPrototypeOf()` изменяет прототип объекта. После изменения старые методы становятся недоступны.\n**Output:**\n```\nMoving\n```"
+  },
+  {
+    "question": "What is the result of this code?\n\n```javascript\nfunction Base() {\n    this.baseValue = 'Base';\n}\nBase.prototype.getBaseValue = function() {\n    return this.baseValue;\n};\nfunction Derived() {\n    Base.call(this);\n    this.derivedValue = 'Derived';\n}\nDerived.prototype = Object.create(Base.prototype);\nconst instance = new Derived();\nconsole.log(instance.getBaseValue());\nconsole.log(instance.baseValue);\nconsole.log(instance.derivedValue);\n```",
+    "answer": "Правильная реализация наследования, где экземпляр получает доступ к методам родительского прототипа.\n**Output:**\n```\nBase\nBase\nDerived\n```\n\n---"
+  },
+  {
+    "question": "What is the result of this code?\n\n```javascript\nconst a = {};\nconst b = { name: 'b' };\nconst c = { name: 'c' };\n\na[b] = 200;\na[c] = 400;\n\nconsole.log(a[b]);\n```",
+    "answer": "При использовании объекта в качестве ключа он преобразуется в строку '[object Object]', поэтому b и c становятся одним и тем же ключом.\n**Output:**\n```\n400\n```"
+  },
+  {
+    "question": "What is the result of this code?\n\n```javascript\nlet c = { greeting: 'Hey!' };\nlet d;\n\nd = c;\nc.greeting = 'Hello';\nconsole.log(d.greeting);\n```",
+    "answer": "`c` и `d` ссылаются на один и тот же объект в памяти. Изменение свойства в одном объекте влияет на другой.\n**Output:**\n```\nHello\n```"
+  },
+  {
+    "question": "What is the result of this code?\n\n```javascript\nfunction Animal(x) {\n    this.x = x;\n    return { x: x + 1 };\n}\nconst obj = new Animal(1);\nconsole.log(obj.x);\n```",
+    "answer": "Если конструктор возвращает объект, `new` возвращает этот объект, а не `this`.\n**Output:**\n```\n2\n```"
+  },
+  {
+    "question": "What is the result of this code?\n\n```javascript\nfunction checkAge() {\n    return this.age >= 18;\n}\nconst person = { age: 20 };\nconsole.log(checkAge.call(person));\n```",
+    "answer": "`call()` позволяет установить контекст `this` для функции.\n**Output:**\n```\ntrue\n```"
+  },
+  {
+    "question": "What is the result of this code?\n\n```javascript\nconst numbers = [1, 2, 3];\nconst newNumbers = [...numbers, numbers];\nconsole.log(newNumbers.length);\nconsole.log(newNumbers);\n```",
+    "answer": "Spread-оператор раскрывает первый массив, а второй массив добавляется как один элемент.\n**Output:**\n```\n4\n[1, 2, 3, [1, 2, 3]]\n```"
+  },
+  {
+    "question": "What is the result of this code?\n\n```javascript\nconst fn = (a, x, y, ...numbers) => {\n    return numbers;\n};\nconsole.log(fn(5, 6, 7, 8, 9, 10));\n```",
+    "answer": "Оператор rest собирает все оставшиеся аргументы в массив.\n**Output:**\n```\n[8, 9, 10]\n```"
+  },
+  {
+    "question": "What is the result of this code?\n\n```javascript\nfunction* generator() {\n    yield 1;\n    yield 2;\n    return 3;\n}\nconst gen = generator();\nconsole.log(gen.next());\nconsole.log(gen.next());\nconsole.log(gen.next());\n```",
+    "answer": "Генераторы возвращают объект с полями value и done. `return` в генераторе устанавливает done = true.\n**Output:**\n```\n{ value: 1, done: false }\n{ value: 2, done: false }\n{ value: 3, done: true }\n```"
+  },
+  {
+    "question": "What is the result of this code?\n\n```javascript\nconst obj = {\n    a: 'one',\n    b: 'two',\n    a: 'three'\n};\nconsole.log(obj);\n```",
+    "answer": "В объекте дублирующиеся ключи перезаписывают предыдущие значения.\n**Output:**\n```\n{ a: 'three', b: 'two' }\n```"
+  },
+  {
+    "question": "What is the result of this code?\n\n```javascript\nconst value = { number: 10 };\nconst multiply = (x = { ...value }) => {\n    console.log(x.number *= 2);\n};\nmultiply();\nmultiply();\nmultiply(value);\nmultiply(value);\n```",
+    "answer": "При деструктуризации с объектом по умолчанию создается новый объект, при передаче существующего объекта изменения сохраняются.\n**Output:**\n```\n20\n20\n20\n40\n```"
+  },
+  {
+    "question": "What is the result of this code?\n\n```javascript\nconst result = [1, 2, 3].map(num => {\n    if (typeof num === 'number') return;\n    return num * 2;\n});\nconsole.log(result);\n```",
+    "answer": "Если функция в `map()` возвращает `undefined`, соответствующий элемент в новом массиве будет `undefined`.\n**Output:**\n```\n[undefined, undefined, undefined]\n```"
+  },
+  {
+    "question": "What is the result of this code?\n\n```javascript\nconst obj = {\n    a: 1,\n    b: 2,\n    c: {\n        d: 3,\n        e: 4\n    }\n};\nconst { a, c: { d } } = obj;\nconsole.log(a, d);\n```",
+    "answer": "Деструктуризация позволяет извлекать вложенные свойства и присваивать им новые имена.\n**Output:**\n```\n1 3\n```"
+  },
+  {
+    "question": "What is the result of this code?\n\n```javascript\nfunction getPersonInfo(age) {\n    const name = 'John';\n    return { name, age };\n}\nconsole.log(getPersonInfo(25));\n```",
+    "answer": "Сокращенная запись свойств объекта позволяет использовать переменные в качестве свойств с тем же именем.\n**Output:**\n```\n{ name: 'John', age: 25 }\n```"
+  },
+  {
+    "question": "What is the result of this code?\n\n```javascript\nfunction compareAge(person1, person2) {\n    if (person1.age === person2.age) {\n        return true;\n    } else {\n        return false;\n    }\n}\nconst person1 = { name: 'John', age: 25 };\nconst person2 = { name: 'Jane', age: 25 };\nconsole.log(compareAge(person1, person2));\n```",
+    "answer": "Функция сравнивает возраст двух объектов и возвращает true, если они равны.\n**Output:**\n```\ntrue\n```"
+  },
+  {
+    "question": "What is the result of this code?\n\n```javascript\nconst person = { name: 'Lydia' };\nObject.defineProperty(person, 'age', { value: 21 });\nconsole.log(person.age);\nconsole.log(Object.keys(person));\n```",
+    "answer": "`Object.defineProperty()` позволяет создавать не перечисляемые свойства (по умолчанию enumerable: false).\n**Output:**\n```\n21\n['name']\n```"
+  },
+  {
+    "question": "What is the result of this code?\n\n```javascript\nlet num = 10;\nconst increaseNumber = () => num++;\nconst increasePassedNumber = number => number++;\nconst num1 = increaseNumber();\nconst num2 = increasePassedNumber(num);\nconsole.log(num1);\nconsole.log(num2);\nconsole.log(num);\n```",
+    "answer": "Оператор `++` возвращает значение до инкремента, а `num++` увеличивает внешнюю переменную.\n**Output:**\n```\n10\n10\n11\n```"
+  },
+  {
+    "question": "What is the result of this code?\n\n```javascript\nconst add = () => {\n    const cache = {};\n    return num => {\n        if (num in cache) {\n            return `From cache! ${cache[num]}`;\n        } else {\n            const result = num + 10;\n            cache[num] = result;\n            return `Calculated! ${result}`;\n        }\n    };\n};\nconst number = add();\nconsole.log(number(10));\nconsole.log(number(10));\n```",
+    "answer": "Пример замыкания, где внутренняя функция сохраняет доступ к переменной cache из внешней функции.\n**Output:**\n```\nCalculated! 20\nFrom cache! 20\n```"
+  },
+  {
+    "question": "What is the result of this code?\n\n```javascript\nconst msg = 'hello';\nconsole.log(msg.toUpperCase());\nconsole.log(typeof msg);\n```",
+    "answer": "Примитивные строки имеют встроенные методы, потому что временно преобразуются в объекты String.\n**Output:**\n```\nHELLO\nstring\n```"
+  },
+  {
+    "question": "What is the result of this code?\n\n```javascript\nconst arr = [1, 2, 3];\nconst [x, y, ...rest] = arr;\nconsole.log(x, y, rest);\n```",
+    "answer": "Оператор rest в деструктуризации массива собирает оставшиеся элементы.\n**Output:**\n```\n1 2 []\n```"
+  },
+  {
+    "question": "What is the result of this code?\n\n```javascript\nconst map = new Map([[1, 2], [2, 4], [3, 6]]);\nconsole.log([...map]);\nconsole.log([...map.keys()]);\nconsole.log([...map.values()]);\n```",
+    "answer": "Map можно преобразовать в массив пар [ключ, значение], получать ключи и значения отдельно.\n**Output:**\n```\n[[1, 2], [2, 4], [3, 6]]\n[1, 2, 3]\n[2, 4, 6]\n```"
+  },
+  {
+    "question": "What is the result of this code?\n\n```javascript\nconst set = new Set([1, 1, 2, 3, 4, 4, 5]);\nconsole.log([...set]);\nconsole.log(set.size);\n```",
+    "answer": "Set автоматически удаляет дубликаты, позволяя легко создавать массивы уникальных значений.\n**Output:**\n```\n[1, 2, 3, 4, 5]\n5\n```"
+  },
+  {
+    "question": "What is the result of this code?\n\n```javascript\nconst user = { name: 'John', age: 30 };\nconst { name, ...other } = user;\nconsole.log(name);\nconsole.log(other);\n```",
+    "answer": "Оператор rest в деструктуризации объекта позволяет извлекать определенные свойства и оставшиеся собирать в новый объект.\n**Output:**\n```\nJohn\n{ age: 30 }\n```"
+  },
+  {
+    "question": "What is the result of this code?\n\n```javascript\nconst arr1 = [1, 2, 3];\nconst arr2 = [4, 5, 6];\nconst combined = [...arr1, ...arr2];\nconsole.log(combined);\n```",
+    "answer": "Spread-оператор позволяет легко объединять массивы.\n**Output:**\n```\n[1, 2, 3, 4, 5, 6]\n```"
+  },
+  {
+    "question": "What is the result of this code?\n\n```javascript\nconst original = { a: 1, b: { c: 2 } };\nconst copy = { ...original };\noriginal.b.c = 100;\nconsole.log(copy.b.c);\n```",
+    "answer": "Spread-оператор создает поверхностную копию, вложенные объекты копируются по ссылке.\n**Output:**\n```\n100\n```"
+  },
+  {
+    "question": "What is the result of this code?\n\n```javascript\nconst obj = { a: 1, b: 2, c: 3 };\nconst { a, c } = obj;\nconsole.log({ a, c });\n```",
+    "answer": "Сокращенная запись свойств объекта позволяет создавать новые объекты с выбранными свойствами.\n**Output:**\n```\n{ a: 1, c: 3 }\n```"
+  },
+  {
+    "question": "What is the result of this code?\n\n```javascript\nfunction* generator() {\n    yield 'Hello';\n    yield 'World';\n}\nconst gen = generator();\nconsole.log(gen.next().value);\nconsole.log(gen.next().value);\nconsole.log(gen.next().done);\n```",
+    "answer": "Генераторы позволяют приостанавливать выполнение функции и возвращаться к ней позже.\n**Output:**\n```\nHello\nWorld\ntrue\n```"
+  },
+  {
+    "question": "What is the result of this code?\n\n```javascript\nconst promise1 = new Promise((resolve, reject) => {\n    setTimeout(resolve, 100, 'one');\n});\nconst promise2 = new Promise((resolve, reject) => {\n    setTimeout(resolve, 200, 'two');\n});\nPromise.all([promise1, promise2]).then(values => console.log(values));\n```",
+    "answer": "`Promise.all` ждет разрешения всех промисов, затем возвращает массив результатов.\n**Output:**\n```\n['one', 'two']  // after 200ms\n```"
+  },
+  {
+    "question": "What is the result of this code?\n\n```javascript\nconst promise = new Promise(res => setTimeout(res, 100, 'Hi'));\npromise.then(value => value).then(value => console.log(value));\n```",
+    "answer": "Цепочка промисов, где результат передается от одного обработчика к другому.\n**Output:**\n```\nHi  // after 100ms\n```"
+  },
+  {
+    "question": "What is the result of this code?\n\n```javascript\nasync function getData() {\n    const response = await new Promise(res => setTimeout(() => res('Data'), 100));\n    return response;\n}\ngetData().then(data => console.log(data));\n```",
+    "answer": "`async/await` - это синтаксический сахар для работы с промисами, который делает асинхронный код более похожим на синхронный.\n**Output:**\n```\nData  // after 100ms\n```"
+  },
+  {
+    "question": "What is the result of this code?\n\n```javascript\nconst obj = { a: 1, b: 2, c: 3 };\nconst keys = Object.keys(obj);\nconst values = Object.values(obj);\nconst entries = Object.entries(obj);\nconsole.log(keys, values, entries);\n```",
+    "answer": "`Object.keys()`, `Object.values()` и `Object.entries()` позволяют получать массивы ключей, значений и пар [ключ, значение].\n**Output:**\n```\n['a', 'b', 'c'] [1, 2, 3] [['a', 1], ['b', 2], ['c', 3]]\n```"
+  },
+  {
+    "question": "What is the result of this code?\n\n```javascript\nconst arr = [1, 2, 3, [4, 5]];\nconst flattened = [].concat(...arr);\nconsole.log(flattened);\n```",
+    "answer": "Spread-оператор раскрывает подмассивы, а `concat()` объединяет их в один плоский массив.\n**Output:**\n```\n[1, 2, 3, 4, 5]\n```"
+  },
+  {
+    "question": "What is the result of this code?\n\n```javascript\nconst person = {\n    name: 'John',\n    details: {\n        age: 30,\n        address: {\n            city: 'New York',\n            country: 'USA'\n        }\n    }\n};\nconst {\n    details: {\n        address: { city }\n    }\n} = person;\nconsole.log(city);\n```",
+    "answer": "Глубокая деструктуризация позволяет извлекать вложенные свойства на любом уровне вложенности.\n**Output:**\n```\nNew York\n```"
+  },
+  {
+    "question": "What is the result of this code?\n\n```javascript\nconst arr = [1, 2, 3];\narr.forEach((item, index) => {\n    arr[index] = item * 2;\n});\nconsole.log(arr);\n```",
+    "answer": "`forEach()` позволяет перебирать элементы массива и изменять их по индексу.\n**Output:**\n```\n[2, 4, 6]\n```"
+  },
+  {
+    "question": "What is the result of this code?\n\n```javascript\nconst user = {\n    firstName: 'John',\n    lastName: 'Doe',\n    getFullName() {\n        return `${this.firstName} ${this.lastName}`;\n    }\n};\nconst { getFullName } = user;\nconsole.log(getFullName());\n```",
+    "answer": "При извлечении метода из объекта теряется контекст `this`, поэтому `this.firstName` и `this.lastName` будут `undefined`.\n**Output:**\n```\nundefined undefined\n```"
+  },
+  {
+    "question": "What is the result of this code?\n\n```javascript\nconst obj1 = { a: 1, b: 2 };\nconst obj2 = { a: 3, c: 4 };\nconst merged = { ...obj1, ...obj2 };\nconsole.log(merged);\n```",
+    "answer": "При объединении объектов свойства из последующих объектов перезаписывают предыдущие.\n**Output:**\n```\n{ a: 3, b: 2, c: 4 }\n```"
+  },
+  {
+    "question": "What is the result of this code?\n\n```javascript\nfunction* counter() {\n    yield 1;\n    yield 2;\n    yield 3;\n}\nconst gen = counter();\nconsole.log([...gen]);\n```",
+    "answer": "Spread-оператор может использоваться для преобразования итерируемого объекта (включая генераторы) в массив.\n**Output:**\n```\n[1, 2, 3]\n```"
+  },
+  {
+    "question": "What is the result of this code?\n\n```javascript\nconst nums = [1, 2, 3, 4, 5];\nconst result = nums.reduce((acc, curr) => {\n    return [...acc, curr * 2];\n}, []);\nconsole.log(result);\n```",
+    "answer": "Использование `reduce()` для создания нового массива с преобразованными значениями.\n**Output:**\n```\n[2, 4, 6, 8, 10]\n```"
+  },
+  {
+    "question": "What is the result of this code?\n\n```javascript\nconst obj = { a: 1, b: 2 };\nObject.freeze(obj);\nobj.c = 3;\nobj.a = 10;\nconsole.log(obj);\n```",
+    "answer": "`Object.freeze()` делает объект неизменяемым. В строгом режиме попытка изменить объект вызывает ошибку.\n**Output:**\n```\n{ a: 1, b: 2 }  // In non-strict mode, assignments fail silently\n```"
+  },
+  {
+    "question": "What is the result of this code?\n\n```javascript\nconst arr = [1, 2, 3];\narr.length = 1;\nconsole.log(arr);\n```",
+    "answer": "Изменение свойства `length` массива удаляет элементы с более высокими индексами.\n**Output:**\n```\n[1]\n```"
+  },
+  {
+    "question": "What is the result of this code?\n\n```javascript\nconst obj = {\n    *[Symbol.iterator]() {\n        yield 1;\n        yield 2;\n        yield 3;\n    }\n};\nconsole.log([...obj]);\n```",
+    "answer": "Использование символа `Symbol.iterator` позволяет сделать объект итерируемым.\n**Output:**\n```\n[1, 2, 3]\n```"
+  },
+  {
+    "question": "What is the result of this code?\n\n```javascript\nconst double = ([first, ...rest]) => [first * 2, ...rest.map(n => n * 2)];\nconsole.log(double([1, 2, 3, 4]));\n```",
+    "answer": "Комбинированное использование деструктуризации массива, rest-оператора и map для преобразования элементов.\n**Output:**\n```\n[2, 4, 6, 8]\n```\n\n---"
+  }
+]

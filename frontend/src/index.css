@@ -1,0 +1,56 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --background: 42 32% 97%;
+  --foreground: 220 22% 17%;
+  --card: 0 0% 100%;
+  --card-foreground: 220 22% 17%;
+  --primary: 191 62% 34%;
+  --primary-foreground: 0 0% 100%;
+  --secondary: 155 34% 42%;
+  --secondary-foreground: 0 0% 100%;
+  --muted: 210 18% 94%;
+  --muted-foreground: 220 12% 42%;
+  --accent: 210 20% 92%;
+  --accent-foreground: 220 20% 20%;
+  --destructive: 0 66% 52%;
+  --destructive-foreground: 0 0% 100%;
+  --border: 210 16% 86%;
+  --input: 210 16% 86%;
+  --ring: 191 62% 34%;
+  --radius: 0.75rem;
+}
+
+.dark {
+  --background: 216 22% 11%;
+  --foreground: 210 18% 90%;
+  --card: 216 20% 14%;
+  --card-foreground: 210 18% 90%;
+  --primary: 191 55% 58%;
+  --primary-foreground: 210 30% 10%;
+  --secondary: 155 42% 52%;
+  --secondary-foreground: 155 32% 10%;
+  --muted: 216 18% 18%;
+  --muted-foreground: 210 12% 66%;
+  --accent: 216 16% 20%;
+  --accent-foreground: 210 14% 88%;
+  --destructive: 0 52% 42%;
+  --destructive-foreground: 0 0% 97%;
+  --border: 216 14% 24%;
+  --input: 216 14% 24%;
+  --ring: 191 55% 58%;
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground antialiased;
+    font-family: "IBM Plex Sans", "Segoe UI", sans-serif;
+    margin: 0;
+  }
+}

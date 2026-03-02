@@ -1,0 +1,186 @@
+[
+  {
+    "question": "Что такое Python?",
+    "answer": "Python - это высокоуровневый язык программирования общего назначения с простым и понятным синтаксисом. Он был создан в конце 1980-х годов Гвидо ван Россумом и назван в честь комедийного шоу \"Монти Пайтон\". Python:\n- Интерпретируемый - код выполняется построчно, без предварительной компиляции\n- Объектно-ориентированный - всё в Python является объектом\n- С кроссплатформенной поддержкой - работает на Windows, macOS, Linux и других ОС\n- Имеет обширную стандартную библиотеку\n- Поддерживает структурное, объектно-ориентированное и функциональное программирование"
+  },
+  {
+    "question": "Что такое PEP8?",
+    "answer": "PEP8 (Python Enhancement Proposal 8) - это стандарт оформления кода на Python. Это руководство по стилю программирования, которое помогает писать читаемый и последовательный код. Основные правила PEP8:\n- Использовать 4 пробела для отступов (а не табуляцию)\n- Ограничивать длину строки 79 символами\n- Разделять функции и классы двумя пустыми строками\n- Имена классов использовать в стиле CamelCase\n- Имена переменных, функций и модулей - в стиле snake_case\n- Проставлять пробелы вокруг операторов\n- Комментарии должны быть понятными и пояснять сложные моменты"
+  },
+  {
+    "question": "Какой тип языка Python?",
+    "answer": "Python - императивный язык программирования. Это означает, что в коде указываются конкретные шаги (инструкции), которые нужно выполнить для достижения результата. Развитие программы происходит последовательно, с явным указанием, \"как\" нужно выполнить задачу. Например:\n```python\n# Императивный подход\nnumbers = [1, 2, 3, 4, 5]\nsquares = []\nfor number in numbers:\n    squares.append(number ** 2)\n```\nPython также поддерживает элементы функционального программирования, но основной стиль - императивный."
+  },
+  {
+    "question": "Конструкция pass",
+    "answer": "`pass` - это специальный оператор в Python, который ничего не делает при выполнении. Он используется как \"заглушка\", когда синтаксис требует наличие оператора, но вы не хотите, чтобы что-то происходило. Примеры использования:\n```python\n# В пустой функции\ndef empty_function():\n    pass  # Заглушка, чтобы функция не вызвала ошибку\n\n# В пустом классе\nclass EmptyClass:\n    pass  # Класс без атрибутов и методов\n\n# В условном операторе\nif condition:\n    pass  # Позже добавим код здесь\nelse:\n    do_something()\n\n# В цикле\nfor i in range(10):\n    if i < 5:\n        pass  # Пропустить числа меньше 5\n    else:\n        print(i)\n```\n`pass` полезен при разработке, когда нужно временно пропустить выполнение блока кода."
+  },
+  {
+    "question": "Изменяемые и неизменяемые типы данных",
+    "answer": "В Python различают изменяемые и неизменяемые типы данных:\n- **Неизменяемые (immutable):**\n  - `int`, `float`, `complex`, `bool` - числовые типы\n  - `str` - строки\n  - `tuple` - кортежи\n  - `frozenset` - неизменяемое множество\n  - `bytes` - байтовые строки\n  - `None` - специальное значение\n\n- **Изменяемые (mutable):**\n  - `list` - списки\n  - `dict` - словари\n  - `set` - множества\n  - `bytearray` - изменяемые байтовые строки\n  - Пользовательские классы (по умолчанию)\n\nРазница: при изменении неизменяемого объекта создается новый объект, а при изменении изменяемого - изменяется сам объект."
+  },
+  {
+    "question": "Основные типы данных",
+    "answer": "Основные типы данных в Python:\n- **Числовые:** `int` (целые), `float` (вещественные), `complex` (комплексные)\n- **Текстовые:** `str` (строки)\n- **Булевые:** `bool` (True/False)\n- **Последовательности:** `list` (списки), `tuple` (кортежи), `range` (диапазоны)\n- **Отображения:** `dict` (словари)\n- **Множества:** `set` (множества), `frozenset` (неизменяемые множества)\n- **NoneType:** `None` (ничто)"
+  },
+  {
+    "question": "Скорость поиска в словаре и списке",
+    "answer": "- В **словаре** (`dict`) поиск элемента по ключу происходит за **O(1)** в среднем случае, потому что словарь реализован как хеш-таблица. Это очень быстрая операция.\n- В **списке** (`list`) поиск элемента происходит за **O(n)**, потому что Python должен перебрать все элементы списка до нахождения нужного.\n\nПример:\n```python\nmy_list = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]  # 10 элементов\nmy_dict = {1: 'a', 2: 'b', 3: 'c', 4: 'd', 5: 'e'}  # 5 пар ключ-значение\n\n# Поиск в списке - O(n)\nif 7 in my_list:  # Проверяет каждый элемент, пока не найдет 7\n    print(\"Found\")\n\n# Поиск в словаре - O(1)\nif 3 in my_dict:  # Прямо обращается к ключу 3, используя хеш\n    print(\"Found\")\n```"
+  },
+  {
+    "question": "Неизменяемые структуры данных",
+    "answer": "К неизменяемым структурам данных относятся:\n- `tuple` (кортежи) - упорядоченные неизменяемые коллекции\n- `str` (строки) - текстовые данные, которые нельзя изменить после создания\n- `frozenset` - неизменяемые множества\n- `bytes` - неизменяемые последовательности байтов"
+  },
+  {
+    "question": "Операторы is и ==",
+    "answer": "- Оператор `==` сравнивает **значения** двух объектов - он проверяет, равны ли объекты по содержанию\n- Оператор `is` проверяет **идентичность** объектов - он проверяет, являются ли оба операнда ссылками на один и тот же объект в памяти\n\nПример:\n```python\na = [1, 2, 3]\nb = [1, 2, 3]\nc = a\n\nprint(a == b)  # True - значения одинаковые\nprint(a is b)  # False - разные объекты в памяти\nprint(a is c)  # True - ссылаются на один объект\n\n# С числами и строками может работать по-другому из-за оптимизации\nx = 5\ny = 5\nprint(x is y)  # True - Python кэширует маленькие целые числа\n\ns1 = \"hello\"\ns2 = \"hello\"\nprint(s1 is s2)  # True - интернирование строк\n```"
+  },
+  {
+    "question": "Comprehensions",
+    "answer": "List comprehension (списковые включения) - это краткий способ создания списков. Это более компактная и читаемая альтернатива циклам for с append. Также существуют dict comprehension (для словарей) и set comprehension (для множеств).\n\n**List comprehension:**\n```python\n# Классический способ\nsquares = []\nfor x in range(10):\n    squares.append(x**2)\n\n# С list comprehension\nsquares = [x**2 for x in range(10)]\n\n# С условием\neven_squares = [x**2 for x in range(10) if x % 2 == 0]\n```\n\n**Dict comprehension:**\n```python\n# Создание словаря из списка\nnumbers = [1, 2, 3, 4, 5]\nsquares_dict = {x: x**2 for x in numbers}\n# Результат: {1: 1, 2: 4, 3: 9, 4: 16, 5: 25}\n```\n\n**Set comprehension:**\n```python\n# Создание множества\nunique_lengths = {len(word) for word in ['hello', 'world', 'python', 'code']}\n```"
+  },
+  {
+    "question": "Lambda-функции",
+    "answer": "Lambda-функции - это анонимные функции (без имени), которые могут принимать аргументы и возвращать значение. Они используются для краткой записи простых функций, особенно в функциях высшего порядка.\n\n```python\n# Стандартная функция\ndef add(x, y):\n    return x + y\n\n# Lambda-функция\nadd = lambda x, y: x + y\n\n# Примеры использования\nnumbers = [1, 2, 3, 4, 5]\n# Удвоить числа\ndoubled = list(map(lambda x: x * 2, numbers))\n\n# Фильтрация четных чисел\neven_numbers = list(filter(lambda x: x % 2 == 0, numbers))\n\n# Сортировка по второму элементу кортежа\npairs = [(1, 'one'), (2, 'two'), (3, 'three')]\npairs.sort(key=lambda pair: pair[1])  # Сортировка по строке\n```"
+  },
+  {
+    "question": "F-строки",
+    "answer": "F-строки (formatted string literals) - это способ форматирования строк, введенный в Python 3.6. Они начинаются с буквы 'f' и позволяют вставлять выражения прямо в строку, заключая их в фигурные скобки {}. Преимущества:\n- Более читаемый и понятный синтаксис\n- Быстрее работают по сравнению с другими методами форматирования\n- Позволяют использовать любые выражения внутри\n\nПример:\n```python\nname = \"Alice\"\nage = 30\n\n# Старые способы\nold_way = \"My name is {} and I'm {}\".format(name, age)\nold_way2 = \"My name is %s and I'm %d\" % (name, age)\n\n# F-строки\nf_string = f\"My name is {name} and I'm {age}\"\n\n# Можно использовать выражения\nf\"Next year I'll be {age + 1} years old\"\n\n# Поддержка форматирования\nfrom datetime import datetime\nf\"Current time: {datetime.now():%Y-%m-%d %H:%M:%S}\"\n```"
+  },
+  {
+    "question": "Тернарный оператор",
+    "answer": "Тернарный оператор в Python - это краткая запись условного выражения в одной строке. Формат: `значение_если_истина if условие else значение_если_ложь`\n\n```python\n# Классический способ\nif x > 0:\n    result = \"positive\"\nelse:\n    result = \"non-positive\"\n\n# Тернарный оператор\nresult = \"positive\" if x > 0 else \"non-positive\"\n\n# Другие примеры\nmax_val = a if a > b else b\nstatus = \"adult\" if age >= 18 else \"minor\"\n```"
+  },
+  {
+    "question": "Слайсы",
+    "answer": "Слайс (slice) - это способ получения подмножества элементов из последовательности (списка, строки, кортежа и т.д.) по индексам. Синтаксис: `sequence[start:stop:step]`, где:\n- `start` - индекс начала (включительно)\n- `stop` - индекс конца (не включая)\n- `step` - шаг (по умолчанию 1)\n\nПримеры:\n```python\ntext = \"Hello, World!\"\nprint(text[0:5])     # \"Hello\" - с 0 по 5 (не включая)\nprint(text[:5])      # \"Hello\" - с начала до 5-го индекса\nprint(text[7:])      # \"World!\" - с 7-го индекса до конца\nprint(text[::2])     # \"Hlo ol!\" - каждый второй символ\nprint(text[::-1])    # \"!dlroW ,olleH\" - строка в обратном порядке\nprint(text[1:8:2])   # \"el, W\" - с 1-го по 8-й индекс с шагом 2\n```"
+  },
+  {
+    "question": "Использование сортировки",
+    "answer": "В Python есть две основные функции для сортировки:\n- `sorted()` - возвращает новый отсортированный список, не изменяя оригинальный\n- `list.sort()` - сортирует список \"на месте\" (изменяет оригинальный список)\n\n```python\nnumbers = [3, 1, 4, 1, 5, 9, 2, 6]\n\n# Функция sorted() - возвращает новый список\nsorted_numbers = sorted(numbers)\nprint(sorted_numbers)  # [1, 1, 2, 3, 4, 5, 6, 9]\nprint(numbers)         # [3, 1, 4, 1, 5, 9, 2, 6] - оригинал не изменился\n\n# Метод sort() - изменяет оригинальный список\nnumbers.sort()\nprint(numbers)         # [1, 1, 2, 3, 4, 5, 6, 9]\n\n# Сортировка с параметрами\nwords = ['banana', 'apple', 'cherry', 'date']\nsorted_by_length = sorted(words, key=len)  # Сортировка по длине\nreversed_sort = sorted(words, reverse=True)  # Обратная сортировка\n```"
+  },
+  {
+    "question": "Аргументы функций",
+    "answer": "В Python используется передача аргументов \"по ссылке на объект\" (pass-by-object-reference или pass-by-assignment). Это значит:\n- Если объект неизменяемый (int, str, tuple), то изменения внутри функции не повлияют на внешнюю переменную\n- Если объект изменяемый (list, dict, set), то изменения внутри функции повлияют на внешнюю переменную\n\n```python\n# Для неизменяемых объектов\ndef change_num(x):\n    x = 10\n    print(f\"Внутри функции: {x}\")\n\nnum = 5\nchange_num(num)\nprint(f\"Вне функции: {num}\")  # Выведет: 5 (не изменилось)\n\n# Для изменяемых объектов\ndef change_list(lst):\n    lst.append(4)\n    print(f\"Внутри функции: {lst}\")\n\nmy_list = [1, 2, 3]\nchange_list(my_list)\nprint(f\"Вне функции: {my_list}\")  # Выведет: [1, 2, 3, 4] (изменилось!)\n```"
+  },
+  {
+    "question": "*args и **kwargs",
+    "answer": "`*args` и `**kwargs` позволяют функции принимать произвольное количество аргументов.\n\n- `*args` - собирает дополнительные позиционные аргументы в кортеж\n- `**kwargs` - собирает дополнительные именованные аргументы в словарь\n\n```python\ndef example_function(arg1, *args, **kwargs):\n    print(f\"Обязательный аргумент: {arg1}\")\n    print(f\"Дополнительные позиционные аргументы: {args}\")\n    print(f\"Дополнительные именованные аргументы: {kwargs}\")\n\n# Вызов с разными аргументами\nexample_function(\"first\", \"second\", \"third\", name=\"Alice\", age=30)\n# Вывод:\n# Обязательный аргумент: first\n# Дополнительные позиционные аргументы: ('second', 'third')\n# Дополнительные именованные аргументы: {'name': 'Alice', 'age': 30}\n\n# Можно использовать при вызове функции для \"распаковки\"\nlist_args = [1, 2, 3]\ndict_args = {'name': 'Alice', 'age': 30}\n# example_function(\"first\", *list_args, **dict_args)\n```"
+  },
+  {
+    "question": "Функции высшего порядка",
+    "answer": "Функция высшего порядка - это функция, которая принимает другую функцию в качестве аргумента или возвращает функцию как результат. Python имеет встроенные функции высшего порядка:\n\n- `map(function, iterable)` - применяет функцию к каждому элементу итерируемого объекта\n- `filter(function, iterable)` - фильтрует элементы по результату функции\n- `reduce(function, iterable)` - накапливает результат, применяя функцию к парам элементов\n\n```python\nfrom functools import reduce\n\n# map\nnumbers = [1, 2, 3, 4, 5]\nsquared = list(map(lambda x: x**2, numbers))  # [1, 4, 9, 16, 25]\n\n# filter\neven_numbers = list(filter(lambda x: x % 2 == 0, numbers))  # [2, 4]\n\n# reduce\nsum_all = reduce(lambda x, y: x + y, numbers)  # 15\n```"
+  },
+  {
+    "question": "Замыкания",
+    "answer": "Замыкание (closure) - это функция, которая \"запоминает\" переменные из своей внешней области видимости, даже после того, как внешняя функция завершена. Замыкание состоит из:\n1. Внутренней функции\n2. Переменных из внешней функции\n3. Внешней функции\n\n```python\ndef outer_function(x):\n    def inner_function(y):\n        return x + y  # x - переменная из внешней области видимости\n    return inner_function\n\n# Создание замыкания\nadd_five = outer_function(5)\nresult = add_five(3)  # Результат: 8\n\n# Замыкание хранит значение x = 5 даже после завершения outer_function\n```"
+  },
+  {
+    "question": "Методы и self",
+    "answer": "Методы класса - это функции, определенные внутри класса, которые работают с экземплярами этого класса. Ключевое слово `self`:\n- Является ссылкой на текущий экземпляр класса\n- Обязательно указывается первым параметром в методах экземпляра\n- Позволяет методу обращаться к атрибутам и другим методам экземпляра\n\n```python\nclass Person:\n    def __init__(self, name, age):\n        self.name = name  # Установка атрибута экземпляра\n        self.age = age    # Установка атрибута экземпляра\n    \n    def introduce(self):  # Метод экземпляра\n        return f\"Привет, я {self.name}, мне {self.age} лет\"\n    \n    def have_birthday(self):  # Метод экземпляра\n        self.age += 1\n\nperson1 = Person(\"Анна\", 25)\nprint(person1.introduce())  # Вызывает метод, self автоматически передается как person1\n```"
+  },
+  {
+    "question": "Конструктор и инициализация",
+    "answer": "- `__init__` - метод инициализации экземпляра класса, вызывается после создания объекта\n- `__new__` - метод создания объекта, вызывается перед `__init__`\n\n```python\nclass MyClass:\n    def __new__(cls, *args, **kwargs):\n        print(\"Создание объекта\")\n        instance = super().__new__(cls)\n        return instance\n    \n    def __init__(self, value):\n        print(\"Инициализация объекта\")\n        self.value = value\n\nobj = MyClass(10)  # Сначала вызывается __new__, потом __init__\n```"
+  },
+  {
+    "question": "Classmethod и Staticmethod",
+    "answer": "- `@classmethod` - получает класс в качестве первого аргумента (обычно называемого `cls`)\n- `@staticmethod` - не получает автоматически никаких аргументов, работает как обычная функция, но принадлежит классу\n\n```python\nclass MyClass:\n    class_var = \"Hello\"\n    \n    @classmethod\n    def class_method(cls):\n        return f\"Сработал classmethod: {cls.class_var}\"\n    \n    @staticmethod\n    def static_method():\n        return \"Сработал staticmethod\"\n\n# Вызов методов\nprint(MyClass.class_method())  # Сработал classmethod: Hello\nprint(MyClass.static_method())  # Сработал staticmethod\n```"
+  },
+  {
+    "question": "Наследование",
+    "answer": "В круглых скобках указываются родительские классы, от которых наследуется новый класс. Это позволяет новому классу наследовать атрибуты и методы родительского класса:\n\n```python\n# Класс, наследующий от одного родителя\nclass Animal:\n    def speak(self):\n        pass\n\nclass Dog(Animal):  # Dog наследует от Animal\n    def speak(self):\n        return \"Woof!\"\n\n# Класс, наследующий от нескольких родителей\nclass A:\n    def method_a(self):\n        return \"A\"\n\nclass B:\n    def method_b(self):\n        return \"B\"\n\nclass C(A, B):  # C наследует от A и B\n    pass\n```"
+  },
+  {
+    "question": "super() функция",
+    "answer": "Функция `super()` возвращает временный объект суперкласса (родительского класса), который позволяет получить доступ к методам и атрибутам родительского класса. Это особенно полезно при переопределении методов в дочернем классе:\n\n```python\nclass Parent:\n    def __init__(self, name):\n        self.name = name\n        print(f\"Parent: {self.name}\")\n    \n    def greet(self):\n        return f\"Hello from {self.name}\"\n\nclass Child(Parent):\n    def __init__(self, name, age):\n        super().__init__(name)  # Вызов конструктора родительского класса\n        self.age = age\n        print(f\"Child: {self.age}\")\n    \n    def greet(self):\n        parent_greeting = super().greet()  # Вызов метода родительского класса\n        return f\"{parent_greeting}, I'm {self.age} years old\"\n\nchild = Child(\"Alice\", 10)\nprint(child.greet())\n```"
+  },
+  {
+    "question": "Магические методы",
+    "answer": "Магические методы (dunder-методы, от \"double underscore\") - это специальные методы, которые начинаются и заканчиваются двумя подчеркиваниями. Они позволяют классам определять собственное поведение для встроенных операций:\n\n```python\nclass Vector:\n    def __init__(self, x, y):\n        self.x = x\n        self.y = y\n    \n    def __add__(self, other):  # Сложение\n        return Vector(self.x + other.x, self.y + other.y)\n    \n    def __str__(self):  # Строковое представление\n        return f\"Vector({self.x}, {self.y})\"\n    \n    def __len__(self):  # Длина\n        return int((self.x**2 + self.y**2)**0.5)\n    \n    def __getitem__(self, index):  # Доступ по индексу\n        if index == 0:\n            return self.x\n        elif index == 1:\n            return self.y\n        else:\n            raise IndexError(\"Vector index out of range\")\n\nv1 = Vector(2, 3)\nv2 = Vector(4, 5)\nv3 = v1 + v2  # Использует __add__\nprint(v3)  # Использует __str__\n```"
+  },
+  {
+    "question": "Декораторы",
+    "answer": "Декоратор - это функция, которая принимает другую функцию и расширяет её поведение без изменения её кода. Декораторы используют символ `@`:\n\n```python\n# Простой декоратор\ndef my_decorator(func):\n    def wrapper():\n        print(\"Что-то делается перед вызовом функции\")\n        result = func()\n        print(\"Что-то делается после вызова функции\")\n        return result\n    return wrapper\n\n@my_decorator\ndef say_hello():\n    print(\"Привет!\")\n\nsay_hello()\n\n# Декоратор с параметрами\ndef repeat(times):\n    def decorator(func):\n        def wrapper(*args, **kwargs):\n            for _ in range(times):\n                result = func(*args, **kwargs)\n            return result\n        return wrapper\n    return decorator\n\n@repeat(3)\ndef greet(name):\n    print(f\"Привет, {name}!\")\n\ngreet(\"Анна\")\n```"
+  },
+  {
+    "question": "@property",
+    "answer": "Декоратор `@property` позволяет обращаться к методу как к атрибуту. Также существуют `@setter` и `@deleter` для установки и удаления значений:\n\n```python\nclass Circle:\n    def __init__(self, radius):\n        self._radius = radius\n    \n    @property\n    def radius(self):\n        return self._radius\n    \n    @radius.setter\n    def radius(self, value):\n        if value < 0:\n            raise ValueError(\"Радиус не может быть отрицательным\")\n        self._radius = value\n    \n    @property\n    def area(self):  # Вычисляемое свойство\n        return 3.14159 * self._radius ** 2\n\ncircle = Circle(5)\nprint(circle.radius)  # 5 - обращение как к атрибуту\ncircle.radius = 10    # Установка значения через setter\nprint(circle.area)    # Вычисление площади\n\n# Стандартные декораторы: @classmethod, @staticmethod, @property\n```"
+  },
+  {
+    "question": "Контекстные менеджеры",
+    "answer": "Контекстный менеджер - это объект, который определяет методы `__enter__` и `__exit__` для выполнения кода в определенном контексте. Конструкция `with` гарантирует, что критические операции (например, открытие/закрытие файлов) будут выполнены даже если произойдет ошибка:\n\n```python\n# Использование with с файлами\nwith open('file.txt', 'r') as file:\n    content = file.read()\n    # Файл автоматически закрывается после выхода из блока with\n\n# Создание собственного контекстного менеджера\nclass MyContextManager:\n    def __enter__(self):\n        print(\"Вход в контекстный менеджер\")\n        return self\n    \n    def __exit__(self, exc_type, exc_value, traceback):\n        print(\"Выход из контекстного менеджера\")\n        if exc_type:\n            print(f\"Произошла ошибка: {exc_value}\")\n        return False  # Не подавлять исключения\n\nwith MyContextManager():\n    print(\"Выполняется код в контексте\")\n    # Даже при ошибке __exit__ будет вызван\n```"
+  },
+  {
+    "question": "Обработка исключений",
+    "answer": "- `try` - блок кода, в котором может произойти исключение\n- `except` - обработка исключения\n- `else` - выполняется, если в блоке `try` не произошло исключений\n- `finally` - выполняется всегда, независимо от того, было ли исключение\n\n```python\ntry:\n    file = open('data.txt', 'r')\nexcept FileNotFoundError:\n    print(\"Файл не найден\")\nelse:\n    print(\"Файл успешно открыт\")\n    content = file.read()\nfinally:\n    # Код в finally всегда выполняется\n    if 'file' in locals() and not file.closed:\n        file.close()\n        print(\"Файл закрыт\")\n\n# Пример использования try...finally без except\ndef example():\n    try:\n        resource = acquire_resource()\n        return process_resource(resource)\n    finally:\n        # Гарантированно освобождаем ресурс\n        release_resource(resource)\n        print(\"Ресурс освобожден\")\n```"
+  },
+  {
+    "question": "Модули и пакеты",
+    "answer": "- **Модуль** - это отдельный файл с кодом на Python (обычно с расширением .py)\n- **Пакет** - это каталог, содержащий несколько модулей и специальный файл `__init__.py`\n\nФайл `__init__.py`:\n- Показывает Python, что каталог является пакетом\n- Может содержать код инициализации для пакета\n- Может определять, какие модули/функции экспортируются из пакета\n\n```python\n# mypackage/\n#   __init__.py\n#   module1.py\n#   module2.py\n\n# mypackage/__init__.py\nfrom .module1 import function1\nfrom .module2 import Class2\n\n__all__ = ['function1', 'Class2']  # Указывает, что экспортируется при from mypackage import *\n```"
+  },
+  {
+    "question": "Итераторы",
+    "answer": "- **Итератор** - это объект, который реализует протокол итерации (`__iter__` и `__next__`)\n- `iter()` - функция, которая возвращает итератор из итерируемого объекта\n- `next()` - функция, которая возвращает следующий элемент из итератора\n\n```python\n# Пример создания итератора\nclass CountDown:\n    def __init__(self, start):\n        self.start = start\n    \n    def __iter__(self):\n        return self\n    \n    def __next__(self):\n        if self.start <= 0:\n            raise StopIteration\n        self.start -= 1\n        return self.start + 1\n\n# Использование\ncountdown = CountDown(3)\nfor num in countdown:\n    print(num)  # 3, 2, 1\n\n# Использование iter() и next()\nmy_list = [1, 2, 3]\niterator = iter(my_list)\nprint(next(iterator))  # 1\nprint(next(iterator))  # 2\nprint(next(iterator))  # 3\n```"
+  },
+  {
+    "question": "Генераторы",
+    "answer": "- **Генератор** - это специальная функция, которая использует ключевое слово `yield` для возврата значений по одному\n- Генераторы проще в создании, чем итераторы\n- Генератор сохраняет состояние между вызовами `yield`\n\n```python\n# Функция-генератор\ndef fibonacci(n):\n    a, b = 0, 1\n    for _ in range(n):\n        yield a\n        a, b = b, a + b\n\n# Использование генератора\nfor num in fibonacci(10):\n    print(num)  # 0, 1, 1, 2, 3, 5, 8, 13, 21, 34\n\n# Выражение-генератор\nsquares = (x**2 for x in range(10))\nfor square in squares:\n    print(square)\n```"
+  },
+  {
+    "question": "Область видимости",
+    "answer": "Правило LEGB определяет порядок поиска переменных:\n- **L** (Local) - локальная область (внутри функции)\n- **E** (Enclosing) - область охватывающей функции (при вложенных функциях)\n- **G** (Global) - глобальная область (модуля)\n- **B** (Built-in) - встроенная область (встроенные функции и переменные)\n\nПространства имен:\n- Локальное - переменные внутри функции\n- Глобальное - переменные на уровне модуля\n- Встроенное - встроенные имена"
+  },
+  {
+    "question": "GIL и многопоточность",
+    "answer": "GIL (Global Interpreter Lock) - это мьютекс в CPython, который позволяет только одному потоку выполнять Python-код в одно время. Это означает:\n- Многопоточность не дает прироста производительности для вычислительных задач\n- GIL снимается при I/O операциях, поэтому многопоточность полезна для ввода-вывода\n- Для CPU-интенсивных задач лучше использовать мультипроцессинг\n\n```python\nimport threading\nimport time\n\ndef cpu_task():\n    # Эта задача не будет параллелиться из-за GIL\n    total = 0\n    for i in range(10000000):\n        total += i\n    return total\n\n# Многопоточность для I/O задач (например, сетевые запросы)\ndef io_task():\n    time.sleep(1)  # Имитация I/O операции\n    print(\"Задача завершена\")\n\n# Для CPU-интенсивных задач лучше использовать мультипроцессинг\nfrom multiprocessing import Pool\n\ndef parallel_cpu_task():\n    with Pool() as pool:\n        results = pool.map(cpu_task, range(4))\n    return results\n```"
+  },
+  {
+    "question": "Сборщик мусора",
+    "answer": "В Python используется автоматическое управление памятью:\n- **Счетчик ссылок** - каждый объект хранит количество ссылок на него. Когда счетчик становится 0, объект удаляется\n- **Циклический сборщик мусора** - находит и удаляет циклические ссылки, которые счетчик ссылок не может обработать\n\nPython также имеет встроенный сборщик мусора, который периодически запускается для обнаружения и удаления циклических зависимостей."
+  },
+  {
+    "question": "Встроенные функции",
+    "answer": "Функция `enumerate()` добавляет счетчик к итерируемому объекту и возвращает перечислитель (enumerator), который можно использовать в цикле для получения индекса и значения:\n\n```python\nfruits = ['apple', 'banana', 'cherry']\n\n# Без enumerate\nfor i in range(len(fruits)):\n    print(f\"{i}: {fruits[i]}\")\n\n# С enumerate (более Pythonic способ)\nfor i, fruit in enumerate(fruits):\n    print(f\"{i}: {fruit}\")\n\n# Можно указать начальное значение счетчика\nfor i, fruit in enumerate(fruits, start=1):\n    print(f\"{i}: {fruit}\")\n```"
+  },
+  {
+    "question": "Модули работы с файлами",
+    "answer": "Основные модули для работы с файлами:\n- `os` - операции с файловой системой\n- `os.path` - операции с путями к файлам\n- `pathlib` - объектно-ориентированный интерфейс для работы с путями (новый стиль)\n- `shutil` - операции копирования и перемещения файлов\n- `io` - базовые интерфейсы ввода-вывода\n- `json` - работа с JSON-файлами\n- `csv` - работа с CSV-файлами\n- `pickle` - сериализация Python-объектов"
+  },
+  {
+    "question": "Виртуальное окружение",
+    "answer": "Виртуальное окружение (virtual environment) - изолированная установка Python с собственными пакетами. Это позволяет:\n- Разделять зависимости для разных проектов\n- Избегать конфликтов между версиями пакетов\n- Упрощать развертывание проектов\n\nСоздание виртуального окружения:\n```bash\npython -m venv myenv        # Создание окружения\nsource myenv/bin/activate   # Активация (Linux/Mac)\nmyenv\\Scripts\\activate      # Активация (Windows)\ndeactivate                  # Деактивация\n```"
+  },
+  {
+    "question": "Менеджеры пакетов",
+    "answer": "Основные менеджеры пакетов:\n- `pip` - стандартный менеджер пакетов Python\n- `conda` - менеджер пакетов и окружений (из Anaconda/Miniconda)\n- `pipenv` - объединяет pip и виртуальные окружения\n- `poetry` - современный менеджер зависимостей"
+  },
+  {
+    "question": "Основы асинхронности",
+    "answer": "- **Синхронный код** - это код, который выполняется последовательно, где каждая операция ждет завершения предыдущей\n- **Асинхронный код** - позволяет выполнять несколько задач одновременно, особенно полезен для I/O-операций\n\nПреимущества асинхронного программирования:\n- Повышение эффективности при I/O-операциях\n- Возможность обработки большего количества одновременных запросов\n- Лучшее использование ресурсов системы\n\n```python\nimport asyncio\n\n# Синхронный подход\ndef sync_task(name, delay):\n    time.sleep(delay)  # Блокирует выполнение\n    print(f\"Синхронная задача {name} завершена\")\n\n# Асинхронный подход\nasync def async_task(name, delay):\n    await asyncio.sleep(delay)  # Не блокирует выполнение\n    print(f\"Асинхронная задача {name} завершена\")\n\nasync def main():\n    await asyncio.gather(\n        async_task(\"A\", 2),\n        async_task(\"B\", 1),\n        async_task(\"C\", 3)\n    )\n\n# Запуск асинхронной функции\nasyncio.run(main())\n```"
+  },
+  {
+    "question": "asyncio",
+    "answer": "- **Корутинная функция** - функция, объявленная с `async def`\n- **Корутина** - объект, возвращаемый корутинной функцией\n- **Task** - обертка для корутины, которая планирует её выполнение в event loop\n- **Future** - низкоуровневый примитив, представляющий будущий результат\n\n```python\nimport asyncio\n\nasync def my_coroutine():\n    await asyncio.sleep(1)\n    return \"Результат\"\n\nasync def main():\n    # Создание корутины\n    coro = my_coroutine()\n    \n    # Создание задачи\n    task = asyncio.create_task(coro)\n    \n    # Ожидание результата\n    result = await task\n    print(result)\n\nasyncio.run(main())\n```"
+  },
+  {
+    "question": "Django",
+    "answer": "Django - это веб-фреймворк высокого уровня, написанный на Python. Основные особенности:\n- Следует архитектуре MVT (Model-View-Template)\n- Включает ORM, систему администрирования, систему аутентификации\n- Предназначен для быстрой разработки безопасных и поддерживаемых веб-приложений\n\nАрхитектура MVT:\n- **Model** - слой данных, определяет структуру базы данных\n- **View** - логика приложения, обработка запросов и возврат ответов\n- **Template** - презентационный слой, HTML с шаблонами"
+  },
+  {
+    "question": "DRF (Django REST Framework)",
+    "answer": "- **Django** - полноценный веб-фреймворк для создания веб-приложений\n- **DRF (Django REST Framework)** - библиотека для создания REST API на основе Django\n\n**Serializer** в DRF преобразует Django-модели в JSON и обратно, обеспечивая:\n- Валидацию данных\n- Преобразование данных из JSON в Django-объекты\n- Обработку сложных связей между моделями"
+  },
+  {
+    "question": "FastAPI",
+    "answer": "FastAPI - современный, быстрый (высокопроизводительный) веб-фреймворк для создания API с поддержкой асинхронности. Особенности:\n- Очень высокая производительность (на уровне NodeJS и Go)\n- Автоматическая генерация документации (Swagger, ReDoc)\n- Поддержка типизации данных (Pydantic)\n- Встроенная валидация данных\n- Поддержка асинхронности\n\nСравнение:\n- **Django** - полный фреймворк с \"батарейками\", подходит для полноценных веб-приложений\n- **Flask** - микрофреймворк, гибкий, но требует больше ручной настройки\n- **FastAPI** - ориентирован на создание API, особенно REST API, с автоматической документацией\n\nFastAPI лучше выбирать при создании API, особенно когда важны производительность и документация."
+  },
+  {
+    "question": "NumPy",
+    "answer": "- **NumPy массивы лучше списков** когда:\n  - Нужно выполнить математические операции над всеми элементами\n  - Требуется высокая производительность\n  - Нужны многомерные массивы\n  - Важна экономия памяти\n\n```python\nimport numpy as np\n# NumPy: быстрые математические операции\narr = np.array([1, 2, 3, 4, 5])\nresult = arr * 2  # Быстрее, чем цикл по списку\n```\n\n- **NumPy** - основа для научных вычислений, предоставляет n-мерные массивы\n- **SciPy** - строится на NumPy, добавляет специализированные функции: статистика, оптимизация, обработка сигналов и т.д."
+  },
+  {
+    "question": "SQLAlchemy",
+    "answer": "ORM (Object-Relational Mapping) - это технология, которая позволяет работать с базами данных, используя объекты Python. SQLAlchemy:\n- Позволяет определять таблицы базы данных как классы Python\n- Мапит строки базы данных на экземпляры этих классов\n- Позволяет выполнять запросы с помощью методов Python вместо SQL\n\n```python\nfrom sqlalchemy import create_engine, Column, Integer, String\nfrom sqlalchemy.ext.declarative import declarative_base\nfrom sqlalchemy.orm import sessionmaker\n\nBase = declarative_base()\n\nclass User(Base):\n    __tablename__ = 'users'\n    id = Column(Integer, primary_key=True)\n    name = Column(String(50))\n    email = Column(String(50))\n```"
+  }
+]

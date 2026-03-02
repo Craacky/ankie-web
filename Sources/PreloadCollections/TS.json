@@ -1,0 +1,94 @@
+[
+  {
+    "question": "Ключевое слово declare в TS",
+    "answer": "Ключевое слово `declare` используется для описания формы существующего JavaScript кода (библиотек, API, переменных), которое TypeScript не компилирует, но знает о его существовании. Оно используется в основном при создании файлов определений типов (`.d.ts`) для библиотек JavaScript.\n\n```ts\n// Пример объявления глобальной переменной из внешней библиотеки\ndeclare var myLib: {\n  startTime: number;\n  endTime: number;\n};\n\n// Пример объявления глобальной функции\ndeclare function myFunc(msg: string): void;\n```\n\nЭто позволяет использовать сторонние библиотеки с типобезопасностью.\n\n---"
+  },
+  {
+    "question": "Модификаторы доступа в TS",
+    "answer": "В TypeScript есть три модификатора доступа:\n\n- `public` — члены класса доступны отовсюду. По умолчанию все члены класса являются `public`.\n- `private` — члены класса доступны только внутри класса.\n- `protected` — члены класса доступны внутри класса и его подклассов.\n\n```ts\nclass Example {\n  public publicProp: string;\n  private privateProp: string;\n  protected protectedProp: string;\n\n  constructor() {\n    this.publicProp = 'public';\n    this.privateProp = 'private';\n    this.protectedProp = 'protected';\n  }\n}\n\nclass Child extends Example {\n  someMethod() {\n    // this.publicProp;      // OK\n    // this.privateProp;     // Ошибка!\n    // this.protectedProp;   // OK\n  }\n}\n```\n\n---"
+  },
+  {
+    "question": "Что такое TS и зачем он нужен",
+    "answer": "TypeScript — это надмножество JavaScript, добавляющее статическую типизацию. Он компилируется в обычный JavaScript. TypeScript нужен для:\n\n- Типобезопасности, выявления ошибок на этапе компиляции\n- Лучшей поддержки кода в больших проектах\n- Улучшенной автодополнения и навигации в IDE\n- Ясности намерений при разработке (документация кода)\n- Совместимости с существующим JavaScript кодом\n- Поддержки новых возможностей ES, которые компилируются в старые версии JavaScript\n\n---"
+  },
+  {
+    "question": "Утилита Pick - пример использования",
+    "answer": "Утилита `Pick<T, K>` позволяет создать новый тип, выбирая определенные свойства `K` из типа `T`.\n\n```ts\ninterface User {\n  id: number;\n  name: string;\n  email: string;\n  password: string;\n}\n\n// Выбираем только нужные поля\ntype UserProfile = Pick<User, 'name' | 'email'>;\n\n// Результат: { name: string; email: string; }\nconst user: UserProfile = {\n  name: 'John',\n  email: 'john@example.com'\n};\n```\n\n---"
+  },
+  {
+    "question": "Абстрактный класс vs интерфейс",
+    "answer": "**Абстрактный класс:**\n- Может содержать реализации методов (как абстрактные, так и конкретные)\n- Может иметь поля и конструкторы\n- Не может быть инстанциирован напрямую\n- Подклассы должны реализовать абстрактные методы\n- Поддерживает наследование только от одного класса\n\n**Интерфейс:**\n- Содержит только определения (до TS 2.0), но может содержать реализации методов с TS 2.0+\n- Не может содержать реализации полей (только определения)\n- Не имеет конструктора\n- Поддерживает множественное наследование\n- Используется для определения контракта\n\n```ts\n// Абстрактный класс\nabstract class Animal {\n  abstract makeSound(): void;\n  move(): void {\n    console.log('Moving...');\n  }\n}\n\n// Интерфейс\ninterface Flyable {\n  fly(): void;\n}\n\nclass Bird extends Animal implements Flyable {\n  makeSound(): void {\n    console.log('Tweet!');\n  }\n  \n  fly(): void {\n    console.log('Flying!');\n  }\n}\n```\n\n---"
+  },
+  {
+    "question": "Объединение vs пересечение типов",
+    "answer": "**Объединение (Union):** `TypeA | TypeB` — значение может быть любого из указанных типов.\n```ts\nlet value: string | number;\nvalue = 'hello'; // OK\nvalue = 42;      // OK\n```\n\n**Пересечение (Intersection):** `TypeA & TypeB` — значение должно удовлетворять всем указанным типам одновременно.\n```ts\ninterface A { a: string }\ninterface B { b: number }\n\nlet obj: A & B; // Объект должен иметь и a, и b\nobj = { a: 'hello', b: 42 }; // OK\n```\n\n---"
+  },
+  {
+    "question": "Разница между типами void, never и unknown",
+    "answer": "- `void` — используется для функций, которые ничего не возвращают (или возвращают `undefined`)\n- `never` — тип для значений, которые никогда не происходят (например, функции, выбрасывающие ошибки или бесконечные циклы)\n- `unknown` — самый безопасный тип, представляет значение неизвестного типа, требует проверки перед использованием\n\n```ts\n// void\nfunction logMessage(msg: string): void {\n  console.log(msg);\n}\n\n// never\nfunction throwError(msg: string): never {\n  throw new Error(msg);\n}\n\n// unknown\nlet userInput: unknown = 'hello';\nif (typeof userInput === 'string') {\n  // Теперь можно использовать userInput как строку\n  const str = userInput.toUpperCase();\n}\n```\n\n---"
+  },
+  {
+    "question": "Типы vs интерфейсы",
+    "answer": "Основные различия:\n\n**Type alias (типы):**\n- Поддерживают объединения, пересечения, примитивы\n- Не могут быть повторно объявлены (расширены)\n- Лучше подходят для простых определений и объединений\n\n**Interface (интерфейсы):**\n- Могут быть расширены другими объявлениями (declaration merging)\n- Предпочтительнее для объектных форм\n- Подают лучше в сообщениях об ошибках\n\n```ts\n// type\ntype Name = string;\ntype User = Name | { name: string };\n\n// interface\ninterface User {\n  name: string;\n}\ninterface User {  // declaration merging\n  age: number;\n}\n// Результат: { name: string; age: number; }\n```\n\n---"
+  },
+  {
+    "question": "Чем отличается unknown от any, когда использование any оправдано",
+    "answer": "`any` отключает проверку типов, позволяя делать что угодно.\n`unknown` — безопасный супертип, требует проверки перед использованием.\n\nИспользование `any` оправдано:\n- При работе с ненадежными API или библиотеками без типов\n- Во время миграции с JavaScript на TypeScript\n- Иногда в дженериках, где тип действительно может быть любым\n\n```ts\nlet value: any;\nvalue.func();  // ОК, но потенциально опасно\n\nlet unknownValue: unknown;\n// unknownValue.func();  // Ошибка, требуется проверка\nif (typeof unknownValue === 'function') {\n  unknownValue.func();  // OK\n}\n```\n\n---"
+  },
+  {
+    "question": "Утилита Record - пример использования",
+    "answer": "Утилита `Record<K, T>` создает тип, свойства которого имеют ключи типа `K` и значения типа `T`. Часто используется для создания объектов-карт.\n\n```ts\n// Создание объекта с ключами типа string и значениями типа number\nconst userScores: Record<string, number> = {\n  john: 95,\n  jane: 87,\n  bob: 92\n};\n\n// Использование с перечислениями\nenum Status { Active = 'active', Inactive = 'inactive' }\nconst statusMap: Record<Status, string> = {\n  [Status.Active]: 'User is active',\n  [Status.Inactive]: 'User is not active'\n};\n```\n\n---"
+  },
+  {
+    "question": "Типы массивов и кортежей",
+    "answer": "**Массивы:**\n```ts\nlet numbers: number[] = [1, 2, 3];\nlet strings: Array<string> = ['a', 'b', 'c'];\n```\n\n**Кортежи:**\n```ts\n// Кортеж с фиксированным количеством элементов разных типов\nlet person: [string, number] = ['John', 30];\n// person = [30, 'John'];  // Ошибка!\n\n// Кортеж с опциональными элементами (начиная с TS 3.0)\nlet optionalTuple: [string, number?];\noptionalTuple = ['hello'];         // OK\noptionalTuple = ['hello', 42];     // OK\n```\n\n---"
+  },
+  {
+    "question": "Утилита Readonly - пример использования",
+    "answer": "Утилита `Readonly<T>` делает все свойства типа `T` только для чтения.\n\n```ts\ninterface Todo {\n  title: string;\n  description: string;\n}\n\nconst todo: Readonly<Todo> = {\n  title: 'Learn TypeScript',\n  description: 'Complete the tutorial'\n};\n\n// todo.title = 'Updated';  // Ошибка! Свойства только для чтения\n```\n\n---"
+  },
+  {
+    "question": "Объединение и пересечение",
+    "answer": "(То же, что и вопрос 6, подробный ответ)\n\n**Объединение (Union):** `TypeA | TypeB`\n```ts\ntype Status = 'success' | 'error' | 'warning';\nlet myStatus: Status = 'success';\n```\n\n**Пересечение (Intersection):** `TypeA & TypeB`\n```ts\ninterface Address {\n  street: string;\n}\ninterface Contact {\n  phone: number;\n}\n\ntype Person = Address & Contact;\n// Результат: { street: string; phone: number; }\n```\n\n---"
+  },
+  {
+    "question": "Утилита Partial - пример использования",
+    "answer": "Утилита `Partial<T>` делает все свойства типа `T` опциональными.\n\n```ts\ninterface User {\n  name: string;\n  email: string;\n  age: number;\n}\n\n// Создание обновления пользователя, где все поля опциональны\nfunction updateUser(id: number, update: Partial<User>) {\n  // Обновляем только указанные поля\n  console.log(`Updating user ${id} with:`, update);\n}\n\nupdateUser(1, { name: 'New Name' });  // OK\nupdateUser(2, {});  // OK - можно обновить ничего\n```\n\n---"
+  },
+  {
+    "question": "Утилита Required - пример использования",
+    "answer": "Утилита `Required<T>` делает все свойства типа `T` обязательными (противоположна `Partial`).\n\n```ts\ninterface User {\n  name?: string;\n  email?: string;\n  phone?: string;\n}\n\n// Для валидации данных, требуем все поля\nfunction validateUser(user: Required<User>) {\n  // Все поля теперь обязательны\n  console.log(user.name.toUpperCase());  // Типо-безопасно\n  console.log(user.email.toLowerCase()); // Типо-безопасно\n}\n\nconst userData: User = {\n  name: 'John',\n  email: 'john@example.com',\n  phone: '123-456-7890'\n};\n\nvalidateUser(userData as Required<User>); // Нужно явное преобразование\n```\n\n---"
+  },
+  {
+    "question": "Основные типы TypeScript",
+    "answer": "Основные типы TypeScript:\n\n**Примитивные типы:**\n- `string` — строки\n- `number` — числа\n- `boolean` — логические значения\n- `null` — отсутствие значения\n- `undefined` — определенная, но неинициализированная переменная\n- `symbol` — уникальные идентификаторы\n- `bigint` — большие целые числа\n\n**Объектные типы:**\n- `Object` — объекты\n- `Array` — массивы\n- `Function` — функции\n\n**Специальные типы:**\n- `any` — любой тип\n- `void` — отсутствие значения\n- `never` — тип для значений, которые никогда не происходят\n- `unknown` — неизвестный тип (безопасная альтернатива any)\n\n---"
+  },
+  {
+    "question": "Литеральные типы",
+    "answer": "Литеральные типы позволяют указать конкретное значение в качестве типа. Это может быть строка, число или логическое значение.\n\n```ts\n// Строковые литералы\nlet direction: 'up' | 'down' | 'left' | 'right';\ndirection = 'up';  // OK\n// direction = 'top';  // Ошибка!\n\n// Числовые литералы\nlet dice: 1 | 2 | 3 | 4 | 5 | 6;\ndice = 4;  // OK\n// dice = 7;  // Ошибка!\n\n// Булевые литералы\nlet isActive: true;\nisActive = true;  // OK\n// isActive = false;  // Ошибка!\n```\n\n---"
+  },
+  {
+    "question": "Когда использовать типы, а когда интерфейсы",
+    "answer": "**Используйте типы (type aliases):**\n- Для объединений и пересечений типов\n- Для примитивов и их комбинаций\n- Когда нужно создать псевдоним для сложного типа\n- Для объявления кортежей\n\n**Используйте интерфейсы:**\n- Для объектных форм\n- Когда предполагается расширение (declaration merging)\n- При работе с классами и наследованием\n- Для определения форм API\n- В большинстве случаев, когда определяете объект\n\n```ts\n// Типы подходят для объединений\ntype Status = 'active' | 'inactive';\ntype Permission = 'read' | 'write' | 'admin';\n\n// Интерфейсы для объектов\ninterface User {\n  name: string;\n  age: number;\n}\n```\n\n---"
+  },
+  {
+    "question": "Утилита Exclude - пример использования",
+    "answer": "Утилита `Exclude<T, U>` исключает из `T` все типы, которые присутствуют в `U`.\n\n```ts\ntype T0 = Exclude<'a' | 'b' | 'c', 'a'>;        // 'b' | 'c'\ntype T1 = Exclude<'a' | 'b' | 'c', 'a' | 'b'>;   // 'c'\ntype T2 = Exclude<string | number | (() => void), Function>;  // string | number\n\n// Практический пример\ninterface Todo {\n  title: string;\n  description: string;\n  completed: boolean;\n}\n\ntype TodoPreview = Pick<Todo, Exclude<keyof Todo, 'completed'>>;\n// Результат: { title: string; description: string; }\n```\n\n---"
+  },
+  {
+    "question": "Утилита Extract - пример использования",
+    "answer": "Утилита `Extract<T, U>` извлекает из `T` все типы, которые присутствуют в `U`.\n\n```ts\ntype T0 = Extract<'a' | 'b' | 'c', 'a' | 'f'>;   // 'a'\ntype T1 = Extract<string | number | (() => void), Function>;  // () => void\ntype T2 = Extract<'a' | 'b' | 'c', 'd'>;         // never\n\n// Практический пример\ntype EventNames = 'click' | 'scroll' | 'mousemove';\ntype MouseEvents = 'click' | 'mousemove';\n\ntype SelectedEvents = Extract<EventNames, MouseEvents>;\n// Результат: 'click' | 'mousemove'\n```\n\n---"
+  },
+  {
+    "question": "Утилита Omit - пример использования",
+    "answer": "Утилита `Omit<T, K>` создает тип, исключая из `T` определенные свойства `K`.\n\n```ts\ninterface Todo {\n  title: string;\n  description: string;\n  completed: boolean;\n  createdAt: number;\n}\n\n// Сделать новый тип без completed и createdAt\ntype TodoPreview = Omit<Todo, 'completed' | 'createdAt'>;\n// Результат: { title: string; description: string; }\n\n// Практический пример: создание формы обновления данных\ntype TodoUpdate = Omit<Todo, 'createdAt'>;  // Не нужно обновлять дату создания\n```\n\n---"
+  },
+  {
+    "question": "Утилита NonNullable - пример использования",
+    "answer": "Утилита `NonNullable<T>` исключает `null` и `undefined` из типа `T`.\n\n```ts\ntype T0 = NonNullable<string | number | undefined>;  // string | number\ntype T1 = NonNullable<string[] | null | undefined>;  // string[]\ntype T2 = NonNullable<undefined>;                    // never\n\n// Практический пример\nfunction processValue<T>(value: NonNullable<T>) {\n  // value гарантированно не null и не undefined\n  return value;\n}\n\n// processValue(undefined);  // Ошибка!\nprocessValue('hello');  // OK\nprocessValue(42);       // OK\n```\n\n---"
+  },
+  {
+    "question": "Когда использовать типы, а когда интерфейсы",
+    "answer": "(То же, что и вопрос 18, но с более подробной информацией)\n\nВот краткое практическое руководство:\n\n1. **Используйте интерфейсы по умолчанию** для объектных форм\n2. **Используйте типы**, когда:\n   - Нужны объединения: `type Position = 'top' | 'bottom'`\n   - Нужны пересечения: `type Mix = A & B`\n   - Нужны кортежи: `type Pair = [string, number]`\n   - Нужен псевдоним для сложного типа: `type Callback = (data: string) => void`\n\n3. **Интерфейсы предпочтительнее**, когда:\n   - Определяете форму API\n   - Ожидаете расширения в будущем (declaration merging)\n   - Работаете с классами (implements)\n   - Хотите получить более понятные сообщения об ошибках\n\n```ts\n// Интерфейс для формы API\ninterface ApiResponse {\n  status: number;\n  data: string;\n}\n\n// Type для объединения\ntype Status = 'success' | 'error' | 'loading';\n```\n\n</content>"
+  }
+]
