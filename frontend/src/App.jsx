@@ -969,9 +969,9 @@ export default function App() {
           </Card>
         </aside>
 
-        <main className="space-y-4">
+        <main className="space-y-4 lg:flex lg:h-[calc(100vh-7.5rem)] lg:flex-col lg:gap-4 lg:space-y-0">
           {!selectedCollectionStats && (
-            <Card className="glass-panel">
+            <Card className="glass-panel lg:h-full">
               <CardHeader>
                 <CardTitle>Upload your first JSON collection</CardTitle>
               </CardHeader>
@@ -1010,8 +1010,8 @@ export default function App() {
                 </CardContent>
               </Card>
 
-              <Card className="glass-panel">
-                <CardContent className="flex flex-col items-center gap-6 pt-6">
+              <Card className="glass-panel lg:min-h-0 lg:flex-1">
+                <CardContent className="flex flex-col items-center gap-6 pt-6 lg:h-full lg:pb-6">
                   {!currentCard && <p className="text-xl font-semibold">No cards left for this session</p>}
                   {currentCard && (
                     <>
@@ -1022,7 +1022,7 @@ export default function App() {
                         onEdit={() => openEditDialog(currentCard)}
                         onDelete={() => removeCard(currentCard.id)}
                       />
-                      <div className="flex w-full max-w-2xl flex-col gap-3 sm:flex-row">
+                      <div className="flex w-full max-w-2xl flex-col items-center gap-3 sm:flex-row sm:justify-center">
                         <Button variant="outline" className="w-full border-amber-500 text-amber-600 hover:bg-amber-50 sm:w-auto" onClick={() => markCurrentCard(false)}>
                           Don't Know
                         </Button>

@@ -868,18 +868,47 @@
 
 @layer components {
   .glass-panel {
-    background: hsl(var(--card) / 0.68);
-    border-color: hsl(var(--border) / 0.72);
+    position: relative;
+    isolation: isolate;
+    overflow: hidden;
+    background:
+      linear-gradient(140deg, hsl(var(--card) / 0.8), hsl(var(--card) / 0.56)),
+      radial-gradient(120% 120% at 0% 0%, hsl(var(--primary) / 0.14), transparent 58%);
+    border-color: hsl(var(--border) / 0.74);
     backdrop-filter: blur(14px);
     -webkit-backdrop-filter: blur(14px);
-    box-shadow: 0 12px 36px rgba(0, 0, 0, 0.08);
+    box-shadow:
+      0 20px 46px rgba(0, 0, 0, 0.14),
+      inset 0 1px 0 hsl(var(--background) / 0.48),
+      inset 0 -1px 0 hsl(var(--border) / 0.34);
+  }
+
+  .glass-panel::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background: linear-gradient(180deg, hsl(var(--background) / 0.24), transparent 28%);
+    z-index: 0;
+  }
+
+  .glass-panel > * {
+    position: relative;
+    z-index: 1;
   }
 
   .glass-item {
-    background: hsl(var(--card) / 0.52);
-    border-color: hsl(var(--border) / 0.68);
+    position: relative;
+    isolation: isolate;
+    background:
+      linear-gradient(135deg, hsl(var(--card) / 0.66), hsl(var(--card) / 0.46)),
+      radial-gradient(110% 110% at 0% 0%, hsl(var(--secondary) / 0.12), transparent 58%);
+    border-color: hsl(var(--border) / 0.72);
     backdrop-filter: blur(10px);
     -webkit-backdrop-filter: blur(10px);
+    box-shadow:
+      0 10px 24px rgba(0, 0, 0, 0.1),
+      inset 0 1px 0 hsl(var(--background) / 0.42);
   }
 }
 
