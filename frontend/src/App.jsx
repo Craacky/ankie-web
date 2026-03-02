@@ -150,10 +150,10 @@ const FlipCard = memo(function FlipCard({ card, flipped, onFlip, onEdit, onDelet
           </CardHeader>
           <CardContent className="flex h-[240px] flex-col sm:h-[320px]">
             <div className="mb-3 text-sm font-semibold uppercase tracking-wide text-muted-foreground">Answer</div>
-            <div className="max-h-[170px] overflow-y-auto pr-1 text-lg font-medium whitespace-pre-wrap break-words sm:max-h-[230px] sm:text-xl">
+            <div className="min-h-0 flex-1 overflow-y-auto pr-1 text-lg font-medium whitespace-pre-wrap break-words sm:text-xl">
               {card.answer}
             </div>
-            <p className="mt-auto pt-4 text-sm text-muted-foreground">Choose “Know” or “Don't Know”</p>
+            <p className="pt-4 text-sm text-muted-foreground">Choose “Know” or “Don't Know”</p>
           </CardContent>
         </Card>
       </div>
