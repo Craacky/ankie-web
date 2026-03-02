@@ -1,9 +1,21 @@
 [
   {
+    "collection_name": "Advices",
+    "source_markdown": "Sources/Theory/Advices.md",
+    "json_file": "Sources/PreloadCollections/Advices.json",
+    "cards": 1
+  },
+  {
     "collection_name": "CSS v2",
     "source_markdown": "Sources/Theory/CSS_v2.md",
     "json_file": "Sources/PreloadCollections/CSS_v2.json",
     "cards": 20
+  },
+  {
+    "collection_name": "CV",
+    "source_markdown": "Sources/Theory/CV.md",
+    "json_file": "Sources/PreloadCollections/CV.json",
+    "cards": 1
   },
   {
     "collection_name": "Docker",
@@ -42,6 +54,12 @@
     "cards": 210
   },
   {
+    "collection_name": "Money",
+    "source_markdown": "Sources/Theory/Money.md",
+    "json_file": "Sources/PreloadCollections/Money.json",
+    "cards": 1
+  },
+  {
     "collection_name": "Patterns",
     "source_markdown": "Sources/Theory/Patterns.md",
     "json_file": "Sources/PreloadCollections/Patterns.json",
@@ -70,6 +88,12 @@
     "source_markdown": "Sources/Theory/SQL.md",
     "json_file": "Sources/PreloadCollections/SQL.json",
     "cards": 66
+  },
+  {
+    "collection_name": "Soft Skills",
+    "source_markdown": "Sources/Theory/Soft Skills.md",
+    "json_file": "Sources/PreloadCollections/Soft Skills.json",
+    "cards": 1
   },
   {
     "collection_name": "TS",

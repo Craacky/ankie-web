@@ -5,8 +5,15 @@ services:
     container_name: ankie-backend
     environment:
       - DB_PATH=/data/ankie.db
+      - TELEGRAM_BOT_TOKEN=${TELEGRAM_BOT_TOKEN:-}
+      - TELEGRAM_BOT_USERNAME=${TELEGRAM_BOT_USERNAME:-}
+      - SESSION_TTL_DAYS=${SESSION_TTL_DAYS:-30}
+      - COOKIE_SECURE=${COOKIE_SECURE:-false}
+      - AUTO_IMPORT_SOURCES=${AUTO_IMPORT_SOURCES:-true}
+      - SOURCES_PATH=/sources
     volumes:
       - ankie_data:/data
+      - ./Sources:/sources:ro
     ports:
       - "8000:8000"
 

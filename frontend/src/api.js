@@ -3,7 +3,11 @@ const API_URL =
   (window.location.port === '5173' ? 'http://localhost:8000/api' : '/api')
 
 async function request(path, options = {}) {
-  const response = await fetch(`${API_URL}${path}`, options)
+  const response = await fetch(`${API_URL}${path}`, {
+    credentials: 'include',
+    ...options
+  })
+
   if (!response.ok) {
     let message = `Request failed with status ${response.status}`
     try {
@@ -14,7 +18,9 @@ async function request(path, options = {}) {
     } catch {
       // no-op
     }
-    throw new Error(message)
+    const error = new Error(message)
+    error.status = response.status
+    throw error
   }
 
   const contentType = response.headers.get('content-type') || ''
@@ -25,7 +31,36 @@ async function request(path, options = {}) {
 }
 
 export const api = {
+  getAuthConfig: () => request('/auth/config'),
+  telegramAuth: (payload) =>
+    request('/auth/telegram', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    }),
+  getMe: () => request('/auth/me'),
+  logout: () => request('/auth/logout', { method: 'POST' }),
   getCollections: () => request('/collections'),
+  getFolders: () => request('/folders'),
+  createFolder: (name) =>
+    request('/folders', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name })
+    }),
+  renameFolder: (folderId, name) =>
+    request(`/folders/${folderId}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name })
+    }),
+  deleteFolder: (folderId) => request(`/folders/${folderId}`, { method: 'DELETE' }),
+  moveCollectionToFolder: (collectionId, folderId) =>
+    request(`/collections/${collectionId}/folder`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ folder_id: folderId })
+    }),
   getCollection: (id) => request(`/collections/${id}`),
   getStudyCards: (id) => request(`/collections/${id}/study-cards`),
   resetCollection: (id) => request(`/collections/${id}/reset`, { method: 'POST' }),
@@ -54,7 +89,7 @@ export const api = {
     }),
   deleteCard: (cardId) => request(`/cards/${cardId}`, { method: 'DELETE' }),
   exportCollection: async (collectionId, collectionName) => {
-    const response = await fetch(`${API_URL}/collections/${collectionId}/export`)
+    const response = await fetch(`${API_URL}/collections/${collectionId}/export`, { credentials: 'include' })
     if (!response.ok) {
       throw new Error('Failed to export collection')
     }

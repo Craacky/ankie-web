@@ -83,6 +83,28 @@ def normalize_answer(body: str) -> str:
     return content
 
 
+def fallback_card_from_markdown(md_path: Path, text: str) -> dict | None:
+    content = text.strip()
+    if not content:
+        return None
+
+    # Remove pure image embed lines from the beginning to reduce noise.
+    lines = content.splitlines()
+    filtered = [ln for ln in lines if not re.match(r"^\s*!\[\[.*\]\]\s*$", ln.strip())]
+    content = "\n".join(filtered).strip()
+    if not content:
+        # If markdown contains only embeds/links, still keep original content as a card.
+        content = text.strip()
+    if not content:
+        return None
+
+    question = f"Notes: {md_path.stem}"
+    return {
+        "question": question,
+        "answer": content,
+    }
+
+
 def section_to_card(title: str, body: str) -> dict | None:
     raw_title = title.strip()
     cleaned_title = clean_heading(raw_title)
@@ -126,6 +148,11 @@ def convert_file(md_path: Path, input_root: Path, output_root: Path) -> tuple[Pa
         card = section_to_card(title, body)
         if card:
             cards.append(card)
+
+    if not cards:
+        fallback = fallback_card_from_markdown(md_path, text)
+        if fallback:
+            cards.append(fallback)
 
     rel = md_path.relative_to(input_root)
     out_path = output_root / rel.with_suffix(".json")
