@@ -867,6 +867,18 @@
 }
 
 @layer components {
+  .frosted-surface {
+    background: hsl(var(--background) / 0.6);
+    border: 1px solid hsl(var(--background) / 0.32);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    box-shadow: 0 12px 45px rgba(0, 0, 0, 0.14);
+  }
+
+  .dark .frosted-surface {
+    border-color: hsl(var(--foreground) / 0.12);
+  }
+
   .glass-panel {
     position: relative;
     isolation: isolate;

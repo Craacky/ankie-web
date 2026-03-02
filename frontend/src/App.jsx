@@ -740,7 +740,7 @@ export default function App() {
   return (
     <div className="min-h-screen bg-background text-foreground">
       <header className="sticky top-3 z-30 px-4">
-        <div className="mx-auto flex max-w-[1800px] items-center justify-between rounded-2xl border border-white/20 bg-background/60 px-3 py-2.5 shadow-[0_12px_45px_rgba(0,0,0,0.14)] backdrop-blur-xl dark:border-white/10 sm:px-5 sm:py-3">
+        <div className="frosted-surface mx-auto flex max-w-[1800px] items-center justify-between rounded-2xl px-3 py-2.5 sm:px-5 sm:py-3">
           <h1 className="text-lg font-semibold tracking-tight sm:text-xl">Ankie Web</h1>
           <div className="flex items-center gap-2">
             {user && (
@@ -816,7 +816,7 @@ export default function App() {
           className="fixed inset-0 z-50 flex items-center justify-center bg-black/45 p-4"
           onClick={() => setThemeMenuOpen(false)}
         >
-          <Card className="glass-panel w-full max-w-xl" onClick={(e) => e.stopPropagation()}>
+          <Card className="frosted-surface w-full max-w-xl" onClick={(e) => e.stopPropagation()}>
             <CardHeader>
               <CardTitle>Choose Theme</CardTitle>
               <CardDescription>
@@ -867,7 +867,7 @@ export default function App() {
       )}
 
       <Dialog open={mobileCollectionsOpen} onOpenChange={setMobileCollectionsOpen}>
-        <DialogContent className="glass-panel flex h-[88vh] w-[96vw] max-w-none flex-col sm:max-w-xl lg:hidden">
+        <DialogContent className="frosted-surface flex h-[88vh] w-[96vw] max-w-none flex-col sm:max-w-xl lg:hidden">
           <DialogHeader>
             <div className="flex items-center justify-between gap-2">
               <DialogTitle>Folders & Collections</DialogTitle>
@@ -1040,7 +1040,7 @@ export default function App() {
       )}
 
       <Dialog open={collectionDialogOpen} onOpenChange={setCollectionDialogOpen}>
-        <DialogContent className="glass-panel">
+        <DialogContent className="frosted-surface">
           <DialogHeader>
             <DialogTitle>Add Collection</DialogTitle>
           </DialogHeader>
@@ -1073,7 +1073,7 @@ export default function App() {
       </Dialog>
 
       <Dialog open={folderDialogOpen} onOpenChange={setFolderDialogOpen}>
-        <DialogContent className="glass-panel">
+        <DialogContent className="frosted-surface">
           <DialogHeader>
             <DialogTitle>Add Folder</DialogTitle>
           </DialogHeader>
