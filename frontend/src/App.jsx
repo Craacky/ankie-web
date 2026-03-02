@@ -657,7 +657,7 @@ export default function App() {
         key={collection.id}
         draggable
         onDragStart={() => setDraggedCollectionId(collection.id)}
-        className={`virtualize-item relative w-full rounded-md border bg-card/55 p-3 text-left transition ${collectionItemClass(collection)} ${
+        className={`relative w-full rounded-md border bg-card/55 p-3 text-left transition ${collectionItemClass(collection)} ${
           isMenuOpen ? 'z-30' : ''
         }`}
         onClick={() => {
@@ -746,7 +746,7 @@ export default function App() {
           return (
             <div
               key={folder.id}
-              className="virtualize-item rounded-md border bg-card/45 p-2"
+              className="rounded-md border bg-card/45 p-2"
               onDragOver={(e) => e.preventDefault()}
               onDrop={() => {
                 if (draggedCollectionId != null) {
