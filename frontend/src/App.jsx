@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { memo, useEffect, useMemo, useRef, useState } from 'react'
 import {
   Palette,
   Check,
@@ -14,7 +14,8 @@ import {
   ChevronDown,
   MoreVertical,
   LogOut,
-  PanelLeft
+  PanelLeft,
+  CircleHelp
 } from 'lucide-react'
 
 import { api } from './api'
@@ -27,6 +28,7 @@ import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '
 const MIN_REPEAT_AFTER = 1
 const MAX_REPEAT_AFTER = 8
 const THEME_STORAGE_KEY = 'ankie_theme'
+const GUIDE_SEEN_KEY_PREFIX = 'ankie_guide_seen_'
 const THEMES = [
   { key: 'catppuccin', label: 'Catppuccin', dark: true, swatches: ['#cba6f7', '#89dceb', '#f38ba8'] },
   { key: 'solarized', label: 'Solarized', dark: false, swatches: ['#2aa198', '#cb4b16', '#b58900'] },
@@ -74,7 +76,7 @@ function randomRepeatAfter() {
   return Math.floor(Math.random() * (MAX_REPEAT_AFTER - MIN_REPEAT_AFTER + 1)) + MIN_REPEAT_AFTER
 }
 
-function CardActionButtons({ onEdit, onDelete }) {
+const CardActionButtons = memo(function CardActionButtons({ onEdit, onDelete }) {
   return (
     <div className="absolute right-4 top-4 z-10 flex items-center gap-2">
       <Button
@@ -103,9 +105,9 @@ function CardActionButtons({ onEdit, onDelete }) {
       </Button>
     </div>
   )
-}
+})
 
-function FlipCard({ card, flipped, onFlip, onEdit, onDelete }) {
+const FlipCard = memo(function FlipCard({ card, flipped, onFlip, onEdit, onDelete }) {
   return (
     <div onClick={onFlip} className="w-full max-w-6xl cursor-pointer [perspective:1400px]">
       <div
@@ -157,7 +159,7 @@ function FlipCard({ card, flipped, onFlip, onEdit, onDelete }) {
       </div>
     </div>
   )
-}
+})
 
 export default function App() {
   const [themeKey, setThemeKey] = useState(localStorage.getItem(THEME_STORAGE_KEY) || 'catppuccin')
@@ -187,8 +189,10 @@ export default function App() {
   const [mobileCollectionsOpen, setMobileCollectionsOpen] = useState(false)
   const [renameFolderTarget, setRenameFolderTarget] = useState(null)
   const [renameFolderInput, setRenameFolderInput] = useState('')
+  const [guideOpen, setGuideOpen] = useState(false)
   const telegramContainerRef = useRef(null)
   const profileMenuRef = useRef(null)
+  const statsSyncTimerRef = useRef(null)
   const [profileMenuOpen, setProfileMenuOpen] = useState(false)
 
   const selectedCollectionStats = useMemo(
@@ -223,6 +227,24 @@ export default function App() {
   function notify(message, type = 'success') {
     setSnack({ message, type })
     window.setTimeout(() => setSnack(null), 3000)
+  }
+
+  function scheduleStatsSync() {
+    if (statsSyncTimerRef.current) {
+      window.clearTimeout(statsSyncTimerRef.current)
+    }
+    statsSyncTimerRef.current = window.setTimeout(() => {
+      fetchCollections().catch((err) => notify(err.message, 'error'))
+    }, 900)
+  }
+
+  function showGuideIfNeeded(userPayload) {
+    if (!userPayload?.id) return
+    const key = `${GUIDE_SEEN_KEY_PREFIX}${userPayload.id}`
+    if (!localStorage.getItem(key)) {
+      localStorage.setItem(key, '1')
+      setGuideOpen(true)
+    }
   }
 
   async function fetchCollections() {
@@ -286,6 +308,7 @@ export default function App() {
       try {
         const me = await api.getMe()
         setUser(me)
+        showGuideIfNeeded(me)
         await Promise.all([fetchCollections(), fetchFolders()])
       } catch (err) {
         if (err.status !== 401) {
@@ -324,6 +347,7 @@ export default function App() {
         await api.telegramAuth(telegramUser)
         const me = await api.getMe()
         setUser(me)
+        showGuideIfNeeded(me)
         await Promise.all([fetchCollections(), fetchFolders()])
         notify(`Welcome, ${me.first_name || me.username || 'user'}`)
       } catch (err) {
@@ -356,6 +380,14 @@ export default function App() {
 
     document.addEventListener('mousedown', onDocumentClick)
     return () => document.removeEventListener('mousedown', onDocumentClick)
+  }, [])
+
+  useEffect(() => {
+    return () => {
+      if (statsSyncTimerRef.current) {
+        window.clearTimeout(statsSyncTimerRef.current)
+      }
+    }
   }, [])
 
   async function handleImport(event) {
@@ -396,8 +428,41 @@ export default function App() {
           return [...rest.slice(0, insertIndex), currentCard, ...rest.slice(insertIndex)]
         })
       }
+      if (selectedCollectionId && known) {
+        setCollections((prev) =>
+          prev.map((item) => {
+            if (item.id !== selectedCollectionId) {
+              return item
+            }
+            const knownCards = Math.min(item.total_cards, item.known_cards + 1)
+            const remainingCards = Math.max(0, item.remaining_cards - 1)
+            return {
+              ...item,
+              known_cards: knownCards,
+              remaining_cards: remainingCards,
+              is_mastered: item.total_cards > 0 && remainingCards === 0
+            }
+          })
+        )
+      }
+      if (selectedCollectionId) {
+        setSelectedCollectionDetail((prev) => {
+          if (!prev || prev.id !== selectedCollectionId) {
+            return prev
+          }
+          const nextKnown = known ? Math.min(prev.total_cards, prev.known_cards + 1) : prev.known_cards
+          const nextRemaining = known ? Math.max(0, prev.remaining_cards - 1) : prev.remaining_cards
+          return {
+            ...prev,
+            known_cards: nextKnown,
+            remaining_cards: nextRemaining,
+            is_mastered: prev.total_cards > 0 && nextRemaining === 0,
+            cards: prev.cards.map((card) => (card.id === currentCard.id ? { ...card, known } : card))
+          }
+        })
+      }
       setFlipped(false)
-      await Promise.all([fetchCollections(), fetchCollectionDetail(selectedCollectionId)])
+      scheduleStatsSync()
     } catch (err) {
       notify(err.message, 'error')
     }
@@ -592,7 +657,7 @@ export default function App() {
         key={collection.id}
         draggable
         onDragStart={() => setDraggedCollectionId(collection.id)}
-        className={`relative w-full rounded-md border bg-card/55 p-3 text-left transition ${collectionItemClass(collection)} ${
+        className={`virtualize-item relative w-full rounded-md border bg-card/55 p-3 text-left transition ${collectionItemClass(collection)} ${
           isMenuOpen ? 'z-30' : ''
         }`}
         onClick={() => {
@@ -681,7 +746,7 @@ export default function App() {
           return (
             <div
               key={folder.id}
-              className="rounded-md border bg-card/45 p-2"
+              className="virtualize-item rounded-md border bg-card/45 p-2"
               onDragOver={(e) => e.preventDefault()}
               onDrop={() => {
                 if (draggedCollectionId != null) {
@@ -775,6 +840,18 @@ export default function App() {
               >
                 <PanelLeft size={16} />
                 Collections
+              </Button>
+            )}
+            {user && (
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                className="gap-2"
+                onClick={() => setGuideOpen(true)}
+              >
+                <CircleHelp size={16} />
+                <span className="hidden sm:inline">Guide</span>
               </Button>
             )}
             <div className="relative">
@@ -970,6 +1047,26 @@ export default function App() {
           <div className="min-h-0 flex-1 overflow-y-auto">
             {renderCollectionsList()}
           </div>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={guideOpen} onOpenChange={setGuideOpen}>
+        <DialogContent className="frosted-surface max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Quick Start Guide</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3 text-sm leading-relaxed text-foreground">
+            <p>1. Open the collections panel and create a folder or import a collection from JSON.</p>
+            <p>2. Select a collection and tap the card to flip between question and answer.</p>
+            <p>3. Use “Know” if you answered correctly, or “Don't Know” to repeat the card later.</p>
+            <p>4. Use “Reset progress” when you want to restart the collection from the beginning.</p>
+            <p>5. Change theme anytime from the top bar and reopen this guide with the “Guide” button.</p>
+          </div>
+          <DialogFooter>
+            <Button type="button" onClick={() => setGuideOpen(false)}>
+              Got it
+            </Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
 

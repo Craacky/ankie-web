@@ -14,7 +14,7 @@ from typing import Any
 from fastapi import Cookie, Depends, FastAPI, File, Form, HTTPException, Response, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
-from sqlalchemy import func, select, text
+from sqlalchemy import case, func, select, text
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session, joinedload
 
@@ -62,6 +62,10 @@ def env_bool(name: str, default: bool) -> bool:
 def on_startup() -> None:
     Base.metadata.create_all(bind=engine)
     with engine.begin() as conn:
+        users_columns = {row[1] for row in conn.execute(text("PRAGMA table_info(users)"))}
+        if "auto_import_done" not in users_columns:
+            conn.execute(text("ALTER TABLE users ADD COLUMN auto_import_done BOOLEAN DEFAULT 0"))
+
         collections_columns = {row[1] for row in conn.execute(text("PRAGMA table_info(collections)"))}
         if "folder_id" not in collections_columns:
             conn.execute(text("ALTER TABLE collections ADD COLUMN folder_id INTEGER"))
@@ -71,6 +75,12 @@ def on_startup() -> None:
         folders_columns = {row[1] for row in conn.execute(text("PRAGMA table_info(folders)"))}
         if "user_id" not in folders_columns:
             conn.execute(text("ALTER TABLE folders ADD COLUMN user_id INTEGER"))
+
+        # Performance indexes for common filters/sorts and progress lookups.
+        conn.execute(text("CREATE INDEX IF NOT EXISTS ix_collections_user_created_at ON collections (user_id, created_at)"))
+        conn.execute(text("CREATE INDEX IF NOT EXISTS ix_collections_user_folder ON collections (user_id, folder_id)"))
+        conn.execute(text("CREATE INDEX IF NOT EXISTS ix_cards_collection_created_at ON cards (collection_id, created_at)"))
+        conn.execute(text("CREATE INDEX IF NOT EXISTS ix_card_progress_known_card ON card_progress (known, card_id)"))
 
 
 def parse_cards_payload(payload: Any) -> list[dict[str, str]]:
@@ -407,7 +417,11 @@ def auth_telegram(payload: TelegramAuthPayload, response: Response, db: Session 
         db.refresh(user)
 
     maybe_assign_legacy_data_to_first_user(db, user)
-    ensure_user_sources_loaded(db, user)
+    if not user.auto_import_done:
+        ensure_user_sources_loaded(db, user)
+        user.auto_import_done = True
+        db.commit()
+        db.refresh(user)
 
     session = create_session(db, user.id)
     set_session_cookie(response, session.token)
@@ -436,29 +450,72 @@ def auth_logout(
 
 @app.get("/api/collections", response_model=list[CollectionOut])
 def list_collections(current_user: User = Depends(get_current_user), db: Session = Depends(get_db)) -> list[CollectionOut]:
-    collections = db.scalars(
-        select(Collection).where(Collection.user_id == current_user.id).order_by(Collection.created_at.asc())
+    rows = db.execute(
+        select(
+            Collection.id,
+            Collection.name,
+            Collection.folder_id,
+            Collection.created_at,
+            func.count(Card.id).label("total_cards"),
+            func.coalesce(
+                func.sum(case((CardProgress.known == True, 1), else_=0)),  # noqa: E712
+                0,
+            ).label("known_cards"),
+        )
+        .select_from(Collection)
+        .outerjoin(Card, Card.collection_id == Collection.id)
+        .outerjoin(CardProgress, CardProgress.card_id == Card.id)
+        .where(Collection.user_id == current_user.id)
+        .group_by(Collection.id, Collection.name, Collection.folder_id, Collection.created_at)
+        .order_by(Collection.created_at.asc())
     ).all()
-    return [collection_stats(db, c) for c in collections]
+    result: list[CollectionOut] = []
+    for row in rows:
+        total = int(row.total_cards or 0)
+        known = int(row.known_cards or 0)
+        remaining = max(total - known, 0)
+        result.append(
+            CollectionOut(
+                id=row.id,
+                name=row.name,
+                folder_id=row.folder_id,
+                created_at=row.created_at,
+                total_cards=total,
+                known_cards=known,
+                remaining_cards=remaining,
+                is_mastered=(total > 0 and remaining == 0),
+            )
+        )
+    return result
 
 
 @app.get("/api/folders", response_model=list[FolderOut])
 def list_folders(current_user: User = Depends(get_current_user), db: Session = Depends(get_db)) -> list[FolderOut]:
-    folders = db.scalars(
-        select(Folder).where(Folder.user_id == current_user.id).order_by(Folder.created_at.asc())
-    ).all()
-    items: list[FolderOut] = []
-    for folder in folders:
-        count = (
-            db.scalar(
-                select(func.count(Collection.id)).where(
-                    Collection.folder_id == folder.id, Collection.user_id == current_user.id
-                )
-            )
-            or 0
+    rows = db.execute(
+        select(
+            Folder.id,
+            Folder.name,
+            Folder.created_at,
+            func.count(Collection.id).label("collections_count"),
         )
-        items.append(FolderOut(id=folder.id, name=folder.name, created_at=folder.created_at, collections_count=count))
-    return items
+        .select_from(Folder)
+        .outerjoin(
+            Collection,
+            (Collection.folder_id == Folder.id) & (Collection.user_id == current_user.id),
+        )
+        .where(Folder.user_id == current_user.id)
+        .group_by(Folder.id, Folder.name, Folder.created_at)
+        .order_by(Folder.created_at.asc())
+    ).all()
+    return [
+        FolderOut(
+            id=row.id,
+            name=row.name,
+            created_at=row.created_at,
+            collections_count=int(row.collections_count or 0),
+        )
+        for row in rows
+    ]
 
 
 @app.post("/api/folders", response_model=FolderOut)
