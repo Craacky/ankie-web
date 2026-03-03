@@ -26,6 +26,9 @@ Import your own Q/A data from JSON, organize it into collections, study with fli
 - Export collections to JSON.
 - Light and dark themes.
 - Persistent storage with SQLite in Docker volume.
+  
+## Preview
+<img width="1633" height="948" alt="image" src="https://github.com/user-attachments/assets/5fc865a2-e971-4055-ac17-918182f27980" />
 
 ## JSON Import Format
 
