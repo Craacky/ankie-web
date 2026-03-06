@@ -39,6 +39,7 @@ class Session(Base):
 
 class Folder(Base):
     __tablename__ = "folders"
+    __table_args__ = (UniqueConstraint("user_id", "name", name="uq_folders_user_name"),)
 
     id: Mapped[int] = mapped_column(primary_key=True, index=True)
     user_id: Mapped[int | None] = mapped_column(ForeignKey("users.id", ondelete="SET NULL"), nullable=True, index=True)
@@ -51,6 +52,7 @@ class Folder(Base):
 
 class Collection(Base):
     __tablename__ = "collections"
+    __table_args__ = (UniqueConstraint("user_id", "name", name="uq_collections_user_name"),)
 
     id: Mapped[int] = mapped_column(primary_key=True, index=True)
     user_id: Mapped[int | None] = mapped_column(ForeignKey("users.id", ondelete="SET NULL"), nullable=True, index=True)

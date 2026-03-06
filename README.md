@@ -1,6 +1,6 @@
 # Ankie Web
 
-A self-hosted, no-auth web app for studying flashcards in an Anki-like flow.
+A self-hosted web app for studying flashcards in an Anki-like flow.
 
 Import your own Q/A data from JSON, organize it into collections, study with flip-cards, and track progress. Designed for personal use, quick setup, and reliable Docker deployment.
 
@@ -12,7 +12,7 @@ Import your own Q/A data from JSON, organize it into collections, study with fli
 
 ## Features
 
-- No authentication, single-user friendly workflow.
+- Telegram authentication with per-user isolated data.
 - Create collections by uploading JSON + custom collection name.
 - Sidebar with all collections and progress counters.
 - Study mode with random order cards.
@@ -24,6 +24,7 @@ Import your own Q/A data from JSON, organize it into collections, study with fli
 - Edit and delete cards.
 - Delete collections.
 - Export collections to JSON.
+- Markdown notes tree with create/rename/delete/upload and live preview.
 - Light and dark themes.
 - Persistent storage with SQLite in Docker volume.
   
@@ -59,8 +60,15 @@ Supported formats:
 ## Project Structure
 
 ```text
-backend/                  FastAPI app
-frontend/                 React app
+backend/
+  app/api/                FastAPI routers (auth, notes, library)
+  app/services/           Service-layer business logic
+  app/dependencies.py     Auth/session dependencies
+  app/startup.py          Startup schema/index bootstrap
+frontend/
+  src/components/         UI components and dialogs
+  src/hooks/              Feature hooks (state + effects)
+  src/features/           Feature utilities
 scripts/                  Utility scripts (backup/restore, data prep)
 Sources/                  Source learning materials
 Sources/PreloadCollections Generated JSON collections
@@ -68,6 +76,19 @@ docker-compose.yml        Local/dev compose
 docker-compose.prod.yml   Production compose with Caddy + HTTPS
 Caddyfile                 Reverse proxy and TLS config
 ```
+
+## Runtime Configuration
+
+Important backend environment variables:
+
+- `CORS_ORIGINS` (comma-separated origins, default: `http://localhost:8080,http://localhost:5173`)
+- `SESSION_TTL_DAYS` (session cookie TTL)
+- `SESSION_CLEANUP_INTERVAL_SECONDS` (expired sessions cleanup interval)
+- `AUTO_IMPORT_SOURCES` and `SOURCES_PATH`
+- `NOTES_BOOTSTRAP_REPO`, `NOTES_BOOTSTRAP_BRANCH`, `GITHUB_TOKEN`, `NOTES_ROOT`
+- `NOTES_UPLOAD_MAX_BYTES` (max uploaded note file size, default 5MB)
+- `COLLECTIONS_IMPORT_MAX_BYTES` (max JSON import size, default 5MB)
+- `COOKIE_SECURE` (should be `true` in production)
 
 ## Local Development (Docker)
 
@@ -180,8 +201,10 @@ Output:
 
 ## Security Notes
 
-- This app is intentionally no-auth for personal/private use.
-- Do not expose it publicly without access controls.
+- Use HTTPS (`COOKIE_SECURE=true`) and strict `CORS_ORIGINS` in production.
+- Notes bootstrap archive extraction is path-validated for safety.
+- File upload/import limits are configurable via env vars.
+- Telegram auth credentials must be kept private.
 - Recommended for internet-facing setups:
   - Use strong firewall rules.
   - Keep server packages and Docker images updated.
