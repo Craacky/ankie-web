@@ -37,6 +37,7 @@ from .schemas import (
     NoteFileOut,
     NoteFileUpdate,
     NoteFolderCreate,
+    NotePathRename,
     NoteTreeNode,
     FolderCreate,
     FolderOut,
@@ -45,6 +46,7 @@ from .schemas import (
     MessageOut,
     StudyCardsOut,
     TelegramAuthPayload,
+    UserThemeUpdate,
     UserOut,
 )
 
@@ -77,6 +79,8 @@ def on_startup() -> None:
             conn.execute(text("ALTER TABLE users ADD COLUMN auto_import_done BOOLEAN DEFAULT 0"))
         if "notes_bootstrap_done" not in users_columns:
             conn.execute(text("ALTER TABLE users ADD COLUMN notes_bootstrap_done BOOLEAN DEFAULT 0"))
+        if "theme_key" not in users_columns:
+            conn.execute(text("ALTER TABLE users ADD COLUMN theme_key VARCHAR(64)"))
 
         collections_columns = {row[1] for row in conn.execute(text("PRAGMA table_info(collections)"))}
         if "folder_id" not in collections_columns:
@@ -312,6 +316,19 @@ def bootstrap_notes_from_github(user: User) -> bool:
     return True
 
 
+def ensure_notes_bootstrap_for_user(db: Session, user: User) -> None:
+    root = notes_root_for_user(user.id)
+    if any(root.iterdir()):
+        return
+    try:
+        ok = bootstrap_notes_from_github(user)
+    except Exception:
+        ok = False
+    if ok and not user.notes_bootstrap_done:
+        user.notes_bootstrap_done = True
+        db.commit()
+
+
 def maybe_assign_legacy_data_to_first_user(db: Session, user: User) -> None:
     users_count = db.scalar(select(func.count(User.id))) or 0
     if users_count != 1:
@@ -372,6 +389,7 @@ def user_to_out(user: User) -> UserOut:
         first_name=user.first_name,
         last_name=user.last_name,
         photo_url=user.photo_url,
+        theme_key=user.theme_key,
     )
 
 
@@ -542,6 +560,21 @@ def auth_me(current_user: User = Depends(get_current_user)) -> UserOut:
     return user_to_out(current_user)
 
 
+@app.put("/api/users/theme", response_model=UserOut)
+def update_user_theme(
+    payload: UserThemeUpdate,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+) -> UserOut:
+    theme_key = payload.theme_key.strip()
+    if not theme_key:
+        raise HTTPException(status_code=400, detail="theme_key cannot be empty")
+    current_user.theme_key = theme_key
+    db.commit()
+    db.refresh(current_user)
+    return user_to_out(current_user)
+
+
 @app.post("/api/auth/logout", response_model=MessageOut)
 def auth_logout(
     response: Response,
@@ -558,7 +591,8 @@ def auth_logout(
 
 
 @app.get("/api/notes/tree", response_model=list[NoteTreeNode])
-def notes_tree(current_user: User = Depends(get_current_user)) -> list[NoteTreeNode]:
+def notes_tree(current_user: User = Depends(get_current_user), db: Session = Depends(get_db)) -> list[NoteTreeNode]:
+    ensure_notes_bootstrap_for_user(db, current_user)
     root = notes_root_for_user(current_user.id)
     children = sorted(root.iterdir(), key=lambda p: (p.is_file(), p.name.lower()))
     return [build_notes_tree(root, child) for child in children]
@@ -650,6 +684,34 @@ async def upload_note_file(
     target.write_text(text_data, encoding="utf-8")
     rel_path = str(target.relative_to(root)).replace("\\", "/")
     return NoteFileOut(path=rel_path, name=target.name, content=text_data)
+
+
+@app.patch("/api/notes/path", response_model=MessageOut)
+def rename_note_path(payload: NotePathRename, current_user: User = Depends(get_current_user)) -> MessageOut:
+    root = notes_root_for_user(current_user.id)
+    source = resolve_user_note_path(root, payload.path)
+    new_name = payload.new_name.strip()
+    if not new_name:
+        raise HTTPException(status_code=400, detail="New name cannot be empty")
+    if "/" in new_name or "\\" in new_name:
+        raise HTTPException(status_code=400, detail="New name cannot contain path separators")
+    target = source.parent / new_name
+    target = resolve_user_note_path(root, str(target.relative_to(root)), allow_missing=True)
+    if target.exists():
+        raise HTTPException(status_code=409, detail="Target already exists")
+    source.rename(target)
+    return MessageOut(message="Path renamed")
+
+
+@app.delete("/api/notes/path", response_model=MessageOut)
+def delete_note_path(path: str, current_user: User = Depends(get_current_user)) -> MessageOut:
+    root = notes_root_for_user(current_user.id)
+    target = resolve_user_note_path(root, path)
+    if target.is_dir():
+        shutil.rmtree(target)
+    else:
+        target.unlink()
+    return MessageOut(message="Path deleted")
 
 
 @app.get("/api/notes/raw")

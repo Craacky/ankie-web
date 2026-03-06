@@ -39,6 +39,12 @@ export const api = {
       body: JSON.stringify(payload)
     }),
   getMe: () => request('/auth/me'),
+  updateTheme: (themeKey) =>
+    request('/users/theme', {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ theme_key: themeKey })
+    }),
   logout: () => request('/auth/logout', { method: 'POST' }),
   getCollections: () => request('/collections'),
   getFolders: () => request('/folders'),
@@ -117,6 +123,13 @@ export const api = {
       body: formData
     })
   },
+  renameNotePath: (path, newName) =>
+    request('/notes/path', {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ path, new_name: newName })
+    }),
+  deleteNotePath: (path) => request(`/notes/path?path=${encodeURIComponent(path)}`, { method: 'DELETE' }),
   noteRawUrl: (path) => `${API_URL}/notes/raw?path=${encodeURIComponent(path)}`,
   exportCollection: async (collectionId, collectionName) => {
     const response = await fetch(`${API_URL}/collections/${collectionId}/export`, { credentials: 'include' })

@@ -241,13 +241,15 @@ export default function App() {
   const [noteFileDialogOpen, setNoteFileDialogOpen] = useState(false)
   const [noteFolderDialogOpen, setNoteFolderDialogOpen] = useState(false)
   const [noteUploadDialogOpen, setNoteUploadDialogOpen] = useState(false)
-  const [noteParentPathInput, setNoteParentPathInput] = useState('')
   const [noteNameInput, setNoteNameInput] = useState('')
   const [noteUploadFile, setNoteUploadFile] = useState(null)
   const [mobileNotesTreeOpen, setMobileNotesTreeOpen] = useState(false)
+  const [focusedNoteFolderPath, setFocusedNoteFolderPath] = useState('')
   const telegramContainerRef = useRef(null)
   const profileMenuRef = useRef(null)
   const statsSyncTimerRef = useRef(null)
+  const themeSyncIntervalRef = useRef(null)
+  const suppressThemeSaveRef = useRef(false)
   const [profileMenuOpen, setProfileMenuOpen] = useState(false)
 
   const selectedCollectionStats = useMemo(
@@ -393,6 +395,43 @@ export default function App() {
     }
   }
 
+  async function renameNotePath(path, currentName) {
+    const nextName = window.prompt('New name', currentName)
+    if (!nextName || !nextName.trim() || nextName.trim() === currentName) return
+    try {
+      await api.renameNotePath(path, nextName.trim())
+      const parent = noteParentPath(path)
+      const nextPath = joinNotePath(parent, nextName.trim())
+      await fetchNotesTree(selectedNotePath === path ? nextPath : selectedNotePath)
+      if (focusedNoteFolderPath === path) {
+        setFocusedNoteFolderPath(nextPath)
+      }
+      notify('Path renamed')
+    } catch (err) {
+      notify(err.message, 'error')
+    }
+  }
+
+  async function deleteNotePath(path, type) {
+    if (!window.confirm(`Delete this ${type}?`)) return
+    try {
+      await api.deleteNotePath(path)
+      if (selectedNotePath === path || selectedNotePath.startsWith(`${path}/`)) {
+        setSelectedNotePath('')
+        setSelectedNoteName('')
+        setNoteContent('')
+        setNoteOriginalContent('')
+      }
+      if (focusedNoteFolderPath === path || focusedNoteFolderPath.startsWith(`${path}/`)) {
+        setFocusedNoteFolderPath('')
+      }
+      await fetchNotesTree()
+      notify(`${type === 'folder' ? 'Folder' : 'File'} deleted`)
+    } catch (err) {
+      notify(err.message, 'error')
+    }
+  }
+
   async function createNoteFile(event) {
     event?.preventDefault()
     const name = noteNameInput.trim()
@@ -400,11 +439,11 @@ export default function App() {
       notify('File name cannot be empty', 'error')
       return
     }
+    const parentPath = focusedNoteFolderPath || ''
     try {
-      const created = await api.createNoteFile(noteParentPathInput.trim(), name, '')
+      const created = await api.createNoteFile(parentPath, name, '')
       setNoteFileDialogOpen(false)
       setNoteNameInput('')
-      setNoteParentPathInput('')
       await fetchNotesTree(created.path)
       notify('File created')
     } catch (err) {
@@ -419,11 +458,11 @@ export default function App() {
       notify('Folder name cannot be empty', 'error')
       return
     }
+    const parentPath = focusedNoteFolderPath || ''
     try {
-      await api.createNoteFolder(noteParentPathInput.trim(), name)
+      await api.createNoteFolder(parentPath, name)
       setNoteFolderDialogOpen(false)
       setNoteNameInput('')
-      setNoteParentPathInput('')
       await fetchNotesTree()
       notify('Folder created')
     } catch (err) {
@@ -437,11 +476,11 @@ export default function App() {
       notify('Choose a file to upload', 'error')
       return
     }
+    const parentPath = focusedNoteFolderPath || ''
     try {
-      const uploaded = await api.uploadNoteFile(noteParentPathInput.trim(), noteUploadFile)
+      const uploaded = await api.uploadNoteFile(parentPath, noteUploadFile)
       setNoteUploadDialogOpen(false)
       setNoteUploadFile(null)
-      setNoteParentPathInput('')
       await fetchNotesTree(uploaded.path)
       notify('File uploaded')
     } catch (err) {
@@ -481,6 +520,10 @@ export default function App() {
       try {
         const me = await api.getMe()
         setUser(me)
+        if (me.theme_key) {
+          suppressThemeSaveRef.current = true
+          setThemeKey(me.theme_key)
+        }
         showGuideIfNeeded(me)
         await Promise.all([fetchCollections(), fetchFolders()])
       } catch (err) {
@@ -498,7 +541,15 @@ export default function App() {
     localStorage.setItem(THEME_STORAGE_KEY, theme.key)
     document.documentElement.classList.toggle('dark', theme.dark)
     document.documentElement.setAttribute('data-theme', theme.key)
-  }, [themeKey])
+    if (!user) {
+      return
+    }
+    if (suppressThemeSaveRef.current) {
+      suppressThemeSaveRef.current = false
+      return
+    }
+    api.updateTheme(theme.key).catch((err) => notify(err.message, 'error'))
+  }, [themeKey, user])
 
   useEffect(() => {
     if (!user || !selectedCollectionId) {
@@ -527,6 +578,10 @@ export default function App() {
         await api.telegramAuth(telegramUser)
         const me = await api.getMe()
         setUser(me)
+        if (me.theme_key) {
+          suppressThemeSaveRef.current = true
+          setThemeKey(me.theme_key)
+        }
         showGuideIfNeeded(me)
         await Promise.all([fetchCollections(), fetchFolders()])
         notify(`Welcome, ${me.first_name || me.username || 'user'}`)
@@ -569,6 +624,39 @@ export default function App() {
       }
     }
   }, [])
+
+  useEffect(() => {
+    if (!user) return
+
+    const syncThemeFromServer = async () => {
+      try {
+        const me = await api.getMe()
+        if (me.theme_key && me.theme_key !== themeKey) {
+          suppressThemeSaveRef.current = true
+          setThemeKey(me.theme_key)
+        }
+      } catch {
+        // no-op: keep UI responsive if temporary network/auth issue
+      }
+    }
+
+    const onVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        syncThemeFromServer()
+      }
+    }
+
+    document.addEventListener('visibilitychange', onVisibilityChange)
+    themeSyncIntervalRef.current = window.setInterval(syncThemeFromServer, 30000)
+
+    return () => {
+      document.removeEventListener('visibilitychange', onVisibilityChange)
+      if (themeSyncIntervalRef.current) {
+        window.clearInterval(themeSyncIntervalRef.current)
+        themeSyncIntervalRef.current = null
+      }
+    }
+  }, [user, themeKey])
 
   async function handleImport(event) {
     event?.preventDefault()
@@ -983,24 +1071,60 @@ export default function App() {
     const isFile = node.type === 'file'
     const isMd = node.path.toLowerCase().endsWith('.md')
     const isSelected = selectedNotePath === node.path
+    const isFocusedFolder = !isFile && focusedNoteFolderPath === node.path
     return (
       <div key={node.path || `root-${node.name}`}>
-        <button
-          type="button"
-          className={`flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-sm transition ${
-            isSelected ? 'bg-primary/15 text-primary' : 'hover:bg-accent'
+        <div
+          className={`group flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-sm transition ${
+            isSelected || isFocusedFolder ? 'bg-primary/15 text-primary' : 'hover:bg-accent'
           }`}
           style={{ paddingLeft: `${0.5 + depth * 0.9}rem` }}
-          onClick={() => {
-            if (isFile && isMd) {
-              openNote(node.path)
-              if (mobileNotesTreeOpen) setMobileNotesTreeOpen(false)
-            }
-          }}
         >
-          {isFile ? <FileText size={14} className="shrink-0" /> : <FolderOpen size={14} className="shrink-0" />}
-          <span className="truncate">{node.name}</span>
-        </button>
+          <button
+            type="button"
+            className="flex min-w-0 flex-1 items-center gap-2"
+            onClick={() => {
+              if (isFile && isMd) {
+                openNote(node.path)
+                setFocusedNoteFolderPath(noteParentPath(node.path))
+                if (mobileNotesTreeOpen) setMobileNotesTreeOpen(false)
+              } else if (!isFile) {
+                setFocusedNoteFolderPath(node.path)
+              }
+            }}
+          >
+            {isFile ? <FileText size={14} className="shrink-0" /> : <FolderOpen size={14} className="shrink-0" />}
+            <span className="truncate">{node.name}</span>
+          </button>
+          <div className="flex items-center gap-1 opacity-0 transition group-hover:opacity-100">
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              className="h-6 w-6 p-0"
+              onClick={(e) => {
+                e.stopPropagation()
+                renameNotePath(node.path, node.name)
+              }}
+              title="Rename"
+            >
+              <Pencil size={12} />
+            </Button>
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              className="h-6 w-6 p-0 text-destructive"
+              onClick={(e) => {
+                e.stopPropagation()
+                deleteNotePath(node.path, node.type)
+              }}
+              title="Delete"
+            >
+              <Trash2 size={12} />
+            </Button>
+          </div>
+        </div>
         {node.children?.map((child) => renderNoteNode(child, depth + 1))}
       </div>
     )
@@ -1549,18 +1673,18 @@ export default function App() {
                 </Card>
 
                 <Card className="glass-panel lg:min-h-0 lg:flex-1">
-                  <CardContent className="pt-6 lg:h-full">
+                  <CardContent className="pt-6 lg:flex lg:h-full lg:flex-col">
                     {!selectedNotePath && <p className="text-sm text-muted-foreground">No markdown file selected.</p>}
                     {selectedNotePath && noteViewMode === 'code' && (
                       <textarea
-                        className="hide-scrollbar h-[65vh] w-full rounded-md border border-input bg-background/70 p-3 font-mono text-sm lg:h-full"
+                        className="hide-scrollbar h-[65vh] w-full resize-none rounded-md border border-input bg-background/70 p-3 font-mono text-sm lg:h-full lg:flex-1"
                         value={noteContent}
                         onChange={(e) => setNoteContent(e.target.value)}
                         placeholder="Markdown content"
                       />
                     )}
                     {selectedNotePath && noteViewMode === 'preview' && (
-                      <div className="prose prose-sm dark:prose-invert hide-scrollbar max-h-[65vh] overflow-y-auto rounded-md border bg-background/35 p-4 lg:max-h-full">
+                      <div className="obsidian-preview hide-scrollbar h-[65vh] overflow-y-auto rounded-md border bg-background/35 p-4 lg:h-full lg:flex-1">
                         <ReactMarkdown
                           remarkPlugins={[remarkGfm]}
                           components={{
@@ -1608,11 +1732,9 @@ export default function App() {
             <DialogTitle>Create Note File</DialogTitle>
           </DialogHeader>
           <form className="space-y-3" onSubmit={createNoteFile}>
-            <Input
-              placeholder="Parent path (optional), e.g. backend/auth"
-              value={noteParentPathInput}
-              onChange={(e) => setNoteParentPathInput(e.target.value)}
-            />
+            <p className="text-xs text-muted-foreground">
+              Parent: <span className="font-medium">{focusedNoteFolderPath || '/'}</span>
+            </p>
             <Input
               placeholder="File name, e.g. notes.md"
               value={noteNameInput}
@@ -1636,11 +1758,9 @@ export default function App() {
             <DialogTitle>Create Note Folder</DialogTitle>
           </DialogHeader>
           <form className="space-y-3" onSubmit={createNoteFolder}>
-            <Input
-              placeholder="Parent path (optional), e.g. backend"
-              value={noteParentPathInput}
-              onChange={(e) => setNoteParentPathInput(e.target.value)}
-            />
+            <p className="text-xs text-muted-foreground">
+              Parent: <span className="font-medium">{focusedNoteFolderPath || '/'}</span>
+            </p>
             <Input
               placeholder="Folder name"
               value={noteNameInput}
@@ -1664,11 +1784,9 @@ export default function App() {
             <DialogTitle>Upload Note File</DialogTitle>
           </DialogHeader>
           <form className="space-y-3" onSubmit={uploadNoteFile}>
-            <Input
-              placeholder="Parent path (optional)"
-              value={noteParentPathInput}
-              onChange={(e) => setNoteParentPathInput(e.target.value)}
-            />
+            <p className="text-xs text-muted-foreground">
+              Parent: <span className="font-medium">{focusedNoteFolderPath || '/'}</span>
+            </p>
             <Input
               type="file"
               onChange={(e) => setNoteUploadFile(e.target.files?.[0] || null)}

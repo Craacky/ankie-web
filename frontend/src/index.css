@@ -938,6 +938,113 @@
     height: 0;
     display: none;
   }
+
+  .obsidian-preview {
+    color: hsl(var(--foreground));
+    line-height: 1.65;
+    font-size: 0.96rem;
+  }
+
+  .obsidian-preview h1,
+  .obsidian-preview h2,
+  .obsidian-preview h3,
+  .obsidian-preview h4 {
+    margin: 1.1rem 0 0.65rem;
+    font-weight: 700;
+    line-height: 1.2;
+  }
+
+  .obsidian-preview h1 {
+    font-size: 1.8rem;
+  }
+
+  .obsidian-preview h2 {
+    font-size: 1.45rem;
+  }
+
+  .obsidian-preview h3 {
+    font-size: 1.2rem;
+  }
+
+  .obsidian-preview p,
+  .obsidian-preview ul,
+  .obsidian-preview ol,
+  .obsidian-preview blockquote,
+  .obsidian-preview pre,
+  .obsidian-preview table {
+    margin: 0.7rem 0;
+  }
+
+  .obsidian-preview ul,
+  .obsidian-preview ol {
+    padding-left: 1.35rem;
+  }
+
+  .obsidian-preview li + li {
+    margin-top: 0.35rem;
+  }
+
+  .obsidian-preview code {
+    font-family: "IBM Plex Mono", "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+    background: hsl(var(--accent) / 0.45);
+    border: 1px solid hsl(var(--border) / 0.6);
+    padding: 0.1rem 0.35rem;
+    border-radius: 0.35rem;
+    font-size: 0.88em;
+  }
+
+  .obsidian-preview pre {
+    background: hsl(var(--card) / 0.8);
+    border: 1px solid hsl(var(--border) / 0.75);
+    border-radius: 0.7rem;
+    padding: 0.9rem 1rem;
+    overflow: auto;
+  }
+
+  .obsidian-preview pre code {
+    background: transparent;
+    border: 0;
+    padding: 0;
+  }
+
+  .obsidian-preview blockquote {
+    border-left: 3px solid hsl(var(--primary) / 0.65);
+    padding: 0.3rem 0 0.3rem 0.9rem;
+    color: hsl(var(--muted-foreground));
+    background: hsl(var(--accent) / 0.25);
+    border-radius: 0 0.5rem 0.5rem 0;
+  }
+
+  .obsidian-preview a {
+    color: hsl(var(--primary));
+    text-decoration: underline;
+    text-underline-offset: 2px;
+  }
+
+  .obsidian-preview hr {
+    border: 0;
+    border-top: 1px solid hsl(var(--border));
+    margin: 1.2rem 0;
+  }
+
+  .obsidian-preview table {
+    border-collapse: collapse;
+    width: 100%;
+    overflow: hidden;
+    border-radius: 0.6rem;
+  }
+
+  .obsidian-preview th,
+  .obsidian-preview td {
+    border: 1px solid hsl(var(--border));
+    padding: 0.45rem 0.55rem;
+    text-align: left;
+  }
+
+  .obsidian-preview th {
+    background: hsl(var(--accent) / 0.45);
+    font-weight: 600;
+  }
 }
 
 @media (max-width: 768px) {

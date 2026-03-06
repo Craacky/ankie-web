@@ -15,6 +15,7 @@ class User(Base):
     first_name: Mapped[str | None] = mapped_column(String(255), nullable=True)
     last_name: Mapped[str | None] = mapped_column(String(255), nullable=True)
     photo_url: Mapped[str | None] = mapped_column(Text, nullable=True)
+    theme_key: Mapped[str | None] = mapped_column(String(64), nullable=True)
     auto_import_done: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
     notes_bootstrap_done: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, nullable=False)

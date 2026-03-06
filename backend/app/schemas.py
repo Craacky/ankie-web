@@ -27,6 +27,7 @@ class UserOut(BaseModel):
     first_name: str | None = None
     last_name: str | None = None
     photo_url: str | None = None
+    theme_key: str | None = None
 
 
 class AuthConfigOut(BaseModel):
@@ -131,3 +132,12 @@ class NoteFileCreate(BaseModel):
 class NoteFolderCreate(BaseModel):
     parent_path: str = ""
     name: str
+
+
+class NotePathRename(BaseModel):
+    path: str
+    new_name: str
+
+
+class UserThemeUpdate(BaseModel):
+    theme_key: str
