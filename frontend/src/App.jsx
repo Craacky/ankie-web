@@ -24,6 +24,7 @@ import {
 } from 'lucide-react'
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
+import rehypeSlug from 'rehype-slug'
 
 import { api } from './api'
 import { Button } from './components/ui/button'
@@ -68,6 +69,18 @@ function resolveRelativeNotePath(currentPath, relativePath) {
     out.push(part)
   }
   return out.join('/')
+}
+
+function splitHrefAndHash(rawHref) {
+  const value = String(rawHref || '')
+  const hashIndex = value.indexOf('#')
+  if (hashIndex < 0) {
+    return { hrefPath: value, hash: '' }
+  }
+  return {
+    hrefPath: value.slice(0, hashIndex),
+    hash: value.slice(hashIndex + 1)
+  }
 }
 const THEMES = [
   { key: 'catppuccin', label: 'Catppuccin', dark: true, swatches: ['#cba6f7', '#89dceb', '#f38ba8'] },
@@ -245,6 +258,8 @@ export default function App() {
   const [noteUploadFile, setNoteUploadFile] = useState(null)
   const [mobileNotesTreeOpen, setMobileNotesTreeOpen] = useState(false)
   const [focusedNoteFolderPath, setFocusedNoteFolderPath] = useState('')
+  const [collapsedNoteFolders, setCollapsedNoteFolders] = useState({})
+  const [pendingAnchor, setPendingAnchor] = useState('')
   const telegramContainerRef = useRef(null)
   const profileMenuRef = useRef(null)
   const statsSyncTimerRef = useRef(null)
@@ -381,6 +396,23 @@ export default function App() {
       setNoteOriginalContent(note.content)
     } catch (err) {
       notify(err.message, 'error')
+    }
+  }
+
+  function scrollToAnchor(anchor) {
+    const normalized = String(anchor || '').trim().replace(/^#/, '')
+    if (!normalized) return
+    const decoded = decodeURIComponent(normalized)
+    const tryScroll = () => {
+      const el = document.getElementById(decoded)
+      if (el) {
+        el.scrollIntoView({ behavior: 'smooth', block: 'start' })
+        return true
+      }
+      return false
+    }
+    if (!tryScroll()) {
+      window.setTimeout(tryScroll, 60)
     }
   }
 
@@ -567,6 +599,12 @@ export default function App() {
     }
     fetchNotesTree().catch((err) => notify(err.message, 'error'))
   }, [user, appMode])
+
+  useEffect(() => {
+    if (!pendingAnchor || appMode !== 'notes') return
+    scrollToAnchor(pendingAnchor)
+    setPendingAnchor('')
+  }, [pendingAnchor, noteContent, noteViewMode, appMode])
 
   useEffect(() => {
     if (!authChecked || user || !telegramBotUsername || !telegramContainerRef.current) {
@@ -1072,6 +1110,7 @@ export default function App() {
     const isMd = node.path.toLowerCase().endsWith('.md')
     const isSelected = selectedNotePath === node.path
     const isFocusedFolder = !isFile && focusedNoteFolderPath === node.path
+    const isCollapsed = !isFile && Boolean(collapsedNoteFolders[node.path])
     return (
       <div key={node.path || `root-${node.name}`}>
         <div
@@ -1089,10 +1128,12 @@ export default function App() {
                 setFocusedNoteFolderPath(noteParentPath(node.path))
                 if (mobileNotesTreeOpen) setMobileNotesTreeOpen(false)
               } else if (!isFile) {
-                setFocusedNoteFolderPath(node.path)
+                setCollapsedNoteFolders((prev) => ({ ...prev, [node.path]: !prev[node.path] }))
+                setFocusedNoteFolderPath((prev) => (prev === node.path ? '' : node.path))
               }
             }}
           >
+            {!isFile && (isCollapsed ? <ChevronRight size={14} className="shrink-0" /> : <ChevronDown size={14} className="shrink-0" />)}
             {isFile ? <FileText size={14} className="shrink-0" /> : <FolderOpen size={14} className="shrink-0" />}
             <span className="truncate">{node.name}</span>
           </button>
@@ -1125,7 +1166,7 @@ export default function App() {
             </Button>
           </div>
         </div>
-        {node.children?.map((child) => renderNoteNode(child, depth + 1))}
+        {!isCollapsed && node.children?.map((child) => renderNoteNode(child, depth + 1))}
       </div>
     )
   }
@@ -1134,7 +1175,22 @@ export default function App() {
     if (!notesTree.length) {
       return <p className="text-sm text-muted-foreground">No notes yet</p>
     }
-    return <div className="space-y-1">{notesTree.map((node) => renderNoteNode(node))}</div>
+    return (
+      <div className="space-y-1">
+        <button
+          type="button"
+          className={`flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-sm transition ${
+            !focusedNoteFolderPath ? 'bg-primary/15 text-primary' : 'hover:bg-accent'
+          }`}
+          onClick={() => setFocusedNoteFolderPath('')}
+          title="Use root folder as default parent"
+        >
+          <FolderOpen size={14} className="shrink-0" />
+          <span className="truncate">/</span>
+        </button>
+        {notesTree.map((node) => renderNoteNode(node))}
+      </div>
+    )
   }
 
   async function exportCollection() {
@@ -1437,6 +1493,16 @@ export default function App() {
               <div className="flex items-center gap-2">
                 <Button
                   type="button"
+                  variant="ghost"
+                  size="sm"
+                  className="h-8 px-2"
+                  onClick={() => setFocusedNoteFolderPath('')}
+                  title="Clear focus"
+                >
+                  Clear focus
+                </Button>
+                <Button
+                  type="button"
                   variant="outline"
                   size="sm"
                   className="h-8 px-2"
@@ -1628,6 +1694,16 @@ export default function App() {
                     <div className="flex items-center justify-between gap-2">
                       <CardTitle className="text-lg">Notes</CardTitle>
                       <div className="flex items-center gap-2">
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          className="h-8 px-2"
+                          onClick={() => setFocusedNoteFolderPath('')}
+                          title="Clear focus"
+                        >
+                          Clear focus
+                        </Button>
                         <Button type="button" variant="outline" size="sm" className="h-8 px-2" onClick={() => setNoteFileDialogOpen(true)} title="Create file">
                           <Plus size={14} />
                         </Button>
@@ -1687,20 +1763,43 @@ export default function App() {
                       <div className="obsidian-preview hide-scrollbar h-[65vh] overflow-y-auto rounded-md border bg-background/35 p-4 lg:h-full lg:flex-1">
                         <ReactMarkdown
                           remarkPlugins={[remarkGfm]}
+                          rehypePlugins={[rehypeSlug]}
                           components={{
                             img: ({ src, alt }) => {
-                              const resolved = resolveRelativeNotePath(selectedNotePath, String(src || ''))
+                              const { hrefPath } = splitHrefAndHash(String(src || ''))
+                              const resolved = resolveRelativeNotePath(selectedNotePath, hrefPath)
                               return <img src={api.noteRawUrl(resolved)} alt={alt || ''} loading="lazy" />
                             },
                             a: ({ href, children }) => {
                               const raw = String(href || '')
-                              const resolved = resolveRelativeNotePath(selectedNotePath, raw)
+                              if (raw.startsWith('#')) {
+                                return (
+                                  <button
+                                    type="button"
+                                    className="text-primary underline"
+                                    onClick={() => {
+                                      setPendingAnchor(raw.slice(1))
+                                      setNoteViewMode('preview')
+                                    }}
+                                  >
+                                    {children}
+                                  </button>
+                                )
+                              }
+                              const { hrefPath, hash } = splitHrefAndHash(raw)
+                              const resolved = resolveRelativeNotePath(selectedNotePath, hrefPath)
                               if (resolved.toLowerCase().endsWith('.md')) {
                                 return (
                                   <button
                                     type="button"
                                     className="text-primary underline"
-                                    onClick={() => openNote(resolved)}
+                                    onClick={async () => {
+                                      await openNote(resolved)
+                                      setNoteViewMode('preview')
+                                      if (hash) {
+                                        setPendingAnchor(hash)
+                                      }
+                                    }}
                                   >
                                     {children}
                                   </button>
