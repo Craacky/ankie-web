@@ -88,6 +88,36 @@ export const api = {
       body: JSON.stringify(payload)
     }),
   deleteCard: (cardId) => request(`/cards/${cardId}`, { method: 'DELETE' }),
+  getNotesTree: () => request('/notes/tree'),
+  getNoteFile: (path) => request(`/notes/file?path=${encodeURIComponent(path)}`),
+  updateNoteFile: (path, content) =>
+    request('/notes/file', {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ path, content })
+    }),
+  createNoteFile: (parentPath, name, content = '') =>
+    request('/notes/file', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ parent_path: parentPath, name, content })
+    }),
+  createNoteFolder: (parentPath, name) =>
+    request('/notes/folder', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ parent_path: parentPath, name })
+    }),
+  uploadNoteFile: (parentPath, file) => {
+    const formData = new FormData()
+    formData.append('parent_path', parentPath || '')
+    formData.append('file', file)
+    return request('/notes/upload', {
+      method: 'POST',
+      body: formData
+    })
+  },
+  noteRawUrl: (path) => `${API_URL}/notes/raw?path=${encodeURIComponent(path)}`,
   exportCollection: async (collectionId, collectionName) => {
     const response = await fetch(`${API_URL}/collections/${collectionId}/export`, { credentials: 'include' })
     if (!response.ok) {

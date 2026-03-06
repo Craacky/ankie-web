@@ -3,18 +3,23 @@ from __future__ import annotations
 import hashlib
 import hmac
 import json
+import mimetypes
 import os
 import random
 import re
 import secrets
+import shutil
+import tarfile
+import tempfile
+import urllib.request
 from datetime import datetime, timedelta
 from pathlib import Path
 from typing import Any
 
 from fastapi import Cookie, Depends, FastAPI, File, Form, HTTPException, Response, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse
-from sqlalchemy import case, func, select, text
+from fastapi.responses import FileResponse, JSONResponse
+from sqlalchemy import case, func, select, text, update
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session, joinedload
 
@@ -28,6 +33,11 @@ from .schemas import (
     CollectionDetail,
     CollectionFolderUpdate,
     CollectionOut,
+    NoteFileCreate,
+    NoteFileOut,
+    NoteFileUpdate,
+    NoteFolderCreate,
+    NoteTreeNode,
     FolderCreate,
     FolderOut,
     FolderUpdate,
@@ -65,6 +75,8 @@ def on_startup() -> None:
         users_columns = {row[1] for row in conn.execute(text("PRAGMA table_info(users)"))}
         if "auto_import_done" not in users_columns:
             conn.execute(text("ALTER TABLE users ADD COLUMN auto_import_done BOOLEAN DEFAULT 0"))
+        if "notes_bootstrap_done" not in users_columns:
+            conn.execute(text("ALTER TABLE users ADD COLUMN notes_bootstrap_done BOOLEAN DEFAULT 0"))
 
         collections_columns = {row[1] for row in conn.execute(text("PRAGMA table_info(collections)"))}
         if "folder_id" not in collections_columns:
@@ -228,6 +240,76 @@ def ensure_user_sources_loaded(db: Session, user: User) -> None:
             db.add(Card(collection_id=collection.id, question=pair[0], answer=pair[1]))
 
         db.commit()
+
+
+def notes_root_for_user(user_id: int) -> Path:
+    base = Path(os.getenv("NOTES_ROOT", "/data/notes"))
+    root = (base / str(user_id)).resolve()
+    root.mkdir(parents=True, exist_ok=True)
+    return root
+
+
+def resolve_user_note_path(root: Path, rel_path: str, allow_missing: bool = False) -> Path:
+    normalized = (rel_path or "").strip().lstrip("/")
+    target = (root / normalized).resolve()
+    if target != root and root not in target.parents:
+        raise HTTPException(status_code=400, detail="Invalid path")
+    if not allow_missing and not target.exists():
+        raise HTTPException(status_code=404, detail="Path not found")
+    return target
+
+
+def build_notes_tree(root: Path, current: Path) -> NoteTreeNode:
+    rel = "" if current == root else str(current.relative_to(root)).replace("\\", "/")
+    node_type = "folder" if current.is_dir() else "file"
+    node = NoteTreeNode(name=current.name if rel else "/", path=rel, type=node_type)
+    if current.is_dir():
+        children = sorted(current.iterdir(), key=lambda p: (p.is_file(), p.name.lower()))
+        node.children = [build_notes_tree(root, child) for child in children]
+    return node
+
+
+def bootstrap_notes_from_github(user: User) -> bool:
+    repo = os.getenv("NOTES_BOOTSTRAP_REPO", "").strip()
+    token = os.getenv("GITHUB_TOKEN", "").strip()
+    branch = os.getenv("NOTES_BOOTSTRAP_BRANCH", "master").strip() or "master"
+    if not repo or not token:
+        return False
+
+    user_root = notes_root_for_user(user.id)
+    if any(user_root.iterdir()):
+        return True
+
+    url = f"https://api.github.com/repos/{repo}/tarball/{branch}"
+    request = urllib.request.Request(
+        url,
+        headers={
+            "Authorization": f"Bearer {token}",
+            "Accept": "application/vnd.github+json",
+            "X-GitHub-Api-Version": "2022-11-28",
+            "User-Agent": "ankie-web",
+        },
+    )
+    with tempfile.TemporaryDirectory() as tmp_dir_name:
+        tmp_dir = Path(tmp_dir_name)
+        archive_path = tmp_dir / "notes.tar.gz"
+        with urllib.request.urlopen(request, timeout=25) as resp:  # noqa: S310
+            archive_path.write_bytes(resp.read())
+        with tarfile.open(archive_path, "r:gz") as tar:
+            tar.extractall(tmp_dir)
+        extracted_roots = [p for p in tmp_dir.iterdir() if p.is_dir()]
+        if not extracted_roots:
+            return False
+        source_root = extracted_roots[0]
+        for child in source_root.iterdir():
+            destination = user_root / child.name
+            if destination.exists():
+                continue
+            if child.is_dir():
+                shutil.copytree(child, destination)
+            else:
+                shutil.copy2(child, destination)
+    return True
 
 
 def maybe_assign_legacy_data_to_first_user(db: Session, user: User) -> None:
@@ -417,11 +499,38 @@ def auth_telegram(payload: TelegramAuthPayload, response: Response, db: Session 
         db.refresh(user)
 
     maybe_assign_legacy_data_to_first_user(db, user)
-    if not user.auto_import_done:
-        ensure_user_sources_loaded(db, user)
-        user.auto_import_done = True
-        db.commit()
-        db.refresh(user)
+    # Claim one-time auto-import atomically to avoid duplicate imports across concurrent logins.
+    claim_result = db.execute(
+        update(User)
+        .where(User.id == user.id, User.auto_import_done == False)  # noqa: E712
+        .values(auto_import_done=True)
+    )
+    db.commit()
+    db.refresh(user)
+    should_auto_import = (claim_result.rowcount or 0) > 0
+    if should_auto_import:
+        existing_count = db.scalar(select(func.count(Collection.id)).where(Collection.user_id == user.id)) or 0
+        if existing_count == 0:
+            ensure_user_sources_loaded(db, user)
+
+    notes_claim_result = db.execute(
+        update(User)
+        .where(User.id == user.id, User.notes_bootstrap_done == False)  # noqa: E712
+        .values(notes_bootstrap_done=True)
+    )
+    db.commit()
+    db.refresh(user)
+    should_bootstrap_notes = (notes_claim_result.rowcount or 0) > 0
+    if should_bootstrap_notes:
+        bootstrap_ok = False
+        try:
+            bootstrap_ok = bootstrap_notes_from_github(user)
+        except Exception:
+            bootstrap_ok = False
+        if not bootstrap_ok:
+            user.notes_bootstrap_done = False
+            db.commit()
+            db.refresh(user)
 
     session = create_session(db, user.id)
     set_session_cookie(response, session.token)
@@ -446,6 +555,111 @@ def auth_logout(
             db.commit()
     clear_session_cookie(response)
     return MessageOut(message="Logged out")
+
+
+@app.get("/api/notes/tree", response_model=list[NoteTreeNode])
+def notes_tree(current_user: User = Depends(get_current_user)) -> list[NoteTreeNode]:
+    root = notes_root_for_user(current_user.id)
+    children = sorted(root.iterdir(), key=lambda p: (p.is_file(), p.name.lower()))
+    return [build_notes_tree(root, child) for child in children]
+
+
+@app.get("/api/notes/file", response_model=NoteFileOut)
+def read_note_file(path: str, current_user: User = Depends(get_current_user)) -> NoteFileOut:
+    root = notes_root_for_user(current_user.id)
+    file_path = resolve_user_note_path(root, path)
+    if not file_path.is_file():
+        raise HTTPException(status_code=400, detail="Target is not a file")
+    try:
+        content = file_path.read_text(encoding="utf-8")
+    except UnicodeDecodeError as exc:
+        raise HTTPException(status_code=400, detail="File is not UTF-8 text") from exc
+    rel_path = str(file_path.relative_to(root)).replace("\\", "/")
+    return NoteFileOut(path=rel_path, name=file_path.name, content=content)
+
+
+@app.put("/api/notes/file", response_model=NoteFileOut)
+def update_note_file(payload: NoteFileUpdate, current_user: User = Depends(get_current_user)) -> NoteFileOut:
+    root = notes_root_for_user(current_user.id)
+    file_path = resolve_user_note_path(root, payload.path, allow_missing=True)
+    if file_path.exists() and not file_path.is_file():
+        raise HTTPException(status_code=400, detail="Target path is not a file")
+    file_path.parent.mkdir(parents=True, exist_ok=True)
+    file_path.write_text(payload.content, encoding="utf-8")
+    rel_path = str(file_path.relative_to(root)).replace("\\", "/")
+    return NoteFileOut(path=rel_path, name=file_path.name, content=payload.content)
+
+
+@app.post("/api/notes/file", response_model=NoteFileOut)
+def create_note_file(payload: NoteFileCreate, current_user: User = Depends(get_current_user)) -> NoteFileOut:
+    root = notes_root_for_user(current_user.id)
+    parent = resolve_user_note_path(root, payload.parent_path, allow_missing=True)
+    if parent.exists() and not parent.is_dir():
+        raise HTTPException(status_code=400, detail="Parent path is not a folder")
+    parent.mkdir(parents=True, exist_ok=True)
+    filename = payload.name.strip()
+    if not filename:
+        raise HTTPException(status_code=400, detail="File name cannot be empty")
+    file_path = resolve_user_note_path(root, str((parent / filename).relative_to(root)), allow_missing=True)
+    if file_path.exists():
+        raise HTTPException(status_code=409, detail="File already exists")
+    file_path.write_text(payload.content, encoding="utf-8")
+    rel_path = str(file_path.relative_to(root)).replace("\\", "/")
+    return NoteFileOut(path=rel_path, name=file_path.name, content=payload.content)
+
+
+@app.post("/api/notes/folder", response_model=MessageOut)
+def create_note_folder(payload: NoteFolderCreate, current_user: User = Depends(get_current_user)) -> MessageOut:
+    root = notes_root_for_user(current_user.id)
+    parent = resolve_user_note_path(root, payload.parent_path, allow_missing=True)
+    if parent.exists() and not parent.is_dir():
+        raise HTTPException(status_code=400, detail="Parent path is not a folder")
+    parent.mkdir(parents=True, exist_ok=True)
+    folder_name = payload.name.strip()
+    if not folder_name:
+        raise HTTPException(status_code=400, detail="Folder name cannot be empty")
+    folder_path = resolve_user_note_path(root, str((parent / folder_name).relative_to(root)), allow_missing=True)
+    if folder_path.exists():
+        raise HTTPException(status_code=409, detail="Folder already exists")
+    folder_path.mkdir(parents=True, exist_ok=False)
+    return MessageOut(message="Folder created")
+
+
+@app.post("/api/notes/upload", response_model=NoteFileOut)
+async def upload_note_file(
+    parent_path: str = Form(""),
+    file: UploadFile = File(...),
+    current_user: User = Depends(get_current_user),
+) -> NoteFileOut:
+    root = notes_root_for_user(current_user.id)
+    parent = resolve_user_note_path(root, parent_path, allow_missing=True)
+    if parent.exists() and not parent.is_dir():
+        raise HTTPException(status_code=400, detail="Parent path is not a folder")
+    parent.mkdir(parents=True, exist_ok=True)
+    filename = Path(file.filename or "").name.strip()
+    if not filename:
+        raise HTTPException(status_code=400, detail="File name cannot be empty")
+    target = resolve_user_note_path(root, str((parent / filename).relative_to(root)), allow_missing=True)
+    if target.exists():
+        raise HTTPException(status_code=409, detail="File already exists")
+    data = await file.read()
+    try:
+        text_data = data.decode("utf-8")
+    except UnicodeDecodeError as exc:
+        raise HTTPException(status_code=400, detail="Only UTF-8 text files are supported") from exc
+    target.write_text(text_data, encoding="utf-8")
+    rel_path = str(target.relative_to(root)).replace("\\", "/")
+    return NoteFileOut(path=rel_path, name=target.name, content=text_data)
+
+
+@app.get("/api/notes/raw")
+def read_note_raw(path: str, current_user: User = Depends(get_current_user)) -> FileResponse:
+    root = notes_root_for_user(current_user.id)
+    file_path = resolve_user_note_path(root, path)
+    if not file_path.is_file():
+        raise HTTPException(status_code=400, detail="Target is not a file")
+    media_type, _ = mimetypes.guess_type(file_path.name)
+    return FileResponse(file_path, media_type=media_type or "application/octet-stream")
 
 
 @app.get("/api/collections", response_model=list[CollectionOut])

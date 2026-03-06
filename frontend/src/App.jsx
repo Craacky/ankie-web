@@ -15,8 +15,15 @@ import {
   MoreVertical,
   LogOut,
   PanelLeft,
-  CircleHelp
+  CircleHelp,
+  FileText,
+  Code2,
+  Eye,
+  Plus,
+  FolderOpen
 } from 'lucide-react'
+import ReactMarkdown from 'react-markdown'
+import remarkGfm from 'remark-gfm'
 
 import { api } from './api'
 import { Button } from './components/ui/button'
@@ -29,6 +36,39 @@ const MIN_REPEAT_AFTER = 1
 const MAX_REPEAT_AFTER = 8
 const THEME_STORAGE_KEY = 'ankie_theme'
 const GUIDE_SEEN_KEY_PREFIX = 'ankie_guide_seen_'
+
+function joinNotePath(parent, child) {
+  const p = (parent || '').trim().replace(/^\/+|\/+$/g, '')
+  const c = (child || '').trim().replace(/^\/+|\/+$/g, '')
+  if (!p) return c
+  if (!c) return p
+  return `${p}/${c}`
+}
+
+function noteParentPath(path) {
+  const normalized = (path || '').trim().replace(/^\/+|\/+$/g, '')
+  if (!normalized.includes('/')) return ''
+  return normalized.split('/').slice(0, -1).join('/')
+}
+
+function resolveRelativeNotePath(currentPath, relativePath) {
+  const rel = (relativePath || '').trim()
+  if (!rel || rel.startsWith('#')) return ''
+  if (rel.startsWith('/')) return rel.replace(/^\/+/, '')
+  const baseDir = noteParentPath(currentPath)
+  const combined = joinNotePath(baseDir, rel)
+  const parts = combined.split('/')
+  const out = []
+  for (const part of parts) {
+    if (!part || part === '.') continue
+    if (part === '..') {
+      out.pop()
+      continue
+    }
+    out.push(part)
+  }
+  return out.join('/')
+}
 const THEMES = [
   { key: 'catppuccin', label: 'Catppuccin', dark: true, swatches: ['#cba6f7', '#89dceb', '#f38ba8'] },
   { key: 'solarized', label: 'Solarized', dark: false, swatches: ['#2aa198', '#cb4b16', '#b58900'] },
@@ -190,6 +230,21 @@ export default function App() {
   const [renameFolderTarget, setRenameFolderTarget] = useState(null)
   const [renameFolderInput, setRenameFolderInput] = useState('')
   const [guideOpen, setGuideOpen] = useState(false)
+  const [appMode, setAppMode] = useState('flashcards')
+  const [notesTree, setNotesTree] = useState([])
+  const [selectedNotePath, setSelectedNotePath] = useState('')
+  const [selectedNoteName, setSelectedNoteName] = useState('')
+  const [noteContent, setNoteContent] = useState('')
+  const [noteOriginalContent, setNoteOriginalContent] = useState('')
+  const [noteViewMode, setNoteViewMode] = useState('preview')
+  const [notesLoading, setNotesLoading] = useState(false)
+  const [noteFileDialogOpen, setNoteFileDialogOpen] = useState(false)
+  const [noteFolderDialogOpen, setNoteFolderDialogOpen] = useState(false)
+  const [noteUploadDialogOpen, setNoteUploadDialogOpen] = useState(false)
+  const [noteParentPathInput, setNoteParentPathInput] = useState('')
+  const [noteNameInput, setNoteNameInput] = useState('')
+  const [noteUploadFile, setNoteUploadFile] = useState(null)
+  const [mobileNotesTreeOpen, setMobileNotesTreeOpen] = useState(false)
   const telegramContainerRef = useRef(null)
   const profileMenuRef = useRef(null)
   const statsSyncTimerRef = useRef(null)
@@ -223,6 +278,7 @@ export default function App() {
   const userInitial = useMemo(() => (displayName?.trim()?.[0] || 'U').toUpperCase(), [displayName])
   const lightThemes = useMemo(() => THEMES.filter((theme) => !theme.dark), [])
   const darkThemes = useMemo(() => THEMES.filter((theme) => theme.dark), [])
+  const noteHasUnsavedChanges = noteContent !== noteOriginalContent
 
   function notify(message, type = 'success') {
     setSnack({ message, type })
@@ -274,6 +330,123 @@ export default function App() {
       })
       return next
     })
+  }
+
+  function collectMarkdownPaths(nodes) {
+    const paths = []
+    const stack = [...nodes]
+    while (stack.length) {
+      const node = stack.shift()
+      if (node.type === 'file' && node.path.toLowerCase().endsWith('.md')) {
+        paths.push(node.path)
+      }
+      if (node.children?.length) {
+        stack.unshift(...node.children)
+      }
+    }
+    return paths
+  }
+
+  async function fetchNotesTree(selectPath = null) {
+    setNotesLoading(true)
+    try {
+      const tree = await api.getNotesTree()
+      setNotesTree(tree)
+      const mdPaths = collectMarkdownPaths(tree)
+      const targetPath = selectPath || selectedNotePath || mdPaths[0] || ''
+      if (targetPath) {
+        await openNote(targetPath)
+      } else {
+        setSelectedNotePath('')
+        setSelectedNoteName('')
+        setNoteContent('')
+        setNoteOriginalContent('')
+      }
+    } catch (err) {
+      notify(err.message, 'error')
+    } finally {
+      setNotesLoading(false)
+    }
+  }
+
+  async function openNote(path) {
+    if (!path) return
+    try {
+      const note = await api.getNoteFile(path)
+      setSelectedNotePath(note.path)
+      setSelectedNoteName(note.name)
+      setNoteContent(note.content)
+      setNoteOriginalContent(note.content)
+    } catch (err) {
+      notify(err.message, 'error')
+    }
+  }
+
+  async function saveNote() {
+    if (!selectedNotePath) return
+    try {
+      const updated = await api.updateNoteFile(selectedNotePath, noteContent)
+      setNoteOriginalContent(updated.content)
+      notify('Note saved')
+    } catch (err) {
+      notify(err.message, 'error')
+    }
+  }
+
+  async function createNoteFile(event) {
+    event?.preventDefault()
+    const name = noteNameInput.trim()
+    if (!name) {
+      notify('File name cannot be empty', 'error')
+      return
+    }
+    try {
+      const created = await api.createNoteFile(noteParentPathInput.trim(), name, '')
+      setNoteFileDialogOpen(false)
+      setNoteNameInput('')
+      setNoteParentPathInput('')
+      await fetchNotesTree(created.path)
+      notify('File created')
+    } catch (err) {
+      notify(err.message, 'error')
+    }
+  }
+
+  async function createNoteFolder(event) {
+    event?.preventDefault()
+    const name = noteNameInput.trim()
+    if (!name) {
+      notify('Folder name cannot be empty', 'error')
+      return
+    }
+    try {
+      await api.createNoteFolder(noteParentPathInput.trim(), name)
+      setNoteFolderDialogOpen(false)
+      setNoteNameInput('')
+      setNoteParentPathInput('')
+      await fetchNotesTree()
+      notify('Folder created')
+    } catch (err) {
+      notify(err.message, 'error')
+    }
+  }
+
+  async function uploadNoteFile(event) {
+    event?.preventDefault()
+    if (!noteUploadFile) {
+      notify('Choose a file to upload', 'error')
+      return
+    }
+    try {
+      const uploaded = await api.uploadNoteFile(noteParentPathInput.trim(), noteUploadFile)
+      setNoteUploadDialogOpen(false)
+      setNoteUploadFile(null)
+      setNoteParentPathInput('')
+      await fetchNotesTree(uploaded.path)
+      notify('File uploaded')
+    } catch (err) {
+      notify(err.message, 'error')
+    }
   }
 
   async function fetchCollectionDetail(collectionId) {
@@ -336,6 +509,13 @@ export default function App() {
       notify(err.message, 'error')
     )
   }, [selectedCollectionId])
+
+  useEffect(() => {
+    if (!user || appMode !== 'notes') {
+      return
+    }
+    fetchNotesTree().catch((err) => notify(err.message, 'error'))
+  }, [user, appMode])
 
   useEffect(() => {
     if (!authChecked || user || !telegramBotUsername || !telegramContainerRef.current) {
@@ -799,6 +979,40 @@ export default function App() {
     )
   }
 
+  function renderNoteNode(node, depth = 0) {
+    const isFile = node.type === 'file'
+    const isMd = node.path.toLowerCase().endsWith('.md')
+    const isSelected = selectedNotePath === node.path
+    return (
+      <div key={node.path || `root-${node.name}`}>
+        <button
+          type="button"
+          className={`flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-sm transition ${
+            isSelected ? 'bg-primary/15 text-primary' : 'hover:bg-accent'
+          }`}
+          style={{ paddingLeft: `${0.5 + depth * 0.9}rem` }}
+          onClick={() => {
+            if (isFile && isMd) {
+              openNote(node.path)
+              if (mobileNotesTreeOpen) setMobileNotesTreeOpen(false)
+            }
+          }}
+        >
+          {isFile ? <FileText size={14} className="shrink-0" /> : <FolderOpen size={14} className="shrink-0" />}
+          <span className="truncate">{node.name}</span>
+        </button>
+        {node.children?.map((child) => renderNoteNode(child, depth + 1))}
+      </div>
+    )
+  }
+
+  function renderNotesTree() {
+    if (!notesTree.length) {
+      return <p className="text-sm text-muted-foreground">No notes yet</p>
+    }
+    return <div className="space-y-1">{notesTree.map((node) => renderNoteNode(node))}</div>
+  }
+
   async function exportCollection() {
     if (!selectedCollectionId || !selectedCollectionStats) return
     try {
@@ -828,18 +1042,60 @@ export default function App() {
     <div className="min-h-screen bg-background text-foreground">
       <header className="sticky top-3 z-30 px-4">
         <div className="frosted-surface mx-auto flex max-w-[1800px] items-center justify-between rounded-2xl px-3 py-2.5 sm:px-5 sm:py-3">
-          <h1 className="text-lg font-semibold tracking-tight sm:text-xl">Ankie Web</h1>
+          <div className="flex items-center gap-2">
+            <h1 className="text-lg font-semibold tracking-tight sm:text-xl">Ankie Web</h1>
+            {user && (
+              <div className="hidden items-center rounded-lg border bg-card/60 p-1 sm:flex">
+                <Button
+                  type="button"
+                  size="sm"
+                  variant={appMode === 'flashcards' ? 'secondary' : 'ghost'}
+                  className="h-8"
+                  onClick={() => setAppMode('flashcards')}
+                >
+                  Flashcards
+                </Button>
+                <Button
+                  type="button"
+                  size="sm"
+                  variant={appMode === 'notes' ? 'secondary' : 'ghost'}
+                  className="h-8"
+                  onClick={() => setAppMode('notes')}
+                >
+                  Notes
+                </Button>
+              </div>
+            )}
+          </div>
           <div className="flex items-center gap-2">
             {user && (
               <Button
                 type="button"
                 variant="outline"
                 size="sm"
+                className="sm:hidden"
+                onClick={() => setAppMode((prev) => (prev === 'flashcards' ? 'notes' : 'flashcards'))}
+                title={appMode === 'flashcards' ? 'Switch to Notes' : 'Switch to Flashcards'}
+              >
+                <FileText size={16} />
+              </Button>
+            )}
+            {user && (
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
                 className="gap-2 lg:hidden"
-                onClick={() => setMobileCollectionsOpen(true)}
+                onClick={() => {
+                  if (appMode === 'notes') {
+                    setMobileNotesTreeOpen(true)
+                  } else {
+                    setMobileCollectionsOpen(true)
+                  }
+                }}
               >
                 <PanelLeft size={16} />
-                <span className="hidden sm:inline">Collections</span>
+                <span className="hidden sm:inline">{appMode === 'notes' ? 'Notes' : 'Collections'}</span>
               </Button>
             )}
             {user && (
@@ -1049,18 +1305,71 @@ export default function App() {
         </DialogContent>
       </Dialog>
 
+      <Dialog open={mobileNotesTreeOpen} onOpenChange={setMobileNotesTreeOpen}>
+        <DialogContent className="frosted-surface flex h-[88vh] w-[96vw] max-w-none flex-col sm:max-w-xl lg:hidden">
+          <DialogHeader>
+            <div className="flex items-center justify-between gap-2">
+              <DialogTitle>Notes</DialogTitle>
+              <div className="flex items-center gap-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  className="h-8 px-2"
+                  onClick={() => {
+                    setMobileNotesTreeOpen(false)
+                    setNoteFileDialogOpen(true)
+                  }}
+                  title="Create file"
+                >
+                  <Plus size={14} />
+                </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  className="h-8 px-2"
+                  onClick={() => {
+                    setMobileNotesTreeOpen(false)
+                    setNoteFolderDialogOpen(true)
+                  }}
+                  title="Create folder"
+                >
+                  <FolderPlus size={14} />
+                </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  className="h-8 px-2"
+                  onClick={() => {
+                    setMobileNotesTreeOpen(false)
+                    setNoteUploadDialogOpen(true)
+                  }}
+                  title="Upload file"
+                >
+                  <Upload size={14} />
+                </Button>
+              </div>
+            </div>
+          </DialogHeader>
+          <div className="hide-scrollbar min-h-0 flex-1 overflow-y-auto">{renderNotesTree()}</div>
+        </DialogContent>
+      </Dialog>
+
       <Dialog open={guideOpen} onOpenChange={setGuideOpen}>
         <DialogContent className="frosted-surface max-w-2xl">
           <DialogHeader>
             <DialogTitle>Quick Start Guide</DialogTitle>
           </DialogHeader>
           <div className="space-y-3 text-sm leading-relaxed text-foreground">
-            <p>1. Open the collections panel and create a folder or import a collection from JSON.</p>
-            <p>2. Select a collection and tap the card to flip between question and answer.</p>
-            <p>3. Use “Know” if you answered correctly, or “Don't Know” to repeat the card later.</p>
-            <p>4. JSON format: [{'{ "question": "...", "answer": "..." }'}] or {'{ "cards": [{ "q": "...", "a": "..." }] }'}.</p>
-            <p>5. Use “Reset progress” when you want to restart the collection from the beginning.</p>
-            <p>6. Change theme anytime from the top bar and reopen this guide with the “Guide” button.</p>
+            <p>1. Choose mode in top bar: `Flashcards` for study or `Notes` for markdown files.</p>
+            <p>2. In Flashcards, import JSON collection and start reviewing cards.</p>
+            <p>3. JSON format: [{'{ "question": "...", "answer": "..." }'}] or {'{ "cards": [{ "q": "...", "a": "..." }] }'}.</p>
+            <p>4. Use “Know” if answered correctly, or “Don't Know” to repeat the card later.</p>
+            <p>5. In Notes, open a markdown file from sidebar and switch between `Preview` and `Code`.</p>
+            <p>6. Create folder, create empty file, or upload file from notes toolbar.</p>
+            <p>7. Change theme anytime and reopen this guide with the `Guide` button.</p>
           </div>
           <DialogFooter>
             <Button type="button" onClick={() => setGuideOpen(false)}>
@@ -1097,110 +1406,284 @@ export default function App() {
 
       {authChecked && user && (
         <div className="mx-auto grid max-w-[1800px] grid-cols-1 items-start gap-4 p-4 pt-8 lg:grid-cols-[340px_1fr]">
-        <aside className="hidden space-y-4 lg:sticky lg:top-24 lg:block">
-          <Card className="glass-panel lg:h-[calc(100vh-7.5rem)]">
-            <CardHeader>
-              <div className="flex items-center justify-between gap-2">
-                <CardTitle className="text-lg">Folders & Collections</CardTitle>
-                <div className="flex items-center gap-2">
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    className="h-8 px-2"
-                    onClick={() => setCollectionDialogOpen(true)}
-                    title="Add collection"
-                  >
-                    <Upload size={14} />
-                  </Button>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    className="h-8 px-2"
-                    onClick={() => setFolderDialogOpen(true)}
-                    title="Add folder"
-                  >
-                    <FolderPlus size={14} />
-                  </Button>
-                </div>
-              </div>
-            </CardHeader>
-            <CardContent className="hide-scrollbar overflow-y-auto lg:h-[calc(100vh-13.5rem)]">
-              {renderCollectionsList()}
-            </CardContent>
-          </Card>
-        </aside>
-
-        <main className="space-y-4 lg:flex lg:h-[calc(100vh-7.5rem)] lg:flex-col lg:gap-4 lg:space-y-0">
-          {!selectedCollectionStats && (
-            <Card className="glass-panel lg:h-full">
-              <CardHeader>
-                <CardTitle>Upload your first JSON collection</CardTitle>
-              </CardHeader>
-              <CardContent className="text-sm text-muted-foreground">
-                Formats: [{'{"question":"...","answer":"..."}'}] or {'{"cards":[{"q":"...","a":"..."}]}' }
-              </CardContent>
-            </Card>
-          )}
-
-          {selectedCollectionStats && (
+          {appMode === 'flashcards' ? (
             <>
-              <Card className="glass-panel">
-                <CardHeader>
-                  <div className="flex flex-wrap items-center justify-between gap-3">
-                    <div>
-                      <CardTitle>{selectedCollectionStats.name}</CardTitle>
-                      <CardDescription>
-                        Total: {selectedCollectionStats.total_cards} | Known: {selectedCollectionStats.known_cards} | Remaining:{' '}
-                        {selectedCollectionStats.remaining_cards}
-                      </CardDescription>
-                    </div>
-                    <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row sm:flex-wrap">
-                      <Button className="w-full sm:w-auto" variant="outline" onClick={reloadSession}><RefreshCcw size={16} /> Reload session</Button>
-                      <Button className="w-full sm:w-auto" variant="outline" onClick={resetProgress}><RotateCcw size={16} /> Reset progress</Button>
-                      <Button className="w-full sm:w-auto" variant="outline" onClick={exportCollection}><Download size={16} /> Export</Button>
-                      <Button className="w-full sm:w-auto" variant="destructive" onClick={removeCollection}><Trash2 size={16} /> Delete</Button>
-                    </div>
-                  </div>
-                </CardHeader>
-                <CardContent className="flex items-center gap-2">
-                  {selectedCollectionStats.is_mastered ? (
-                    <Badge variant="secondary">Collection mastered</Badge>
-                  ) : (
-                    <Badge variant="outline">In progress</Badge>
-                  )}
-                </CardContent>
-              </Card>
-
-              <Card className="glass-panel lg:min-h-0 lg:flex-1">
-                <CardContent className="flex flex-col items-center gap-6 pt-6 lg:h-full lg:pb-6">
-                  {!currentCard && <p className="text-xl font-semibold">No cards left for this session</p>}
-                  {currentCard && (
-                    <>
-                      <FlipCard
-                        card={currentCard}
-                        flipped={flipped}
-                        onFlip={() => setFlipped((v) => !v)}
-                        onEdit={() => openEditDialog(currentCard)}
-                        onDelete={() => removeCard(currentCard.id)}
-                      />
-                      <div className="flex w-full max-w-2xl flex-col items-center gap-3 sm:flex-row sm:justify-center">
-                        <Button variant="outline" className="w-full border-amber-500 text-amber-600 hover:bg-amber-50 sm:w-auto" onClick={() => markCurrentCard(false)}>
-                          Don't Know
+              <aside className="hidden space-y-4 lg:sticky lg:top-24 lg:block">
+                <Card className="glass-panel lg:h-[calc(100vh-7.5rem)]">
+                  <CardHeader>
+                    <div className="flex items-center justify-between gap-2">
+                      <CardTitle className="text-lg">Folders & Collections</CardTitle>
+                      <div className="flex items-center gap-2">
+                        <Button type="button" variant="outline" size="sm" className="h-8 px-2" onClick={() => setCollectionDialogOpen(true)} title="Add collection">
+                          <Upload size={14} />
                         </Button>
-                        <Button className="w-full sm:w-auto" variant="secondary" onClick={() => markCurrentCard(true)}>Know</Button>
+                        <Button type="button" variant="outline" size="sm" className="h-8 px-2" onClick={() => setFolderDialogOpen(true)} title="Add folder">
+                          <FolderPlus size={14} />
+                        </Button>
                       </div>
-                    </>
-                  )}
-                </CardContent>
-              </Card>
+                    </div>
+                  </CardHeader>
+                  <CardContent className="hide-scrollbar overflow-y-auto lg:h-[calc(100vh-13.5rem)]">
+                    {renderCollectionsList()}
+                  </CardContent>
+                </Card>
+              </aside>
 
+              <main className="space-y-4 lg:flex lg:h-[calc(100vh-7.5rem)] lg:flex-col lg:gap-4 lg:space-y-0">
+                {!selectedCollectionStats && (
+                  <Card className="glass-panel lg:h-full">
+                    <CardHeader>
+                      <CardTitle>Upload your first JSON collection</CardTitle>
+                    </CardHeader>
+                    <CardContent className="text-sm text-muted-foreground">
+                      Formats: [{'{"question":"...","answer":"..."}'}] or {'{"cards":[{"q":"...","a":"..."}]}' }
+                    </CardContent>
+                  </Card>
+                )}
+
+                {selectedCollectionStats && (
+                  <>
+                    <Card className="glass-panel">
+                      <CardHeader>
+                        <div className="flex flex-wrap items-center justify-between gap-3">
+                          <div>
+                            <CardTitle>{selectedCollectionStats.name}</CardTitle>
+                            <CardDescription>
+                              Total: {selectedCollectionStats.total_cards} | Known: {selectedCollectionStats.known_cards} | Remaining:{' '}
+                              {selectedCollectionStats.remaining_cards}
+                            </CardDescription>
+                          </div>
+                          <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row sm:flex-wrap">
+                            <Button className="w-full sm:w-auto" variant="outline" onClick={reloadSession}><RefreshCcw size={16} /> Reload session</Button>
+                            <Button className="w-full sm:w-auto" variant="outline" onClick={resetProgress}><RotateCcw size={16} /> Reset progress</Button>
+                            <Button className="w-full sm:w-auto" variant="outline" onClick={exportCollection}><Download size={16} /> Export</Button>
+                            <Button className="w-full sm:w-auto" variant="destructive" onClick={removeCollection}><Trash2 size={16} /> Delete</Button>
+                          </div>
+                        </div>
+                      </CardHeader>
+                      <CardContent className="flex items-center gap-2">
+                        {selectedCollectionStats.is_mastered ? (
+                          <Badge variant="secondary">Collection mastered</Badge>
+                        ) : (
+                          <Badge variant="outline">In progress</Badge>
+                        )}
+                      </CardContent>
+                    </Card>
+
+                    <Card className="glass-panel lg:min-h-0 lg:flex-1">
+                      <CardContent className="flex flex-col items-center gap-6 pt-6 lg:h-full lg:pb-6">
+                        {!currentCard && <p className="text-xl font-semibold">No cards left for this session</p>}
+                        {currentCard && (
+                          <>
+                            <FlipCard
+                              card={currentCard}
+                              flipped={flipped}
+                              onFlip={() => setFlipped((v) => !v)}
+                              onEdit={() => openEditDialog(currentCard)}
+                              onDelete={() => removeCard(currentCard.id)}
+                            />
+                            <div className="flex w-full max-w-2xl flex-col items-center gap-3 sm:flex-row sm:justify-center">
+                              <Button variant="outline" className="w-full border-amber-500 text-amber-600 hover:bg-amber-50 sm:w-auto" onClick={() => markCurrentCard(false)}>
+                                Don't Know
+                              </Button>
+                              <Button className="w-full sm:w-auto" variant="secondary" onClick={() => markCurrentCard(true)}>Know</Button>
+                            </div>
+                          </>
+                        )}
+                      </CardContent>
+                    </Card>
+                  </>
+                )}
+              </main>
+            </>
+          ) : (
+            <>
+              <aside className="hidden space-y-4 lg:sticky lg:top-24 lg:block">
+                <Card className="glass-panel lg:h-[calc(100vh-7.5rem)]">
+                  <CardHeader>
+                    <div className="flex items-center justify-between gap-2">
+                      <CardTitle className="text-lg">Notes</CardTitle>
+                      <div className="flex items-center gap-2">
+                        <Button type="button" variant="outline" size="sm" className="h-8 px-2" onClick={() => setNoteFileDialogOpen(true)} title="Create file">
+                          <Plus size={14} />
+                        </Button>
+                        <Button type="button" variant="outline" size="sm" className="h-8 px-2" onClick={() => setNoteFolderDialogOpen(true)} title="Create folder">
+                          <FolderPlus size={14} />
+                        </Button>
+                        <Button type="button" variant="outline" size="sm" className="h-8 px-2" onClick={() => setNoteUploadDialogOpen(true)} title="Upload file">
+                          <Upload size={14} />
+                        </Button>
+                      </div>
+                    </div>
+                  </CardHeader>
+                  <CardContent className="hide-scrollbar overflow-y-auto lg:h-[calc(100vh-13.5rem)]">
+                    {notesLoading ? <p className="text-sm text-muted-foreground">Loading notes...</p> : renderNotesTree()}
+                  </CardContent>
+                </Card>
+              </aside>
+
+              <main className="space-y-4 lg:flex lg:h-[calc(100vh-7.5rem)] lg:flex-col lg:gap-4 lg:space-y-0">
+                <Card className="glass-panel">
+                  <CardHeader>
+                    <div className="flex flex-wrap items-center justify-between gap-3">
+                      <div>
+                        <CardTitle>{selectedNoteName || 'Select a markdown file'}</CardTitle>
+                        <CardDescription>{selectedNotePath || 'Choose a file from Notes sidebar'}</CardDescription>
+                      </div>
+                      <div className="flex flex-wrap items-center gap-2">
+                        <Button type="button" variant={noteViewMode === 'preview' ? 'secondary' : 'outline'} onClick={() => setNoteViewMode('preview')}>
+                          <Eye size={16} /> Preview
+                        </Button>
+                        <Button type="button" variant={noteViewMode === 'code' ? 'secondary' : 'outline'} onClick={() => setNoteViewMode('code')}>
+                          <Code2 size={16} /> Code
+                        </Button>
+                        <Button type="button" variant="outline" onClick={() => fetchNotesTree(selectedNotePath)}>
+                          <RefreshCcw size={16} /> Reload
+                        </Button>
+                        <Button type="button" onClick={saveNote} disabled={!selectedNotePath || !noteHasUnsavedChanges}>
+                          <Save size={16} /> Save
+                        </Button>
+                      </div>
+                    </div>
+                  </CardHeader>
+                </Card>
+
+                <Card className="glass-panel lg:min-h-0 lg:flex-1">
+                  <CardContent className="pt-6 lg:h-full">
+                    {!selectedNotePath && <p className="text-sm text-muted-foreground">No markdown file selected.</p>}
+                    {selectedNotePath && noteViewMode === 'code' && (
+                      <textarea
+                        className="hide-scrollbar h-[65vh] w-full rounded-md border border-input bg-background/70 p-3 font-mono text-sm lg:h-full"
+                        value={noteContent}
+                        onChange={(e) => setNoteContent(e.target.value)}
+                        placeholder="Markdown content"
+                      />
+                    )}
+                    {selectedNotePath && noteViewMode === 'preview' && (
+                      <div className="prose prose-sm dark:prose-invert hide-scrollbar max-h-[65vh] overflow-y-auto rounded-md border bg-background/35 p-4 lg:max-h-full">
+                        <ReactMarkdown
+                          remarkPlugins={[remarkGfm]}
+                          components={{
+                            img: ({ src, alt }) => {
+                              const resolved = resolveRelativeNotePath(selectedNotePath, String(src || ''))
+                              return <img src={api.noteRawUrl(resolved)} alt={alt || ''} loading="lazy" />
+                            },
+                            a: ({ href, children }) => {
+                              const raw = String(href || '')
+                              const resolved = resolveRelativeNotePath(selectedNotePath, raw)
+                              if (resolved.toLowerCase().endsWith('.md')) {
+                                return (
+                                  <button
+                                    type="button"
+                                    className="text-primary underline"
+                                    onClick={() => openNote(resolved)}
+                                  >
+                                    {children}
+                                  </button>
+                                )
+                              }
+                              return (
+                                <a href={resolved ? api.noteRawUrl(resolved) : raw} target="_blank" rel="noreferrer">
+                                  {children}
+                                </a>
+                              )
+                            }
+                          }}
+                        >
+                          {noteContent || '*Empty file*'}
+                        </ReactMarkdown>
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              </main>
             </>
           )}
-        </main>
-      </div>
+        </div>
       )}
+
+      <Dialog open={noteFileDialogOpen} onOpenChange={setNoteFileDialogOpen}>
+        <DialogContent className="frosted-surface">
+          <DialogHeader>
+            <DialogTitle>Create Note File</DialogTitle>
+          </DialogHeader>
+          <form className="space-y-3" onSubmit={createNoteFile}>
+            <Input
+              placeholder="Parent path (optional), e.g. backend/auth"
+              value={noteParentPathInput}
+              onChange={(e) => setNoteParentPathInput(e.target.value)}
+            />
+            <Input
+              placeholder="File name, e.g. notes.md"
+              value={noteNameInput}
+              onChange={(e) => setNoteNameInput(e.target.value)}
+            />
+            <DialogFooter>
+              <Button type="button" variant="outline" onClick={() => setNoteFileDialogOpen(false)}>
+                Cancel
+              </Button>
+              <Button type="submit">
+                <Plus size={16} /> Create
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={noteFolderDialogOpen} onOpenChange={setNoteFolderDialogOpen}>
+        <DialogContent className="frosted-surface">
+          <DialogHeader>
+            <DialogTitle>Create Note Folder</DialogTitle>
+          </DialogHeader>
+          <form className="space-y-3" onSubmit={createNoteFolder}>
+            <Input
+              placeholder="Parent path (optional), e.g. backend"
+              value={noteParentPathInput}
+              onChange={(e) => setNoteParentPathInput(e.target.value)}
+            />
+            <Input
+              placeholder="Folder name"
+              value={noteNameInput}
+              onChange={(e) => setNoteNameInput(e.target.value)}
+            />
+            <DialogFooter>
+              <Button type="button" variant="outline" onClick={() => setNoteFolderDialogOpen(false)}>
+                Cancel
+              </Button>
+              <Button type="submit">
+                <FolderPlus size={16} /> Create
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={noteUploadDialogOpen} onOpenChange={setNoteUploadDialogOpen}>
+        <DialogContent className="frosted-surface">
+          <DialogHeader>
+            <DialogTitle>Upload Note File</DialogTitle>
+          </DialogHeader>
+          <form className="space-y-3" onSubmit={uploadNoteFile}>
+            <Input
+              placeholder="Parent path (optional)"
+              value={noteParentPathInput}
+              onChange={(e) => setNoteParentPathInput(e.target.value)}
+            />
+            <Input
+              type="file"
+              onChange={(e) => setNoteUploadFile(e.target.files?.[0] || null)}
+            />
+            <DialogFooter>
+              <Button type="button" variant="outline" onClick={() => setNoteUploadDialogOpen(false)}>
+                Cancel
+              </Button>
+              <Button type="submit">
+                <Upload size={16} /> Upload
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
 
       <Dialog open={collectionDialogOpen} onOpenChange={setCollectionDialogOpen}>
         <DialogContent className="frosted-surface">

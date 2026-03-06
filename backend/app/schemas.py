@@ -102,3 +102,32 @@ class CardProgressAction(BaseModel):
 
 class MessageOut(BaseModel):
     message: str
+
+
+class NoteTreeNode(BaseModel):
+    name: str
+    path: str
+    type: str
+    children: list["NoteTreeNode"] = Field(default_factory=list)
+
+
+class NoteFileOut(BaseModel):
+    path: str
+    name: str
+    content: str
+
+
+class NoteFileUpdate(BaseModel):
+    path: str
+    content: str
+
+
+class NoteFileCreate(BaseModel):
+    parent_path: str = ""
+    name: str
+    content: str = ""
+
+
+class NoteFolderCreate(BaseModel):
+    parent_path: str = ""
+    name: str
