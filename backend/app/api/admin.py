@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from datetime import datetime, timedelta
 
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query, Request
 from sqlalchemy import case, func, select
 from sqlalchemy.orm import Session
 
@@ -27,13 +27,14 @@ router = APIRouter()
 
 @router.get("/admin/me", response_model=AdminMeOut)
 @limiter.limit("60/minute")
-def admin_me(_: User = Depends(get_admin_user)) -> AdminMeOut:
+def admin_me(request: Request, _: User = Depends(get_admin_user)) -> AdminMeOut:
     return AdminMeOut(is_admin=True)
 
 
 @router.get("/admin/overview", response_model=AdminOverviewOut)
 @limiter.limit("30/minute")
 def admin_overview(
+    request: Request,
     window_minutes: int = Query(60, ge=1, le=1440),
     _: User = Depends(get_admin_user),
     db: Session = Depends(get_db),
@@ -64,6 +65,7 @@ def admin_overview(
 @router.get("/admin/users", response_model=list[AdminUserOut])
 @limiter.limit("30/minute")
 def admin_users(
+    request: Request,
     window_minutes: int = Query(1440, ge=5, le=10080),
     limit: int = Query(100, ge=1, le=500),
     _: User = Depends(get_admin_user),
@@ -121,6 +123,7 @@ def admin_users(
 @router.get("/admin/requests", response_model=list[AdminRequestOut])
 @limiter.limit("30/minute")
 def admin_requests(
+    request: Request,
     user_id: int | None = None,
     ip: str | None = None,
     path_contains: str | None = None,
@@ -160,6 +163,7 @@ def admin_requests(
 @router.post("/admin/ban", response_model=MessageOut)
 @limiter.limit("20/minute")
 def admin_ban(
+    request: Request,
     payload: AdminBanIn,
     admin_user: User = Depends(get_admin_user),
     db: Session = Depends(get_db),
@@ -194,6 +198,7 @@ def admin_ban(
 @router.post("/admin/unban", response_model=MessageOut)
 @limiter.limit("20/minute")
 def admin_unban(
+    request: Request,
     payload: AdminUnbanIn,
     admin_user: User = Depends(get_admin_user),
     db: Session = Depends(get_db),
@@ -223,6 +228,7 @@ def admin_unban(
 @router.get("/admin/alerts", response_model=list[AdminAlertOut])
 @limiter.limit("30/minute")
 def admin_alerts(
+    request: Request,
     limit: int = Query(100, ge=1, le=500),
     _: User = Depends(get_admin_user),
     db: Session = Depends(get_db),
