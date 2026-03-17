@@ -7,6 +7,7 @@ from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
 from ..models import Collection, Folder, User
+from ..settings import card_answer_max_chars, card_question_max_chars
 
 
 def parse_cards_payload(payload: Any) -> list[dict[str, str]]:
@@ -32,6 +33,8 @@ def parse_cards_payload(payload: Any) -> list[dict[str, str]]:
         question = question.strip()
         answer = answer.strip()
         if not question or not answer:
+            continue
+        if len(question) > card_question_max_chars() or len(answer) > card_answer_max_chars():
             continue
 
         cards.append({"question": question, "answer": answer})

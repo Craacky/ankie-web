@@ -4,17 +4,20 @@ import os
 from datetime import datetime
 
 from fastapi import APIRouter, Cookie, Depends, HTTPException, Response
-from sqlalchemy import select
+from sqlalchemy import delete, select
 from sqlalchemy.orm import Session
 
 from ..database import get_db
 from ..dependencies import get_current_user
+from ..limiter import limiter
 from ..models import User, Session as UserSession
 from ..schemas import AuthConfigOut, MessageOut, TelegramAuthPayload, UserOut, UserThemeUpdate
 from ..services.auth import (
     SESSION_COOKIE_NAME,
     clear_session_cookie,
+    clear_csrf_cookie,
     create_session,
+    set_csrf_cookie,
     set_session_cookie,
     user_to_out,
     verify_telegram_payload,
@@ -25,11 +28,13 @@ router = APIRouter()
 
 
 @router.get("/health")
+@limiter.limit("30/minute")
 def health() -> dict[str, str]:
     return {"status": "ok"}
 
 
 @router.get("/auth/config", response_model=AuthConfigOut)
+@limiter.limit("20/minute")
 def auth_config() -> AuthConfigOut:
     username = os.getenv("TELEGRAM_BOT_USERNAME", "").strip()
     if not username:
@@ -38,6 +43,7 @@ def auth_config() -> AuthConfigOut:
 
 
 @router.post("/auth/telegram", response_model=UserOut)
+@limiter.limit("10/minute")
 def auth_telegram(payload: TelegramAuthPayload, response: Response, db: Session = Depends(get_db)) -> UserOut:
     bot_token = os.getenv("TELEGRAM_BOT_TOKEN", "").strip()
     if not bot_token:
@@ -77,15 +83,19 @@ def auth_telegram(payload: TelegramAuthPayload, response: Response, db: Session 
 
     session = create_session(db, user.id)
     set_session_cookie(response, session.token)
+    set_csrf_cookie(response)
     return user_to_out(user)
 
 
 @router.get("/auth/me", response_model=UserOut)
-def auth_me(current_user: User = Depends(get_current_user)) -> UserOut:
+@limiter.limit("60/minute")
+def auth_me(response: Response, current_user: User = Depends(get_current_user)) -> UserOut:
+    set_csrf_cookie(response)
     return user_to_out(current_user)
 
 
 @router.put("/users/theme", response_model=UserOut)
+@limiter.limit("60/minute")
 def update_user_theme(
     payload: UserThemeUpdate,
     current_user: User = Depends(get_current_user),
@@ -101,6 +111,7 @@ def update_user_theme(
 
 
 @router.post("/auth/logout", response_model=MessageOut)
+@limiter.limit("30/minute")
 def auth_logout(
     response: Response,
     session_token: str | None = Cookie(default=None, alias=SESSION_COOKIE_NAME),
@@ -112,4 +123,19 @@ def auth_logout(
             db.delete(session)
             db.commit()
     clear_session_cookie(response)
+    clear_csrf_cookie(response)
     return MessageOut(message="Logged out")
+
+
+@router.post("/auth/logout-all", response_model=MessageOut)
+@limiter.limit("10/minute")
+def auth_logout_all(
+    response: Response,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+) -> MessageOut:
+    db.execute(delete(UserSession).where(UserSession.user_id == current_user.id))
+    db.commit()
+    clear_session_cookie(response)
+    clear_csrf_cookie(response)
+    return MessageOut(message="Logged out from all sessions")

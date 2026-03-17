@@ -11,6 +11,7 @@ from sqlalchemy.orm import Session, joinedload
 
 from ..database import get_db
 from ..dependencies import get_current_user
+from ..limiter import limiter
 from ..models import Card, CardProgress, Collection, Folder, User
 from ..schemas import (
     CardOut,
@@ -30,6 +31,7 @@ from ..schemas import (
 from ..services.imports import parse_cards_payload
 from ..services.library import card_to_out, collection_stats
 from ..settings import collections_import_max_bytes
+from ..settings import card_answer_max_chars, card_question_max_chars
 from ..utils.uploads import read_upload_with_limit
 
 router = APIRouter()
@@ -42,6 +44,7 @@ def clamp_limit(limit: int, max_limit: int = 500, default: int = 200) -> int:
 
 
 @router.get("/collections", response_model=list[CollectionOut])
+@limiter.limit("60/minute")
 def list_collections(current_user: User = Depends(get_current_user), db: Session = Depends(get_db)) -> list[CollectionOut]:
     rows = db.execute(
         select(
@@ -204,6 +207,7 @@ def move_collection_to_folder(
 
 
 @router.get("/collections/{collection_id}", response_model=CollectionDetail)
+@limiter.limit("60/minute")
 def get_collection(
     collection_id: int,
     current_user: User = Depends(get_current_user),
@@ -232,6 +236,7 @@ def get_collection(
 
 
 @router.get("/collections/{collection_id}/cards", response_model=PaginatedCardsOut)
+@limiter.limit("60/minute")
 def list_collection_cards(
     collection_id: int,
     current_user: User = Depends(get_current_user),
@@ -262,6 +267,7 @@ def list_collection_cards(
 
 
 @router.get("/collections/{collection_id}/study-cards", response_model=StudyCardsOut)
+@limiter.limit("120/minute")
 def get_study_cards(
     collection_id: int,
     current_user: User = Depends(get_current_user),
@@ -303,6 +309,7 @@ def get_study_cards(
 
 
 @router.post("/collections/import", response_model=ImportResult)
+@limiter.limit("10/minute")
 async def import_collection(
     name: str = Form(...),
     file: UploadFile = File(...),
@@ -357,6 +364,7 @@ async def import_collection(
 
 
 @router.delete("/collections/{collection_id}", response_model=MessageOut)
+@limiter.limit("30/minute")
 def delete_collection(
     collection_id: int,
     current_user: User = Depends(get_current_user),
@@ -372,6 +380,7 @@ def delete_collection(
 
 
 @router.post("/collections/{collection_id}/reset", response_model=MessageOut)
+@limiter.limit("30/minute")
 def reset_collection_progress(
     collection_id: int,
     current_user: User = Depends(get_current_user),
@@ -410,6 +419,7 @@ def export_collection(
 
 
 @router.put("/cards/{card_id}", response_model=CardOut)
+@limiter.limit("60/minute")
 def update_card(
     card_id: int,
     payload: CardUpdate,
@@ -429,6 +439,8 @@ def update_card(
     card.answer = payload.answer.strip()
     if not card.question or not card.answer:
         raise HTTPException(status_code=400, detail="Question and answer cannot be empty")
+    if len(card.question) > card_question_max_chars() or len(card.answer) > card_answer_max_chars():
+        raise HTTPException(status_code=400, detail="Question or answer is too long")
 
     db.commit()
     db.refresh(card)
@@ -436,6 +448,7 @@ def update_card(
 
 
 @router.delete("/cards/{card_id}", response_model=MessageOut)
+@limiter.limit("60/minute")
 def delete_card(
     card_id: int,
     current_user: User = Depends(get_current_user),
@@ -455,6 +468,7 @@ def delete_card(
 
 
 @router.post("/cards/{card_id}/progress", response_model=CardProgressAction)
+@limiter.limit("120/minute")
 def mark_card_progress(
     card_id: int,
     action: CardProgressAction,

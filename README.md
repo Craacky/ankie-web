@@ -86,6 +86,11 @@ Important backend environment variables:
 - `NOTES_UPLOAD_MAX_BYTES` (max uploaded note file size, default 5MB)
 - `COLLECTIONS_IMPORT_MAX_BYTES` (max JSON import size, default 5MB)
 - `COOKIE_SECURE` (should be `true` in production)
+- `ENABLE_API_DOCS` (expose Swagger/Redoc)
+- `ALLOW_CORS_ANY` (allow `*` origins; should be `false` in production)
+- `DISABLE_RATE_LIMITING` (disable API rate limits)
+- `ALLOW_UNSAFE_NOTES_ROOT` (allow notes path outside `/data/notes`)
+- `CARD_QUESTION_MAX_CHARS` and `CARD_ANSWER_MAX_CHARS`
 
 ## Local Development (Docker)
 
@@ -184,6 +189,7 @@ Optional explicit volume:
 ## Security Notes
 
 - Use HTTPS (`COOKIE_SECURE=true`) and strict `CORS_ORIGINS` in production.
+- CSRF protection is enforced for unsafe methods; frontend sends `X-CSRF-Token` from cookie.
 - Notes bootstrap archive extraction is path-validated for safety.
 - File upload/import limits are configurable via env vars.
 - Telegram auth credentials must be kept private.

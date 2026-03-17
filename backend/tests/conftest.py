@@ -32,6 +32,8 @@ def client():
     os.environ["TELEGRAM_BOT_USERNAME"] = "testbot"
     os.environ["TELEGRAM_BOT_TOKEN"] = "testtoken"
     os.environ["NOTES_ROOT"] = str(notes_root)
+    os.environ["ALLOW_UNSAFE_NOTES_ROOT"] = "true"
+    os.environ["DISABLE_RATE_LIMITING"] = "true"
 
     from app.main import app  # noqa: E402
 
@@ -87,4 +89,6 @@ def auth_client(client, clean_db):
     clean_db.commit()
 
     client.cookies.set("ankie_session", token)
+    client.cookies.set("ankie_csrf", "test-csrf-token")
+    client.headers.update({"X-CSRF-Token": "test-csrf-token"})
     return client

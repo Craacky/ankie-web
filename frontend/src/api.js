@@ -2,10 +2,24 @@ const API_URL =
   import.meta.env.VITE_API_URL ||
   (window.location.port === '5173' ? 'http://localhost:8000/api' : '/api')
 
+function getCookieValue(name) {
+  const match = document.cookie.match(new RegExp(`(^|; )${name}=([^;]*)`))
+  return match ? decodeURIComponent(match[2]) : ''
+}
+
 async function request(path, options = {}) {
+  const method = (options.method || 'GET').toUpperCase()
+  const headers = { ...(options.headers || {}) }
+  if (['POST', 'PUT', 'PATCH', 'DELETE'].includes(method)) {
+    const csrf = getCookieValue('ankie_csrf')
+    if (csrf && !headers['X-CSRF-Token']) {
+      headers['X-CSRF-Token'] = csrf
+    }
+  }
   const response = await fetch(`${API_URL}${path}`, {
     credentials: 'include',
-    ...options
+    ...options,
+    headers
   })
 
   if (!response.ok) {

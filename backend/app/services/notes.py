@@ -5,11 +5,17 @@ from pathlib import Path
 
 from fastapi import HTTPException
 from ..schemas import NoteTreeNode
+from ..settings import allow_unsafe_notes_root
 
 
 def notes_root_for_user(user_id: int) -> Path:
     base = Path(os.getenv("NOTES_ROOT", "/data/notes"))
-    root = (base / str(user_id)).resolve()
+    safe_root = Path("/data/notes").resolve()
+    base_resolved = base.resolve()
+    if not allow_unsafe_notes_root():
+        if base_resolved != safe_root and safe_root not in base_resolved.parents:
+            raise HTTPException(status_code=500, detail="NOTES_ROOT must be under /data/notes")
+    root = (base_resolved / str(user_id)).resolve()
     root.mkdir(parents=True, exist_ok=True)
     return root
 
