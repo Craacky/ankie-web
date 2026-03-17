@@ -10,8 +10,8 @@ from ..models import Collection, Folder, User
 from ..settings import card_answer_max_chars, card_question_max_chars
 
 
-def parse_cards_payload(payload: Any) -> list[dict[str, str]]:
-    cards: list[dict[str, str]] = []
+def parse_cards_payload(payload: Any) -> list[dict[str, Any]]:
+    cards: list[dict[str, Any]] = []
 
     if isinstance(payload, list):
         source = payload
@@ -37,10 +37,40 @@ def parse_cards_payload(payload: Any) -> list[dict[str, str]]:
         if len(question) > card_question_max_chars() or len(answer) > card_answer_max_chars():
             continue
 
-        cards.append({"question": question, "answer": answer})
+        is_markdown = bool(item.get("markdown") or item.get("is_markdown"))
+        cards.append({"question": question, "answer": answer, "is_markdown": is_markdown})
 
     if not cards:
         raise HTTPException(status_code=400, detail="No valid cards found in JSON")
+
+    return cards
+
+
+def parse_markdown_cards(content: str) -> list[dict[str, Any]]:
+    lines = content.splitlines()
+    cards: list[dict[str, Any]] = []
+    current_question: str | None = None
+    current_body: list[str] = []
+    for line in lines:
+        if line.startswith("## "):
+            if current_question is not None:
+                answer = "\n".join(current_body).strip()
+                if answer:
+                    if len(current_question) <= card_question_max_chars() and len(answer) <= card_answer_max_chars():
+                        cards.append({"question": current_question, "answer": answer, "is_markdown": True})
+            current_question = line[3:].strip()
+            current_body = []
+        else:
+        current_body.append(line)
+
+    if current_question is not None:
+        answer = "\n".join(current_body).strip()
+        if answer:
+            if len(current_question) <= card_question_max_chars() and len(answer) <= card_answer_max_chars():
+                cards.append({"question": current_question, "answer": answer, "is_markdown": True})
+
+    if not cards:
+        raise HTTPException(status_code=400, detail="No valid cards found in markdown")
 
     return cards
 
