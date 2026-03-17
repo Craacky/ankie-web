@@ -23,7 +23,7 @@ Self-hosted flashcards + notes web app with Telegram login, offline-friendly stu
 
 ```json
 [
-  { "question": "What is 2+2?", "answer": "4" }
+  { "question": "What is 2+2?", "answer": "4", "markdown": false }
 ]
 ```
 
@@ -33,6 +33,20 @@ Self-hosted flashcards + notes web app with Telegram login, offline-friendly stu
     { "q": "What is 2+2?", "a": "4" }
   ]
 }
+```
+
+## Markdown Import Format
+
+Upload a `.md` file where each card starts with `## Question` and the answer is all content until the next `##`.
+
+```md
+# Optional Title
+
+## What is 2+2?
+The answer is **4**.
+
+## Another question
+Answer supports Markdown, lists, code, etc.
 ```
 
 ## Local Development (Docker)

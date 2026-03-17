@@ -1,5 +1,7 @@
 import { memo } from 'react'
 import { Pencil, Trash2 } from 'lucide-react'
+import ReactMarkdown from 'react-markdown'
+import remarkGfm from 'remark-gfm'
 
 import { Button } from './ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card'
@@ -54,7 +56,15 @@ export const FlipCard = memo(function FlipCard({ card, flipped, onFlip, onEdit, 
           <CardActionButtons onEdit={onEdit} onDelete={onDelete} />
           <CardHeader className="pb-2 sm:pb-4">
             <CardDescription>Question</CardDescription>
-            <CardTitle className="text-2xl break-words whitespace-pre-wrap sm:text-3xl">{card.question}</CardTitle>
+            <CardTitle className="text-2xl break-words whitespace-pre-wrap sm:text-3xl">
+              {card.is_markdown ? (
+                <div className="obsidian-preview">
+                  <ReactMarkdown remarkPlugins={[remarkGfm]}>{card.question}</ReactMarkdown>
+                </div>
+              ) : (
+                card.question
+              )}
+            </CardTitle>
           </CardHeader>
           <CardContent className="flex h-[240px] flex-col sm:h-[320px]">
             <p className="mt-4 text-sm text-muted-foreground">Click the card to flip</p>
@@ -74,12 +84,26 @@ export const FlipCard = memo(function FlipCard({ card, flipped, onFlip, onEdit, 
           <CardActionButtons onEdit={onEdit} onDelete={onDelete} />
           <CardHeader className="pb-2 sm:pb-4">
             <CardDescription>Question</CardDescription>
-            <CardTitle className="text-xl break-words whitespace-pre-wrap sm:text-2xl">{card.question}</CardTitle>
+            <CardTitle className="text-xl break-words whitespace-pre-wrap sm:text-2xl">
+              {card.is_markdown ? (
+                <div className="obsidian-preview">
+                  <ReactMarkdown remarkPlugins={[remarkGfm]}>{card.question}</ReactMarkdown>
+                </div>
+              ) : (
+                card.question
+              )}
+            </CardTitle>
           </CardHeader>
           <CardContent className="flex h-[290px] flex-col sm:h-[390px]">
             <div className="mb-3 text-sm font-semibold uppercase tracking-wide text-muted-foreground">Answer</div>
             <div className="min-h-0 flex-1 overflow-y-auto pr-1 text-lg font-medium whitespace-pre-wrap break-words sm:text-xl">
-              {card.answer}
+              {card.is_markdown ? (
+                <div className="obsidian-preview">
+                  <ReactMarkdown remarkPlugins={[remarkGfm]}>{card.answer}</ReactMarkdown>
+                </div>
+              ) : (
+                card.answer
+              )}
             </div>
             <p className="mt-4 text-sm text-muted-foreground">Choose "Know" or "Don't Know"</p>
           </CardContent>

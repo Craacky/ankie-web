@@ -15,6 +15,7 @@ class CardOut(CardBase):
     id: int
     collection_id: int
     known: bool = False
+    is_markdown: bool = False
 
     class Config:
         from_attributes = True

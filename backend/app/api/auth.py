@@ -97,6 +97,7 @@ def auth_me(request: Request, response: Response, current_user: User = Depends(g
 @router.put("/users/theme", response_model=UserOut)
 @limiter.limit("60/minute")
 def update_user_theme(
+    request: Request,
     payload: UserThemeUpdate,
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),

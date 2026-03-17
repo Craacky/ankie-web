@@ -44,7 +44,7 @@ export function CollectionDialogs({
               <span className="mb-2 block text-sm text-muted-foreground">JSON file</span>
               <Input
                 type="file"
-                accept="application/json,.json,text/json,text/plain"
+                accept="application/json,.json,text/json,text/plain,text/markdown,.md"
                 onChange={(e) => setJsonFile(e.target.files?.[0] || null)}
                 disabled={loading}
               />

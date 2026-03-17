@@ -39,4 +39,5 @@ def card_to_out(card: Card) -> CardOut:
         question=card.question,
         answer=card.answer,
         known=known,
+        is_markdown=bool(getattr(card, "is_markdown", False)),
     )

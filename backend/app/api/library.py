@@ -28,7 +28,7 @@ from ..schemas import (
     PaginatedCardsOut,
     StudyCardsOut,
 )
-from ..services.imports import parse_cards_payload
+from ..services.imports import parse_cards_payload, parse_markdown_cards
 from ..services.library import card_to_out, collection_stats
 from ..settings import collections_import_max_bytes
 from ..settings import card_answer_max_chars, card_question_max_chars
@@ -260,7 +260,14 @@ def list_collection_cards(
     ).all()
 
     items = [
-        CardOut(id=card.id, collection_id=card.collection_id, question=card.question, answer=card.answer, known=bool(known))
+        CardOut(
+            id=card.id,
+            collection_id=card.collection_id,
+            question=card.question,
+            answer=card.answer,
+            known=bool(known),
+            is_markdown=bool(getattr(card, "is_markdown", False)),
+        )
         for card, known in rows
     ]
     return PaginatedCardsOut(items=items, total=int(total), offset=offset, limit=limit)
@@ -316,17 +323,27 @@ async def import_collection(
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ) -> ImportResult:
-    if file.content_type not in {"application/json", "text/json", "text/plain", None}:
-        raise HTTPException(status_code=400, detail="Only JSON files are supported")
+    filename = (file.filename or "").lower()
+    is_markdown = filename.endswith(".md") or file.content_type in {"text/markdown", "text/x-markdown"}
+    if not is_markdown and file.content_type not in {"application/json", "text/json", "text/plain", None}:
+        raise HTTPException(status_code=400, detail="Only JSON or Markdown files are supported")
 
     data = await read_upload_with_limit(file, collections_import_max_bytes())
 
+    text = ""
     try:
-        parsed = json.loads(data.decode("utf-8"))
-    except (UnicodeDecodeError, json.JSONDecodeError) as exc:
-        raise HTTPException(status_code=400, detail="Invalid JSON file") from exc
+        text = data.decode("utf-8")
+    except UnicodeDecodeError as exc:
+        raise HTTPException(status_code=400, detail="Invalid UTF-8 file") from exc
 
-    cards = parse_cards_payload(parsed)
+    if is_markdown:
+        cards = parse_markdown_cards(text)
+    else:
+        try:
+            parsed = json.loads(text)
+        except json.JSONDecodeError as exc:
+            raise HTTPException(status_code=400, detail="Invalid JSON file") from exc
+        cards = parse_cards_payload(parsed)
 
     collection_name = name.strip()
     if not collection_name:
@@ -350,7 +367,14 @@ async def import_collection(
             skipped += 1
             continue
         existing_pairs.add(pair)
-        db.add(Card(collection_id=collection.id, question=pair[0], answer=pair[1]))
+        db.add(
+            Card(
+                collection_id=collection.id,
+                question=pair[0],
+                answer=pair[1],
+                is_markdown=bool(item.get("is_markdown", False)),
+            )
+        )
         imported_count += 1
 
     db.commit()
@@ -413,7 +437,10 @@ def export_collection(
         raise HTTPException(status_code=404, detail="Collection not found")
 
     cards = db.scalars(select(Card).where(Card.collection_id == collection_id).order_by(Card.created_at.asc())).all()
-    payload = [{"question": c.question, "answer": c.answer} for c in cards]
+    payload = [
+        {"question": c.question, "answer": c.answer, "markdown": bool(getattr(c, "is_markdown", False))}
+        for c in cards
+    ]
 
     return JSONResponse(content={"name": collection.name, "cards": payload})
 
