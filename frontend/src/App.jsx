@@ -3,6 +3,7 @@ import { Palette, LogOut, PanelLeft, CircleHelp, FileText } from 'lucide-react'
 
 import { api } from './api'
 import { CollectionDialogs } from './components/CollectionDialogs'
+import { AdminMode } from './components/AdminMode'
 import { FlashcardsMode } from './components/FlashcardsMode'
 import { MobileCollectionsDialog } from './components/MobileCollectionsDialog'
 import { MobileNotesDialog } from './components/MobileNotesDialog'
@@ -24,6 +25,7 @@ export default function App() {
   const [authChecked, setAuthChecked] = useState(false)
   const [user, setUser] = useState(null)
   const [telegramBotUsername, setTelegramBotUsername] = useState('')
+  const [isAdmin, setIsAdmin] = useState(false)
   const [snack, setSnack] = useState(null)
   const [themeMenuOpen, setThemeMenuOpen] = useState(false)
   const [mobileCollectionsOpen, setMobileCollectionsOpen] = useState(false)
@@ -174,6 +176,23 @@ export default function App() {
   }, [])
 
   useEffect(() => {
+    if (!user) {
+      setIsAdmin(false)
+      return
+    }
+    api
+      .getAdminMe()
+      .then(() => setIsAdmin(true))
+      .catch(() => setIsAdmin(false))
+  }, [user])
+
+  useEffect(() => {
+    if (!isAdmin && appMode === 'admin') {
+      setAppMode('flashcards')
+    }
+  }, [isAdmin, appMode])
+
+  useEffect(() => {
     const theme = THEMES.find((item) => item.key === themeKey) || THEMES[0]
     localStorage.setItem(THEME_STORAGE_KEY, theme.key)
     document.documentElement.classList.toggle('dark', theme.dark)
@@ -318,6 +337,7 @@ export default function App() {
     try {
       await api.logout()
       setUser(null)
+      setIsAdmin(false)
       notify('Logged out')
     } catch (err) {
       notify(err.message, 'error')
@@ -382,6 +402,17 @@ export default function App() {
                 >
                   Notes
                 </Button>
+                {isAdmin && (
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant={appMode === 'admin' ? 'secondary' : 'ghost'}
+                    className="h-8"
+                    onClick={() => setAppMode('admin')}
+                  >
+                    Admin
+                  </Button>
+                )}
               </div>
             )}
           </div>
@@ -398,7 +429,19 @@ export default function App() {
                 <FileText size={16} />
               </Button>
             )}
-            {user && (
+            {user && isAdmin && (
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                className="sm:hidden"
+                onClick={() => setAppMode('admin')}
+                title="Admin"
+              >
+                Admin
+              </Button>
+            )}
+            {user && appMode !== 'admin' && (
               <Button
                 type="button"
                 variant="outline"
@@ -577,7 +620,11 @@ export default function App() {
 
       {authChecked && user && (
         <div className="mx-auto grid max-w-[1800px] grid-cols-1 items-start gap-4 p-4 pt-8 lg:grid-cols-[340px_1fr]">
-          {appMode === 'flashcards' ? (
+          {appMode === 'admin' ? (
+            <div className="lg:col-span-2">
+              <AdminMode notify={notify} />
+            </div>
+          ) : appMode === 'flashcards' ? (
             <FlashcardsMode
               setCollectionDialogOpen={setCollectionDialogOpen}
               setFolderDialogOpen={setFolderDialogOpen}

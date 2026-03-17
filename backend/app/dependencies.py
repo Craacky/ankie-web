@@ -8,6 +8,7 @@ from .database import get_db
 from .models import Session as UserSession
 from .models import User
 from .services.auth import SESSION_COOKIE_NAME
+from .services.admin import is_admin_telegram_id
 
 
 def get_current_user(
@@ -29,3 +30,9 @@ def get_current_user(
         raise HTTPException(status_code=401, detail="Unauthorized")
 
     return session.user
+
+
+def get_admin_user(current_user: User = Depends(get_current_user)) -> User:
+    if not is_admin_telegram_id(current_user.telegram_id):
+        raise HTTPException(status_code=403, detail="Admin access required")
+    return current_user

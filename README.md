@@ -91,6 +91,11 @@ Important backend environment variables:
 - `DISABLE_RATE_LIMITING` (disable API rate limits)
 - `ALLOW_UNSAFE_NOTES_ROOT` (allow notes path outside `/data/notes`)
 - `CARD_QUESTION_MAX_CHARS` and `CARD_ANSWER_MAX_CHARS`
+- `ADMIN_TELEGRAM_IDS` (comma-separated admin Telegram user IDs)
+- `TELEGRAM_ADMIN_CHAT_ID` (admin channel/chat for alerts)
+- `REQUEST_LOG_RETENTION_DAYS`
+- `ALERT_CHECK_INTERVAL_SECONDS`, `ALERT_WINDOW_SECONDS`
+- `ALERT_REQUESTS_THRESHOLD`, `ALERT_ERROR_THRESHOLD`
 
 ## Local Development (Docker)
 
@@ -154,6 +159,17 @@ git pull
 docker compose --env-file .env.production -f docker-compose.prod.yml up -d --build
 ```
 
+## GitHub Actions Deployment
+
+This repo includes a workflow that deploys on push to `main`. You need SSH access from GitHub Actions to your VPS.
+
+### Required GitHub Secrets
+
+- `VPS_HOST` (your VPS IP or host)
+- `VPS_USER` (deploy user, e.g. `deploy`)
+- `VPS_SSH_KEY` (private key for deploy user)
+- `VPS_PATH` (path to repo on VPS, e.g. `/home/deploy/ankie-web`)
+
 ## Data Persistence
 
 Study data is stored in SQLite at `/data/ankie.db` inside the backend container.
@@ -190,6 +206,11 @@ Optional explicit volume:
 
 - Use HTTPS (`COOKIE_SECURE=true`) and strict `CORS_ORIGINS` in production.
 - CSRF protection is enforced for unsafe methods; frontend sends `X-CSRF-Token` from cookie.
+- Admin dashboard access is restricted to `ADMIN_TELEGRAM_IDS`.
+
+## Admin Dashboard
+
+Once `ADMIN_TELEGRAM_IDS` is set, an `Admin` tab appears in the UI for monitoring users, requests, and alerts. Admin actions (ban/unban) are audited, and alerts are sent to `TELEGRAM_ADMIN_CHAT_ID`.
 - Notes bootstrap archive extraction is path-validated for safety.
 - File upload/import limits are configurable via env vars.
 - Telegram auth credentials must be kept private.

@@ -162,5 +162,31 @@ export const api = {
     a.download = `${collectionName.replace(/\s+/g, '_').toLowerCase()}_export.json`
     a.click()
     URL.revokeObjectURL(url)
-  }
+  },
+  getAdminMe: () => request('/admin/me'),
+  getAdminOverview: (windowMinutes = 60) => request(`/admin/overview?window_minutes=${windowMinutes}`),
+  getAdminUsers: (windowMinutes = 1440, limit = 100) =>
+    request(`/admin/users?window_minutes=${windowMinutes}&limit=${limit}`),
+  getAdminRequests: (params = {}) => {
+    const search = new URLSearchParams()
+    if (params.user_id != null) search.set('user_id', params.user_id)
+    if (params.ip) search.set('ip', params.ip)
+    if (params.path_contains) search.set('path_contains', params.path_contains)
+    if (params.status_min != null) search.set('status_min', params.status_min)
+    if (params.limit != null) search.set('limit', params.limit)
+    return request(`/admin/requests?${search.toString()}`)
+  },
+  getAdminAlerts: (limit = 100) => request(`/admin/alerts?limit=${limit}`),
+  adminBan: (payload) =>
+    request('/admin/ban', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    }),
+  adminUnban: (payload) =>
+    request('/admin/unban', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    })
 }

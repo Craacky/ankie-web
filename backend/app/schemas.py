@@ -150,3 +150,62 @@ class NotePathRename(BaseModel):
 
 class UserThemeUpdate(BaseModel):
     theme_key: str
+
+
+class AdminMeOut(BaseModel):
+    is_admin: bool
+
+
+class AdminUserOut(BaseModel):
+    id: int
+    telegram_id: int
+    username: str | None = None
+    first_name: str | None = None
+    last_name: str | None = None
+    request_count: int
+    error_count: int
+    last_seen: datetime | None = None
+    is_banned: bool
+
+
+class AdminRequestOut(BaseModel):
+    id: int
+    user_id: int | None = None
+    ip: str | None = None
+    method: str
+    path: str
+    status_code: int
+    duration_ms: int
+    request_id: str
+    user_agent: str | None = None
+    created_at: datetime
+
+
+class AdminOverviewOut(BaseModel):
+    window_minutes: int
+    total_requests: int
+    unique_users: int
+    unique_ips: int
+    error_requests: int
+
+
+class AdminBanIn(BaseModel):
+    user_id: int | None = None
+    ip: str | None = None
+    reason: str | None = None
+    duration_minutes: int | None = None
+
+
+class AdminUnbanIn(BaseModel):
+    user_id: int | None = None
+    ip: str | None = None
+
+
+class AdminAlertOut(BaseModel):
+    id: int
+    kind: str
+    user_id: int | None = None
+    ip: str | None = None
+    window_seconds: int
+    count: int
+    created_at: datetime

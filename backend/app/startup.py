@@ -11,7 +11,8 @@ from sqlalchemy import delete
 
 from .database import SessionLocal
 from .models import Session as UserSession
-from .settings import session_cleanup_interval_seconds
+from .services.admin import check_alerts, cleanup_request_logs
+from .settings import alert_check_interval_seconds, session_cleanup_interval_seconds
 
 def run_migrations() -> None:
     base_dir = Path(__file__).resolve().parents[1]
@@ -31,5 +32,16 @@ async def session_cleanup_loop() -> None:
                 now = datetime.utcnow()
                 db.execute(delete(UserSession).where(UserSession.expires_at <= now))
                 db.commit()
+    except asyncio.CancelledError:
+        return
+
+
+async def admin_monitor_loop() -> None:
+    try:
+        while True:
+            await asyncio.sleep(alert_check_interval_seconds())
+            with SessionLocal() as db:
+                cleanup_request_logs(db)
+                check_alerts(db)
     except asyncio.CancelledError:
         return

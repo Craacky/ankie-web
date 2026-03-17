@@ -77,3 +77,44 @@ def card_answer_max_chars() -> int:
 
 def allow_unsafe_notes_root() -> bool:
     return env_bool("ALLOW_UNSAFE_NOTES_ROOT", False)
+
+
+def admin_telegram_ids() -> set[int]:
+    raw = os.getenv("ADMIN_TELEGRAM_IDS", "").strip()
+    if not raw:
+        return set()
+    values: set[int] = set()
+    for item in raw.split(","):
+        item = item.strip()
+        if not item:
+            continue
+        try:
+            values.add(int(item))
+        except ValueError:
+            continue
+    return values
+
+
+def telegram_admin_chat_id() -> str | None:
+    raw = os.getenv("TELEGRAM_ADMIN_CHAT_ID", "").strip()
+    return raw or None
+
+
+def request_log_retention_days() -> int:
+    return max(1, env_int("REQUEST_LOG_RETENTION_DAYS", 14))
+
+
+def alert_check_interval_seconds() -> int:
+    return max(15, env_int("ALERT_CHECK_INTERVAL_SECONDS", 60))
+
+
+def alert_window_seconds() -> int:
+    return max(30, env_int("ALERT_WINDOW_SECONDS", 60))
+
+
+def alert_requests_threshold() -> int:
+    return max(10, env_int("ALERT_REQUESTS_THRESHOLD", 120))
+
+
+def alert_error_threshold() -> int:
+    return max(5, env_int("ALERT_ERROR_THRESHOLD", 30))
