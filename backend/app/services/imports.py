@@ -61,7 +61,7 @@ def parse_markdown_cards(content: str) -> list[dict[str, Any]]:
             current_question = line[3:].strip()
             current_body = []
         else:
-        current_body.append(line)
+            current_body.append(line)
 
     if current_question is not None:
         answer = "\n".join(current_body).strip()
