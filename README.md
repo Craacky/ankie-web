@@ -70,8 +70,6 @@ frontend/
   src/hooks/              Feature hooks (state + effects)
   src/features/           Feature utilities
 scripts/                  Utility scripts (backup/restore, data prep)
-Sources/                  Source learning materials
-Sources/PreloadCollections Generated JSON collections
 docker-compose.yml        Local/dev compose
 docker-compose.prod.yml   Production compose with Caddy + HTTPS
 Caddyfile                 Reverse proxy and TLS config
@@ -84,8 +82,7 @@ Important backend environment variables:
 - `CORS_ORIGINS` (comma-separated origins, default: `http://localhost:8080,http://localhost:5173`)
 - `SESSION_TTL_DAYS` (session cookie TTL)
 - `SESSION_CLEANUP_INTERVAL_SECONDS` (expired sessions cleanup interval)
-- `AUTO_IMPORT_SOURCES` and `SOURCES_PATH`
-- `NOTES_BOOTSTRAP_REPO`, `NOTES_BOOTSTRAP_BRANCH`, `GITHUB_TOKEN`, `NOTES_ROOT`
+- `NOTES_ROOT`
 - `NOTES_UPLOAD_MAX_BYTES` (max uploaded note file size, default 5MB)
 - `COLLECTIONS_IMPORT_MAX_BYTES` (max JSON import size, default 5MB)
 - `COOKIE_SECURE` (should be `true` in production)
@@ -183,21 +180,6 @@ Optional explicit volume:
 ```bash
 ./scripts/restore_volume.sh backups/ankie_data_YYYYMMDD_HHMMSS.tar.gz <volume_name>
 ```
-
-## Preparing Collections from Markdown Sources
-
-This project includes a converter that builds import-ready JSON collections from markdown files in `Sources/Theory`.
-
-Run:
-
-```bash
-python3 scripts/prepare_collections.py
-```
-
-Output:
-
-- JSON collections: `Sources/PreloadCollections/**/*.json`
-- Manifest: `Sources/PreloadCollections/collections-manifest.json`
 
 ## Security Notes
 

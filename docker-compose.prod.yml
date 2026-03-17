@@ -8,15 +8,9 @@ services:
       - TELEGRAM_BOT_USERNAME=${TELEGRAM_BOT_USERNAME}
       - SESSION_TTL_DAYS=${SESSION_TTL_DAYS:-30}
       - COOKIE_SECURE=${COOKIE_SECURE:-true}
-      - AUTO_IMPORT_SOURCES=${AUTO_IMPORT_SOURCES:-true}
-      - SOURCES_PATH=/sources
-      - NOTES_BOOTSTRAP_REPO=${NOTES_BOOTSTRAP_REPO:-}
-      - NOTES_BOOTSTRAP_BRANCH=${NOTES_BOOTSTRAP_BRANCH:-master}
-      - GITHUB_TOKEN=${GITHUB_TOKEN:-}
       - NOTES_ROOT=${NOTES_ROOT:-/data/notes}
     volumes:
       - ankie_data:/data
-      - ./Sources:/sources:ro
     restart: unless-stopped
 
   frontend:

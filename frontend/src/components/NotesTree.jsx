@@ -21,6 +21,7 @@ function NoteNode({
   const isMd = node.path.toLowerCase().endsWith('.md')
   const isSelected = selectedNotePath === node.path
   const isFocusedFolder = !isFile && focusedNoteFolderPath === node.path
+  const hasChildren = !isFile && (node.has_children || node.children?.length)
   const isCollapsed = !isFile && Boolean(collapsedNoteFolders[node.path])
 
   return (
@@ -40,11 +41,20 @@ function NoteNode({
               onSetFocusedFolder(noteParentPath(node.path))
               if (mobileNotesTreeOpen) onCloseMobileTree()
             } else if (!isFile) {
-              onToggleFolderClick(node.path)
+              onToggleFolderClick(node.path, hasChildren)
             }
           }}
         >
-          {!isFile && (isCollapsed ? <ChevronRight size={14} className="shrink-0" /> : <ChevronDown size={14} className="shrink-0" />)}
+          {!isFile &&
+            (hasChildren ? (
+              isCollapsed ? (
+                <ChevronRight size={14} className="shrink-0" />
+              ) : (
+                <ChevronDown size={14} className="shrink-0" />
+              )
+            ) : (
+              <span className="w-3" />
+            ))}
           {isFile ? <FileText size={14} className="shrink-0" /> : <FolderOpen size={14} className="shrink-0" />}
           <span className="truncate">{node.name}</span>
         </button>

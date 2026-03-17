@@ -1,21 +1,18 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 
 import { api } from '../api'
 import { joinNotePath, noteParentPath } from '../features/notes/pathUtils'
 
 function collectMarkdownPaths(nodes) {
-  const paths = []
-  const stack = [...nodes]
-  while (stack.length) {
-    const node = stack.shift()
-    if (node.type === 'file' && node.path.toLowerCase().endsWith('.md')) {
-      paths.push(node.path)
-    }
-    if (node.children?.length) {
-      stack.unshift(...node.children)
-    }
-  }
-  return paths
+  return nodes.filter((node) => node.type === 'file' && node.path.toLowerCase().endsWith('.md')).map((node) => node.path)
+}
+
+function buildTree(index, path = '') {
+  const nodes = index[path] || []
+  return nodes.map((node) => ({
+    ...node,
+    children: node.type === 'folder' ? buildTree(index, node.path) : []
+  }))
 }
 
 function scrollToAnchor(anchor) {
@@ -36,7 +33,7 @@ function scrollToAnchor(anchor) {
 }
 
 export function useNotesFlow({ user, appMode, notify }) {
-  const [notesTree, setNotesTree] = useState([])
+  const [notesIndex, setNotesIndex] = useState({})
   const [selectedNotePath, setSelectedNotePath] = useState('')
   const [selectedNoteName, setSelectedNoteName] = useState('')
   const [noteContent, setNoteContent] = useState('')
@@ -52,8 +49,10 @@ export function useNotesFlow({ user, appMode, notify }) {
   const [focusedNoteFolderPath, setFocusedNoteFolderPath] = useState('')
   const [collapsedNoteFolders, setCollapsedNoteFolders] = useState({})
   const [pendingAnchor, setPendingAnchor] = useState('')
+  const loadedFoldersRef = useRef(new Set())
 
   const noteHasUnsavedChanges = noteContent !== noteOriginalContent
+  const notesTree = useMemo(() => buildTree(notesIndex, ''), [notesIndex])
 
   async function openNote(path) {
     if (!path) return
@@ -68,25 +67,32 @@ export function useNotesFlow({ user, appMode, notify }) {
     }
   }
 
-  async function fetchNotesTree(selectPath = null) {
+  async function loadFolder(path = '') {
     setNotesLoading(true)
     try {
-      const tree = await api.getNotesTree()
-      setNotesTree(tree)
-      const mdPaths = collectMarkdownPaths(tree)
-      const targetPath = selectPath || selectedNotePath || mdPaths[0] || ''
-      if (targetPath) {
-        await openNote(targetPath)
-      } else {
-        setSelectedNotePath('')
-        setSelectedNoteName('')
-        setNoteContent('')
-        setNoteOriginalContent('')
-      }
+      const tree = await api.getNotesTree(path)
+      loadedFoldersRef.current.add(path)
+      setNotesIndex((prev) => ({ ...prev, [path]: tree }))
+      return tree
     } catch (err) {
       notify(err.message, 'error')
+      return []
     } finally {
       setNotesLoading(false)
+    }
+  }
+
+  async function fetchNotesTree(selectPath = null) {
+    const rootNodes = await loadFolder('')
+    const mdPaths = collectMarkdownPaths(rootNodes)
+    const targetPath = selectPath || selectedNotePath || mdPaths[0] || ''
+    if (targetPath) {
+      await openNote(targetPath)
+    } else {
+      setSelectedNotePath('')
+      setSelectedNoteName('')
+      setNoteContent('')
+      setNoteOriginalContent('')
     }
   }
 
@@ -108,9 +114,12 @@ export function useNotesFlow({ user, appMode, notify }) {
       await api.renameNotePath(path, nextName.trim())
       const parent = noteParentPath(path)
       const nextPath = joinNotePath(parent, nextName.trim())
-      await fetchNotesTree(selectedNotePath === path ? nextPath : selectedNotePath)
+      await loadFolder(parent)
       if (focusedNoteFolderPath === path) {
         setFocusedNoteFolderPath(nextPath)
+      }
+      if (selectedNotePath === path) {
+        await openNote(nextPath)
       }
       notify('Path renamed')
     } catch (err) {
@@ -131,7 +140,7 @@ export function useNotesFlow({ user, appMode, notify }) {
       if (focusedNoteFolderPath === path || focusedNoteFolderPath.startsWith(`${path}/`)) {
         setFocusedNoteFolderPath('')
       }
-      await fetchNotesTree()
+      await loadFolder(noteParentPath(path))
       notify(`${type === 'folder' ? 'Folder' : 'File'} deleted`)
     } catch (err) {
       notify(err.message, 'error')
@@ -150,7 +159,8 @@ export function useNotesFlow({ user, appMode, notify }) {
       const created = await api.createNoteFile(parentPath, name, '')
       setNoteFileDialogOpen(false)
       setNoteNameInput('')
-      await fetchNotesTree(created.path)
+      await loadFolder(parentPath)
+      await openNote(created.path)
       notify('File created')
     } catch (err) {
       notify(err.message, 'error')
@@ -169,7 +179,7 @@ export function useNotesFlow({ user, appMode, notify }) {
       await api.createNoteFolder(parentPath, name)
       setNoteFolderDialogOpen(false)
       setNoteNameInput('')
-      await fetchNotesTree()
+      await loadFolder(parentPath)
       notify('Folder created')
     } catch (err) {
       notify(err.message, 'error')
@@ -187,20 +197,30 @@ export function useNotesFlow({ user, appMode, notify }) {
       const uploaded = await api.uploadNoteFile(parentPath, noteUploadFile)
       setNoteUploadDialogOpen(false)
       setNoteUploadFile(null)
-      await fetchNotesTree(uploaded.path)
+      await loadFolder(parentPath)
+      await openNote(uploaded.path)
       notify('File uploaded')
     } catch (err) {
       notify(err.message, 'error')
     }
   }
 
-  function handleNoteFolderClick(path) {
+  async function handleNoteFolderClick(path, hasChildren) {
     setCollapsedNoteFolders((prev) => ({ ...prev, [path]: !prev[path] }))
     setFocusedNoteFolderPath((prev) => (prev === path ? '' : path))
+    if (hasChildren && !loadedFoldersRef.current.has(path)) {
+      await loadFolder(path)
+    }
   }
 
   useEffect(() => {
     if (!user || appMode !== 'notes') {
+      setNotesIndex({})
+      loadedFoldersRef.current = new Set()
+      setSelectedNotePath('')
+      setSelectedNoteName('')
+      setNoteContent('')
+      setNoteOriginalContent('')
       return
     }
     fetchNotesTree().catch((err) => notify(err.message, 'error'))
@@ -245,6 +265,7 @@ export function useNotesFlow({ user, appMode, notify }) {
     setCollapsedNoteFolders,
     setPendingAnchor,
     fetchNotesTree,
+    loadFolder,
     openNote,
     saveNote,
     renameNotePath,

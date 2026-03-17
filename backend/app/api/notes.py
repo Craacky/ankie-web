@@ -6,29 +6,25 @@ from pathlib import Path
 
 from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile
 from fastapi.responses import FileResponse
-from sqlalchemy.orm import Session
-
-from ..database import get_db
 from ..dependencies import get_current_user
 from ..models import User
 from ..schemas import MessageOut, NoteFileCreate, NoteFileOut, NoteFileUpdate, NoteFolderCreate, NotePathRename, NoteTreeNode
-from ..services.notes import (
-    build_notes_tree,
-    ensure_notes_bootstrap_for_user,
-    notes_root_for_user,
-    resolve_user_note_path,
-)
+from ..services.notes import list_notes_children, notes_root_for_user, resolve_user_note_path
 from ..settings import notes_upload_max_bytes
+from ..utils.uploads import read_upload_with_limit
 
 router = APIRouter()
 
 
 @router.get("/notes/tree", response_model=list[NoteTreeNode])
-def notes_tree(current_user: User = Depends(get_current_user), db: Session = Depends(get_db)) -> list[NoteTreeNode]:
-    ensure_notes_bootstrap_for_user(db, current_user)
+def notes_tree(path: str = "", current_user: User = Depends(get_current_user)) -> list[NoteTreeNode]:
     root = notes_root_for_user(current_user.id)
-    children = sorted(root.iterdir(), key=lambda p: (p.is_file(), p.name.lower()))
-    return [build_notes_tree(root, child) for child in children]
+    target = resolve_user_note_path(root, path, allow_missing=True) if path else root
+    if target.exists() and not target.is_dir():
+        raise HTTPException(status_code=400, detail="Target is not a folder")
+    if not target.exists():
+        raise HTTPException(status_code=404, detail="Path not found")
+    return list_notes_children(root, target)
 
 
 @router.get("/notes/file", response_model=NoteFileOut)
@@ -109,9 +105,7 @@ async def upload_note_file(
     target = resolve_user_note_path(root, str((parent / filename).relative_to(root)), allow_missing=True)
     if target.exists():
         raise HTTPException(status_code=409, detail="File already exists")
-    data = await file.read()
-    if len(data) > notes_upload_max_bytes():
-        raise HTTPException(status_code=413, detail="Uploaded file is too large")
+    data = await read_upload_with_limit(file, notes_upload_max_bytes())
     try:
         text_data = data.decode("utf-8")
     except UnicodeDecodeError as exc:

@@ -1,12 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
-import {
-  Palette,
-  Save,
-  LogOut,
-  PanelLeft,
-  CircleHelp,
-  FileText,
-} from 'lucide-react'
+import { Palette, LogOut, PanelLeft, CircleHelp, FileText } from 'lucide-react'
 
 import { api } from './api'
 import { CollectionDialogs } from './components/CollectionDialogs'
@@ -20,74 +13,27 @@ import { Button } from './components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './components/ui/card'
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from './components/ui/dialog'
 import { THEMES } from './constants/themes'
+import { useFlashcardsFlow } from './hooks/useFlashcardsFlow'
 import { useNotesFlow } from './hooks/useNotesFlow'
 
-const MIN_REPEAT_AFTER = 1
-const MAX_REPEAT_AFTER = 8
 const THEME_STORAGE_KEY = 'ankie_theme'
 const GUIDE_SEEN_KEY_PREFIX = 'ankie_guide_seen_'
-
-function randomRepeatAfter() {
-  return Math.floor(Math.random() * (MAX_REPEAT_AFTER - MIN_REPEAT_AFTER + 1)) + MIN_REPEAT_AFTER
-}
 
 export default function App() {
   const [themeKey, setThemeKey] = useState(localStorage.getItem(THEME_STORAGE_KEY) || 'catppuccin')
   const [authChecked, setAuthChecked] = useState(false)
   const [user, setUser] = useState(null)
   const [telegramBotUsername, setTelegramBotUsername] = useState('')
-  const [collections, setCollections] = useState([])
-  const [folders, setFolders] = useState([])
-  const [selectedCollectionId, setSelectedCollectionId] = useState(null)
-  const [selectedCollectionDetail, setSelectedCollectionDetail] = useState(null)
-  const [nameInput, setNameInput] = useState('')
-  const [folderNameInput, setFolderNameInput] = useState('')
-  const [jsonFile, setJsonFile] = useState(null)
-  const [loading, setLoading] = useState(false)
   const [snack, setSnack] = useState(null)
-  const [sessionQueue, setSessionQueue] = useState([])
-  const [flipped, setFlipped] = useState(false)
-  const [editCard, setEditCard] = useState(null)
-  const [editQuestion, setEditQuestion] = useState('')
-  const [editAnswer, setEditAnswer] = useState('')
-  const [draggedCollectionId, setDraggedCollectionId] = useState(null)
-  const [collapsedFolders, setCollapsedFolders] = useState({})
   const [themeMenuOpen, setThemeMenuOpen] = useState(false)
-  const [collectionMenuOpenId, setCollectionMenuOpenId] = useState(null)
-  const [collectionDialogOpen, setCollectionDialogOpen] = useState(false)
-  const [folderDialogOpen, setFolderDialogOpen] = useState(false)
   const [mobileCollectionsOpen, setMobileCollectionsOpen] = useState(false)
-  const [renameFolderTarget, setRenameFolderTarget] = useState(null)
-  const [renameFolderInput, setRenameFolderInput] = useState('')
   const [guideOpen, setGuideOpen] = useState(false)
   const [appMode, setAppMode] = useState('flashcards')
   const telegramContainerRef = useRef(null)
   const profileMenuRef = useRef(null)
-  const statsSyncTimerRef = useRef(null)
   const themeSyncIntervalRef = useRef(null)
   const suppressThemeSaveRef = useRef(false)
   const [profileMenuOpen, setProfileMenuOpen] = useState(false)
-
-  const selectedCollectionStats = useMemo(
-    () => collections.find((c) => c.id === selectedCollectionId) || null,
-    [collections, selectedCollectionId]
-  )
-
-  const currentCard = sessionQueue[0] || null
-  const ungroupedCollections = useMemo(
-    () => collections.filter((collection) => collection.folder_id == null),
-    [collections]
-  )
-  const collectionsByFolder = useMemo(() => {
-    const grouped = new Map()
-    folders.forEach((folder) => grouped.set(folder.id, []))
-    collections.forEach((collection) => {
-      if (collection.folder_id != null && grouped.has(collection.folder_id)) {
-        grouped.get(collection.folder_id).push(collection)
-      }
-    })
-    return grouped
-  }, [collections, folders])
   const displayName = useMemo(() => user?.first_name || user?.username || 'Telegram User', [user])
   const displayHandle = useMemo(
     () => (user?.username ? `@${user.username}` : `id: ${user?.telegram_id ?? ''}`),
@@ -101,6 +47,59 @@ export default function App() {
     setSnack({ message, type })
     window.setTimeout(() => setSnack(null), 3000)
   }
+
+  const {
+    collections,
+    folders,
+    selectedCollectionId,
+    setSelectedCollectionId,
+    selectedCollectionStats,
+    sessionQueue,
+    flipped,
+    setFlipped,
+    currentCard,
+    ungroupedCollections,
+    collectionsByFolder,
+    nameInput,
+    setNameInput,
+    jsonFile,
+    setJsonFile,
+    folderNameInput,
+    setFolderNameInput,
+    loading,
+    collectionDialogOpen,
+    setCollectionDialogOpen,
+    folderDialogOpen,
+    setFolderDialogOpen,
+    renameFolderTarget,
+    setRenameFolderTarget,
+    renameFolderInput,
+    setRenameFolderInput,
+    editCard,
+    setEditCard,
+    editQuestion,
+    setEditQuestion,
+    editAnswer,
+    setEditAnswer,
+    draggedCollectionId,
+    setDraggedCollectionId,
+    collapsedFolders,
+    setCollapsedFolders,
+    collectionMenuOpenId,
+    setCollectionMenuOpenId,
+    handleImport,
+    createFolder,
+    saveFolderRename,
+    deleteFolder,
+    moveCollectionToFolder,
+    markCurrentCard,
+    resetProgress,
+    reloadSession,
+    removeCollection,
+    openEditDialog,
+    saveCardEdit,
+    removeCard
+  } = useFlashcardsFlow({ user, notify })
 
   const {
     notesTree,
@@ -138,15 +137,6 @@ export default function App() {
     handleNoteFolderClick,
   } = useNotesFlow({ user, appMode, notify })
 
-  function scheduleStatsSync() {
-    if (statsSyncTimerRef.current) {
-      window.clearTimeout(statsSyncTimerRef.current)
-    }
-    statsSyncTimerRef.current = window.setTimeout(() => {
-      fetchCollections().catch((err) => notify(err.message, 'error'))
-    }, 900)
-  }
-
   function showGuideIfNeeded(userPayload) {
     if (!userPayload?.id) return
     const key = `${GUIDE_SEEN_KEY_PREFIX}${userPayload.id}`
@@ -154,55 +144,6 @@ export default function App() {
       localStorage.setItem(key, '1')
       setGuideOpen(true)
     }
-  }
-
-  async function fetchCollections() {
-    const list = await api.getCollections()
-    setCollections(list)
-
-    if (!selectedCollectionId && list.length > 0) {
-      setSelectedCollectionId(list[0].id)
-    }
-
-    if (selectedCollectionId && !list.some((c) => c.id === selectedCollectionId)) {
-      setSelectedCollectionId(list.length ? list[0].id : null)
-      setSelectedCollectionDetail(null)
-      setSessionQueue([])
-    }
-  }
-
-  async function fetchFolders() {
-    const list = await api.getFolders()
-    setFolders(list)
-    setCollapsedFolders((prev) => {
-      const next = { ...prev }
-      list.forEach((folder) => {
-        if (next[folder.id] == null) {
-          next[folder.id] = false
-        }
-      })
-      return next
-    })
-  }
-
-  async function fetchCollectionDetail(collectionId) {
-    if (!collectionId) {
-      setSelectedCollectionDetail(null)
-      setSessionQueue([])
-      return
-    }
-    const detail = await api.getCollection(collectionId)
-    setSelectedCollectionDetail(detail)
-  }
-
-  async function loadStudyCards(collectionId) {
-    if (!collectionId) {
-      setSessionQueue([])
-      return
-    }
-    const result = await api.getStudyCards(collectionId)
-    setSessionQueue(result.cards)
-    setFlipped(false)
   }
 
   useEffect(() => {
@@ -222,7 +163,6 @@ export default function App() {
           setThemeKey(me.theme_key)
         }
         showGuideIfNeeded(me)
-        await Promise.all([fetchCollections(), fetchFolders()])
       } catch (err) {
         if (err.status !== 401) {
           notify(err.message, 'error')
@@ -249,16 +189,6 @@ export default function App() {
   }, [themeKey, user])
 
   useEffect(() => {
-    if (!user || !selectedCollectionId) {
-      return
-    }
-
-    Promise.all([fetchCollectionDetail(selectedCollectionId), loadStudyCards(selectedCollectionId)]).catch((err) =>
-      notify(err.message, 'error')
-    )
-  }, [selectedCollectionId])
-
-  useEffect(() => {
     if (!authChecked || user || !telegramBotUsername || !telegramContainerRef.current) {
       return
     }
@@ -273,7 +203,6 @@ export default function App() {
           setThemeKey(me.theme_key)
         }
         showGuideIfNeeded(me)
-        await Promise.all([fetchCollections(), fetchFolders()])
         notify(`Welcome, ${me.first_name || me.username || 'user'}`)
       } catch (err) {
         notify(err.message, 'error')
@@ -305,14 +234,6 @@ export default function App() {
 
     document.addEventListener('mousedown', onDocumentClick)
     return () => document.removeEventListener('mousedown', onDocumentClick)
-  }, [])
-
-  useEffect(() => {
-    return () => {
-      if (statsSyncTimerRef.current) {
-        window.clearTimeout(statsSyncTimerRef.current)
-      }
-    }
   }, [])
 
   useEffect(() => {
@@ -348,204 +269,9 @@ export default function App() {
     }
   }, [user, themeKey])
 
-  async function handleImport(event) {
-    event?.preventDefault()
-    if (!nameInput.trim() || !jsonFile) {
-      notify('Provide a collection name and JSON file', 'error')
-      return
-    }
-
-    setLoading(true)
-    try {
-      const result = await api.importCollection(nameInput.trim(), jsonFile)
-      setNameInput('')
-      setJsonFile(null)
-      setCollectionDialogOpen(false)
-      await Promise.all([fetchCollections(), fetchFolders()])
-      setSelectedCollectionId(result.collection_id)
-      notify(`Imported ${result.imported_count} cards`)
-    } catch (err) {
-      notify(err.message, 'error')
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  async function markCurrentCard(known) {
-    if (!currentCard) return
-
-    try {
-      await api.markCardProgress(currentCard.id, known)
-      if (known) {
-        setSessionQueue((prev) => prev.slice(1))
-      } else {
-        const repeatAfter = randomRepeatAfter()
-        setSessionQueue((prev) => {
-          const rest = prev.slice(1)
-          const insertIndex = Math.min(repeatAfter, rest.length)
-          return [...rest.slice(0, insertIndex), currentCard, ...rest.slice(insertIndex)]
-        })
-      }
-      if (selectedCollectionId && known) {
-        setCollections((prev) =>
-          prev.map((item) => {
-            if (item.id !== selectedCollectionId) {
-              return item
-            }
-            const knownCards = Math.min(item.total_cards, item.known_cards + 1)
-            const remainingCards = Math.max(0, item.remaining_cards - 1)
-            return {
-              ...item,
-              known_cards: knownCards,
-              remaining_cards: remainingCards,
-              is_mastered: item.total_cards > 0 && remainingCards === 0
-            }
-          })
-        )
-      }
-      if (selectedCollectionId) {
-        setSelectedCollectionDetail((prev) => {
-          if (!prev || prev.id !== selectedCollectionId) {
-            return prev
-          }
-          const nextKnown = known ? Math.min(prev.total_cards, prev.known_cards + 1) : prev.known_cards
-          const nextRemaining = known ? Math.max(0, prev.remaining_cards - 1) : prev.remaining_cards
-          return {
-            ...prev,
-            known_cards: nextKnown,
-            remaining_cards: nextRemaining,
-            is_mastered: prev.total_cards > 0 && nextRemaining === 0,
-            cards: prev.cards.map((card) => (card.id === currentCard.id ? { ...card, known } : card))
-          }
-        })
-      }
-      setFlipped(false)
-      scheduleStatsSync()
-    } catch (err) {
-      notify(err.message, 'error')
-    }
-  }
-
-  async function resetProgress() {
-    if (!selectedCollectionId) return
-    setLoading(true)
-    try {
-      await api.resetCollection(selectedCollectionId)
-      await Promise.all([
-        fetchCollections(),
-        fetchCollectionDetail(selectedCollectionId),
-        loadStudyCards(selectedCollectionId)
-      ])
-      notify('Collection progress has been reset')
-    } catch (err) {
-      notify(err.message, 'error')
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  async function reloadSession() {
-    if (!selectedCollectionId) return
-    try {
-      await loadStudyCards(selectedCollectionId)
-      notify('Session reloaded')
-    } catch (err) {
-      notify(err.message, 'error')
-    }
-  }
-
-  async function removeCollection() {
-    if (!selectedCollectionId) return
-    if (!window.confirm('Delete this collection and all cards?')) return
-
-    setLoading(true)
-    try {
-      await api.deleteCollection(selectedCollectionId)
-      await Promise.all([fetchCollections(), fetchFolders()])
-      notify('Collection deleted')
-    } catch (err) {
-      notify(err.message, 'error')
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  function openEditDialog(card) {
-    setEditCard(card)
-    setEditQuestion(card.question)
-    setEditAnswer(card.answer)
-  }
-
-  async function saveCardEdit() {
-    if (!editCard) return
-    setLoading(true)
-    try {
-      await api.updateCard(editCard.id, {
-        question: editQuestion.trim(),
-        answer: editAnswer.trim()
-      })
-      setEditCard(null)
-      await Promise.all([
-        fetchCollections(),
-        fetchCollectionDetail(selectedCollectionId),
-        loadStudyCards(selectedCollectionId)
-      ])
-      notify('Card updated')
-    } catch (err) {
-      notify(err.message, 'error')
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  async function removeCard(cardId) {
-    if (!window.confirm('Delete this card?')) return
-
-    setLoading(true)
-    try {
-      await api.deleteCard(cardId)
-      await Promise.all([
-        fetchCollections(),
-        fetchCollectionDetail(selectedCollectionId),
-        loadStudyCards(selectedCollectionId)
-      ])
-      notify('Card deleted')
-    } catch (err) {
-      notify(err.message, 'error')
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  async function createFolder(event) {
-    event?.preventDefault()
-    const name = folderNameInput.trim()
-    if (!name) {
-      notify('Folder name cannot be empty', 'error')
-      return
-    }
-
-    setLoading(true)
-    try {
-      await api.createFolder(name)
-      setFolderNameInput('')
-      setFolderDialogOpen(false)
-      await fetchFolders()
-      notify('Folder created')
-    } catch (err) {
-      notify(err.message, 'error')
-    } finally {
-      setLoading(false)
-    }
-  }
-
   async function moveCollection(collectionId, folderId) {
     try {
-      await api.moveCollectionToFolder(collectionId, folderId)
-      await Promise.all([fetchCollections(), fetchFolders()])
-      notify('Collection moved')
-    } catch (err) {
-      notify(err.message, 'error')
+      await moveCollectionToFolder(collectionId, folderId)
     } finally {
       setDraggedCollectionId(null)
     }
@@ -560,39 +286,8 @@ export default function App() {
     setRenameFolderInput(folder.name)
   }
 
-  async function saveFolderRename(event) {
-    event?.preventDefault()
-    if (!renameFolderTarget) return
-    const nextName = renameFolderInput.trim()
-    if (!nextName) {
-      notify('Folder name cannot be empty', 'error')
-      return
-    }
-    if (nextName === renameFolderTarget.name) {
-      setRenameFolderTarget(null)
-      return
-    }
-
-    try {
-      await api.renameFolder(renameFolderTarget.id, nextName)
-      await fetchFolders()
-      setRenameFolderTarget(null)
-      notify('Folder renamed')
-    } catch (err) {
-      notify(err.message, 'error')
-    }
-  }
-
-  async function deleteFolder(folder) {
-    if (!window.confirm(`Delete folder "${folder.name}"? Collections will move to Ungrouped.`)) return
-
-    try {
-      await api.deleteFolder(folder.id)
-      await Promise.all([fetchFolders(), fetchCollections()])
-      notify('Folder deleted')
-    } catch (err) {
-      notify(err.message, 'error')
-    }
+  async function deleteFolderByRef(folder) {
+    await deleteFolder(folder.id)
   }
 
   function handleSelectCollection(collectionId) {
@@ -623,11 +318,6 @@ export default function App() {
     try {
       await api.logout()
       setUser(null)
-      setCollections([])
-      setFolders([])
-      setSelectedCollectionId(null)
-      setSelectedCollectionDetail(null)
-      setSessionQueue([])
       notify('Logged out')
     } catch (err) {
       notify(err.message, 'error')
@@ -649,7 +339,7 @@ export default function App() {
     onMove: moveCollection,
     onToggleFolderCollapsed: toggleFolderCollapsed,
     onOpenRenameFolderDialog: openRenameFolderDialog,
-    onDeleteFolder: deleteFolder
+    onDeleteFolder: deleteFolderByRef
   }
 
   const notesTreeProps = {

@@ -1,12 +1,11 @@
 from __future__ import annotations
 
 import json
-import random
 from datetime import datetime
 
-from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile
+from fastapi import APIRouter, Depends, File, Form, HTTPException, Query, UploadFile
 from fastapi.responses import JSONResponse
-from sqlalchemy import case, func, select
+from sqlalchemy import case, func, or_, select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session, joinedload
 
@@ -25,13 +24,21 @@ from ..schemas import (
     FolderUpdate,
     ImportResult,
     MessageOut,
+    PaginatedCardsOut,
     StudyCardsOut,
 )
 from ..services.imports import parse_cards_payload
 from ..services.library import card_to_out, collection_stats
 from ..settings import collections_import_max_bytes
+from ..utils.uploads import read_upload_with_limit
 
 router = APIRouter()
+
+
+def clamp_limit(limit: int, max_limit: int = 500, default: int = 200) -> int:
+    if limit <= 0:
+        return default
+    return min(limit, max_limit)
 
 
 @router.get("/collections", response_model=list[CollectionOut])
@@ -201,21 +208,57 @@ def get_collection(
     collection_id: int,
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
+    offset: int = Query(0, ge=0),
+    limit: int = Query(200, ge=0, le=500),
 ) -> CollectionDetail:
     collection = db.scalar(select(Collection).where(Collection.id == collection_id, Collection.user_id == current_user.id))
     if not collection:
         raise HTTPException(status_code=404, detail="Collection not found")
 
+    limit = clamp_limit(limit)
+    cards_total = db.scalar(select(func.count(Card.id)).where(Card.collection_id == collection_id)) or 0
     cards = db.scalars(
         select(Card)
         .join(Collection, Collection.id == Card.collection_id)
         .where(Card.collection_id == collection_id, Collection.user_id == current_user.id)
         .options(joinedload(Card.progress))
         .order_by(Card.created_at.asc())
+        .offset(offset)
+        .limit(limit)
     ).all()
 
     stats = collection_stats(db, collection)
-    return CollectionDetail(**stats.model_dump(), cards=[card_to_out(c) for c in cards])
+    return CollectionDetail(**stats.model_dump(), cards=[card_to_out(c) for c in cards], cards_total=int(cards_total))
+
+
+@router.get("/collections/{collection_id}/cards", response_model=PaginatedCardsOut)
+def list_collection_cards(
+    collection_id: int,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+    offset: int = Query(0, ge=0),
+    limit: int = Query(200, ge=0, le=500),
+) -> PaginatedCardsOut:
+    collection = db.scalar(select(Collection.id).where(Collection.id == collection_id, Collection.user_id == current_user.id))
+    if not collection:
+        raise HTTPException(status_code=404, detail="Collection not found")
+
+    limit = clamp_limit(limit)
+    total = db.scalar(select(func.count(Card.id)).where(Card.collection_id == collection_id)) or 0
+    rows = db.execute(
+        select(Card, CardProgress.known)
+        .outerjoin(CardProgress, CardProgress.card_id == Card.id)
+        .where(Card.collection_id == collection_id)
+        .order_by(Card.created_at.asc())
+        .offset(offset)
+        .limit(limit)
+    ).all()
+
+    items = [
+        CardOut(id=card.id, collection_id=card.collection_id, question=card.question, answer=card.answer, known=bool(known))
+        for card, known in rows
+    ]
+    return PaginatedCardsOut(items=items, total=int(total), offset=offset, limit=limit)
 
 
 @router.get("/collections/{collection_id}/study-cards", response_model=StudyCardsOut)
@@ -223,26 +266,38 @@ def get_study_cards(
     collection_id: int,
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
+    offset: int = Query(0, ge=0),
+    limit: int = Query(200, ge=0, le=500),
 ) -> StudyCardsOut:
     collection = db.scalar(select(Collection).where(Collection.id == collection_id, Collection.user_id == current_user.id))
     if not collection:
         raise HTTPException(status_code=404, detail="Collection not found")
 
+    limit = clamp_limit(limit)
+    unknown_filter = or_(CardProgress.id.is_(None), CardProgress.known == False)  # noqa: E712
+    remaining = db.scalar(
+        select(func.count(Card.id))
+        .outerjoin(CardProgress, CardProgress.card_id == Card.id)
+        .where(Card.collection_id == collection_id, unknown_filter)
+    ) or 0
+
     cards = db.scalars(
         select(Card)
-        .join(Collection, Collection.id == Card.collection_id)
-        .where(Card.collection_id == collection_id, Collection.user_id == current_user.id)
+        .outerjoin(CardProgress, CardProgress.card_id == Card.id)
+        .where(Card.collection_id == collection_id, unknown_filter)
         .options(joinedload(Card.progress))
+        .order_by(Card.created_at.asc())
+        .offset(offset)
+        .limit(limit)
     ).all()
 
-    filtered = [card_to_out(card) for card in cards if not (card.progress and card.progress.known)]
-    random.shuffle(filtered)
+    filtered = [card_to_out(card) for card in cards]
 
     return StudyCardsOut(
         collection_id=collection.id,
         collection_name=collection.name,
-        is_mastered=(len(cards) > 0 and len(filtered) == 0),
-        remaining_cards=len(filtered),
+        is_mastered=remaining == 0,
+        remaining_cards=int(remaining),
         cards=filtered,
     )
 
@@ -257,9 +312,7 @@ async def import_collection(
     if file.content_type not in {"application/json", "text/json", "text/plain", None}:
         raise HTTPException(status_code=400, detail="Only JSON files are supported")
 
-    data = await file.read()
-    if len(data) > collections_import_max_bytes():
-        raise HTTPException(status_code=413, detail="Imported file is too large")
+    data = await read_upload_with_limit(file, collections_import_max_bytes())
 
     try:
         parsed = json.loads(data.decode("utf-8"))

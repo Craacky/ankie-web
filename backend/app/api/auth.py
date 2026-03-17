@@ -4,12 +4,12 @@ import os
 from datetime import datetime
 
 from fastapi import APIRouter, Cookie, Depends, HTTPException, Response
-from sqlalchemy import func, select, update
+from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from ..database import get_db
 from ..dependencies import get_current_user
-from ..models import Collection, User, Session as UserSession
+from ..models import User, Session as UserSession
 from ..schemas import AuthConfigOut, MessageOut, TelegramAuthPayload, UserOut, UserThemeUpdate
 from ..services.auth import (
     SESSION_COOKIE_NAME,
@@ -19,8 +19,7 @@ from ..services.auth import (
     user_to_out,
     verify_telegram_payload,
 )
-from ..services.imports import ensure_user_sources_loaded, maybe_assign_legacy_data_to_first_user
-from ..services.notes import bootstrap_notes_from_github
+from ..services.imports import maybe_assign_legacy_data_to_first_user
 
 router = APIRouter()
 
@@ -49,6 +48,8 @@ def auth_telegram(payload: TelegramAuthPayload, response: Response, db: Session 
 
     max_age_seconds = int(os.getenv("TELEGRAM_AUTH_MAX_AGE", str(24 * 60 * 60)))
     now_ts = int(datetime.utcnow().timestamp())
+    if int(payload.auth_date) > now_ts + 60:
+        raise HTTPException(status_code=401, detail="Telegram auth date is in the future")
     if now_ts - int(payload.auth_date) > max_age_seconds:
         raise HTTPException(status_code=401, detail="Telegram auth data is too old")
 
@@ -73,38 +74,6 @@ def auth_telegram(payload: TelegramAuthPayload, response: Response, db: Session 
         db.refresh(user)
 
     maybe_assign_legacy_data_to_first_user(db, user)
-
-    claim_result = db.execute(
-        update(User)
-        .where(User.id == user.id, User.auto_import_done == False)  # noqa: E712
-        .values(auto_import_done=True)
-    )
-    db.commit()
-    db.refresh(user)
-    should_auto_import = (claim_result.rowcount or 0) > 0
-    if should_auto_import:
-        existing_count = db.scalar(select(func.count(Collection.id)).where(Collection.user_id == user.id)) or 0
-        if existing_count == 0:
-            ensure_user_sources_loaded(db, user)
-
-    notes_claim_result = db.execute(
-        update(User)
-        .where(User.id == user.id, User.notes_bootstrap_done == False)  # noqa: E712
-        .values(notes_bootstrap_done=True)
-    )
-    db.commit()
-    db.refresh(user)
-    should_bootstrap_notes = (notes_claim_result.rowcount or 0) > 0
-    if should_bootstrap_notes:
-        bootstrap_ok = False
-        try:
-            bootstrap_ok = bootstrap_notes_from_github(user)
-        except Exception:  # noqa: BLE001
-            bootstrap_ok = False
-        if not bootstrap_ok:
-            user.notes_bootstrap_done = False
-            db.commit()
-            db.refresh(user)
 
     session = create_session(db, user.id)
     set_session_cookie(response, session.token)

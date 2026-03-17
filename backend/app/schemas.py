@@ -79,6 +79,7 @@ class CollectionOut(BaseModel):
 
 class CollectionDetail(CollectionOut):
     cards: list[CardOut]
+    cards_total: int
 
 
 class ImportResult(BaseModel):
@@ -109,7 +110,15 @@ class NoteTreeNode(BaseModel):
     name: str
     path: str
     type: str
+    has_children: bool = False
     children: list["NoteTreeNode"] = Field(default_factory=list)
+
+
+class PaginatedCardsOut(BaseModel):
+    items: list[CardOut]
+    total: int
+    offset: int
+    limit: int
 
 
 class NoteFileOut(BaseModel):

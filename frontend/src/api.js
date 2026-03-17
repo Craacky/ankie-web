@@ -67,8 +67,12 @@ export const api = {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ folder_id: folderId })
     }),
-  getCollection: (id) => request(`/collections/${id}`),
-  getStudyCards: (id) => request(`/collections/${id}/study-cards`),
+  getCollection: (id, { offset = 0, limit = 200 } = {}) =>
+    request(`/collections/${id}?offset=${offset}&limit=${limit}`),
+  getCollectionCards: (id, { offset = 0, limit = 200 } = {}) =>
+    request(`/collections/${id}/cards?offset=${offset}&limit=${limit}`),
+  getStudyCards: (id, { offset = 0, limit = 200 } = {}) =>
+    request(`/collections/${id}/study-cards?offset=${offset}&limit=${limit}`),
   resetCollection: (id) => request(`/collections/${id}/reset`, { method: 'POST' }),
   deleteCollection: (id) => request(`/collections/${id}`, { method: 'DELETE' }),
   importCollection: (name, file) => {
@@ -94,7 +98,7 @@ export const api = {
       body: JSON.stringify(payload)
     }),
   deleteCard: (cardId) => request(`/cards/${cardId}`, { method: 'DELETE' }),
-  getNotesTree: () => request('/notes/tree'),
+  getNotesTree: (path = '') => request(`/notes/tree?path=${encodeURIComponent(path)}`),
   getNoteFile: (path) => request(`/notes/file?path=${encodeURIComponent(path)}`),
   updateNoteFile: (path, content) =>
     request('/notes/file', {
