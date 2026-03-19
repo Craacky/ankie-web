@@ -33,6 +33,7 @@ class UserOut(BaseModel):
 
 class AuthConfigOut(BaseModel):
     telegram_bot_username: str
+    csrf_cookie_name: str
 
 
 class TelegramAuthPayload(BaseModel):

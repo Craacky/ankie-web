@@ -2,6 +2,8 @@ const API_URL =
   import.meta.env.VITE_API_URL ||
   (window.location.port === '5173' ? 'http://localhost:8000/api' : '/api')
 
+let csrfCookieName = 'ankie_csrf'
+
 function getCookieValue(name) {
   const match = document.cookie.match(new RegExp(`(^|; )${name}=([^;]*)`))
   return match ? decodeURIComponent(match[2]) : ''
@@ -11,7 +13,7 @@ async function request(path, options = {}) {
   const method = (options.method || 'GET').toUpperCase()
   const headers = { ...(options.headers || {}) }
   if (['POST', 'PUT', 'PATCH', 'DELETE'].includes(method)) {
-    const csrf = getCookieValue('ankie_csrf')
+    const csrf = getCookieValue(csrfCookieName)
     if (csrf && !headers['X-CSRF-Token']) {
       headers['X-CSRF-Token'] = csrf
     }
@@ -49,7 +51,13 @@ async function request(path, options = {}) {
 }
 
 export const api = {
-  getAuthConfig: () => request('/auth/config'),
+  getAuthConfig: async () => {
+    const cfg = await request('/auth/config')
+    if (cfg?.csrf_cookie_name) {
+      csrfCookieName = cfg.csrf_cookie_name
+    }
+    return cfg
+  },
   telegramAuth: (payload) =>
     request('/auth/telegram', {
       method: 'POST',

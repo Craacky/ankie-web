@@ -12,6 +12,7 @@ from ..dependencies import get_current_user
 from ..limiter import limiter
 from ..models import User, Session as UserSession
 from ..schemas import AuthConfigOut, MessageOut, TelegramAuthPayload, UserOut, UserThemeUpdate
+from ..settings import csrf_cookie_name
 from ..services.auth import (
     SESSION_COOKIE_NAME,
     clear_session_cookie,
@@ -39,7 +40,7 @@ def auth_config(request: Request) -> AuthConfigOut:
     username = os.getenv("TELEGRAM_BOT_USERNAME", "").strip()
     if not username:
         raise HTTPException(status_code=500, detail="TELEGRAM_BOT_USERNAME is not configured")
-    return AuthConfigOut(telegram_bot_username=username)
+    return AuthConfigOut(telegram_bot_username=username, csrf_cookie_name=csrf_cookie_name())
 
 
 @router.post("/auth/telegram", response_model=UserOut)

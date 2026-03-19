@@ -69,6 +69,8 @@ def create_note_file(request: Request, payload: NoteFileCreate, current_user: Us
     filename = payload.name.strip()
     if not filename:
         raise HTTPException(status_code=400, detail="File name cannot be empty")
+    if "/" in filename or "\\" in filename:
+        raise HTTPException(status_code=400, detail="File name cannot contain path separators")
     file_path = resolve_user_note_path(root, str((parent / filename).relative_to(root)), allow_missing=True)
     if file_path.exists():
         raise HTTPException(status_code=409, detail="File already exists")
@@ -88,6 +90,8 @@ def create_note_folder(request: Request, payload: NoteFolderCreate, current_user
     folder_name = payload.name.strip()
     if not folder_name:
         raise HTTPException(status_code=400, detail="Folder name cannot be empty")
+    if "/" in folder_name or "\\" in folder_name:
+        raise HTTPException(status_code=400, detail="Folder name cannot contain path separators")
     folder_path = resolve_user_note_path(root, str((parent / folder_name).relative_to(root)), allow_missing=True)
     if folder_path.exists():
         raise HTTPException(status_code=409, detail="Folder already exists")
@@ -133,6 +137,8 @@ async def upload_note_file(
 @limiter.limit("30/minute")
 def rename_note_path(request: Request, payload: NotePathRename, current_user: User = Depends(get_current_user)) -> MessageOut:
     root = notes_root_for_user(current_user.id)
+    if not payload.path.strip():
+        raise HTTPException(status_code=400, detail="Path cannot be empty")
     source = resolve_user_note_path(root, payload.path)
     new_name = payload.new_name.strip()
     if not new_name:
@@ -151,6 +157,8 @@ def rename_note_path(request: Request, payload: NotePathRename, current_user: Us
 @limiter.limit("30/minute")
 def delete_note_path(request: Request, path: str, current_user: User = Depends(get_current_user)) -> MessageOut:
     root = notes_root_for_user(current_user.id)
+    if not path.strip():
+        raise HTTPException(status_code=400, detail="Path cannot be empty")
     target = resolve_user_note_path(root, path)
     if target.is_dir():
         shutil.rmtree(target)

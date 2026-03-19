@@ -40,8 +40,10 @@ def is_banned(db: Session, user_id: int | None, ip: str | None) -> bool:
         UserFlag.banned == True,  # noqa: E712
         (UserFlag.expires_at.is_(None)) | (UserFlag.expires_at > now),
     )
-    if user_id is not None:
+    if user_id is not None and ip:
         query = query.where((UserFlag.user_id == user_id) | (UserFlag.ip == ip))
+    elif user_id is not None:
+        query = query.where(UserFlag.user_id == user_id)
     elif ip:
         query = query.where(UserFlag.ip == ip)
     else:
