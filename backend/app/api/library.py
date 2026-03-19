@@ -324,11 +324,16 @@ def get_study_cards(
 @limiter.limit("10/minute")
 async def import_collection(
     request: Request,
-    name: str = Form(...),
-    file: UploadFile = File(...),
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ) -> ImportResult:
+    form = await request.form()
+    name = form.get("name")
+    file = form.get("file")
+    if not isinstance(name, str) or not name.strip():
+        raise HTTPException(status_code=422, detail="name is required")
+    if not isinstance(file, UploadFile):
+        raise HTTPException(status_code=422, detail="file is required")
     filename = (file.filename or "").lower()
     is_markdown = filename.endswith(".md") or file.content_type in {"text/markdown", "text/x-markdown"}
     if not is_markdown and file.content_type not in {"application/json", "text/json", "text/plain", None}:

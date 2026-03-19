@@ -98,10 +98,15 @@ def create_note_folder(request: Request, payload: NoteFolderCreate, current_user
 @limiter.limit("10/minute")
 async def upload_note_file(
     request: Request,
-    parent_path: str = Form(""),
-    file: UploadFile = File(...),
     current_user: User = Depends(get_current_user),
 ) -> NoteFileOut:
+    form = await request.form()
+    parent_path = form.get("parent_path") or ""
+    file = form.get("file")
+    if not isinstance(parent_path, str):
+        parent_path = ""
+    if not isinstance(file, UploadFile):
+        raise HTTPException(status_code=422, detail="file is required")
     root = notes_root_for_user(current_user.id)
     parent = resolve_user_note_path(root, parent_path, allow_missing=True)
     if parent.exists() and not parent.is_dir():

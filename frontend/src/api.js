@@ -27,7 +27,11 @@ async function request(path, options = {}) {
     try {
       const body = await response.json()
       if (body?.detail) {
-        message = body.detail
+        if (Array.isArray(body.detail)) {
+          message = body.detail.map((item) => item.msg || String(item)).join(', ')
+        } else {
+          message = body.detail
+        }
       }
     } catch {
       // no-op
