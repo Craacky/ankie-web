@@ -114,6 +114,7 @@ def update_user_theme(
 @router.post("/auth/logout", response_model=MessageOut)
 @limiter.limit("30/minute")
 def auth_logout(
+    request: Request,
     response: Response,
     session_token: str | None = Cookie(default=None, alias=SESSION_COOKIE_NAME),
     db: Session = Depends(get_db),
@@ -131,6 +132,7 @@ def auth_logout(
 @router.post("/auth/logout-all", response_model=MessageOut)
 @limiter.limit("10/minute")
 def auth_logout_all(
+    request: Request,
     response: Response,
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
