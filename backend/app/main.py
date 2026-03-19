@@ -92,7 +92,7 @@ async def request_logging(request: Request, call_next):
         response = await call_next(request)
     except Exception:
         duration_ms = (time.monotonic() - start) * 1000
-        logger.info(
+        logger.exception(
             "request_id=%s method=%s path=%s status=error duration_ms=%.2f ip=%s",
             request_id,
             request.method,
