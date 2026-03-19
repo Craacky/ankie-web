@@ -88,8 +88,12 @@ def admin_telegram_ids() -> set[int]:
         item = item.strip()
         if not item:
             continue
+        # Allow IDs that may include accidental non-digit chars (e.g. "id:123456")
+        digits = "".join(ch for ch in item if ch.isdigit())
+        if not digits:
+            continue
         try:
-            values.add(int(item))
+            values.add(int(digits))
         except ValueError:
             continue
     return values
