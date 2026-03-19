@@ -4,7 +4,7 @@ import mimetypes
 import shutil
 from pathlib import Path
 
-from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile
+from fastapi import APIRouter, Depends, File, Form, HTTPException, Request, UploadFile
 from fastapi.responses import FileResponse
 from ..dependencies import get_current_user
 from ..limiter import limiter
@@ -19,7 +19,7 @@ router = APIRouter()
 
 @router.get("/notes/tree", response_model=list[NoteTreeNode])
 @limiter.limit("60/minute")
-def notes_tree(path: str = "", current_user: User = Depends(get_current_user)) -> list[NoteTreeNode]:
+def notes_tree(request: Request, path: str = "", current_user: User = Depends(get_current_user)) -> list[NoteTreeNode]:
     root = notes_root_for_user(current_user.id)
     target = resolve_user_note_path(root, path, allow_missing=True) if path else root
     if target.exists() and not target.is_dir():
@@ -31,7 +31,7 @@ def notes_tree(path: str = "", current_user: User = Depends(get_current_user)) -
 
 @router.get("/notes/file", response_model=NoteFileOut)
 @limiter.limit("60/minute")
-def read_note_file(path: str, current_user: User = Depends(get_current_user)) -> NoteFileOut:
+def read_note_file(request: Request, path: str, current_user: User = Depends(get_current_user)) -> NoteFileOut:
     root = notes_root_for_user(current_user.id)
     file_path = resolve_user_note_path(root, path)
     if not file_path.is_file():
@@ -46,7 +46,7 @@ def read_note_file(path: str, current_user: User = Depends(get_current_user)) ->
 
 @router.put("/notes/file", response_model=NoteFileOut)
 @limiter.limit("60/minute")
-def update_note_file(payload: NoteFileUpdate, current_user: User = Depends(get_current_user)) -> NoteFileOut:
+def update_note_file(request: Request, payload: NoteFileUpdate, current_user: User = Depends(get_current_user)) -> NoteFileOut:
     root = notes_root_for_user(current_user.id)
     file_path = resolve_user_note_path(root, payload.path, allow_missing=True)
     if file_path.exists() and not file_path.is_file():
@@ -59,7 +59,7 @@ def update_note_file(payload: NoteFileUpdate, current_user: User = Depends(get_c
 
 @router.post("/notes/file", response_model=NoteFileOut)
 @limiter.limit("30/minute")
-def create_note_file(payload: NoteFileCreate, current_user: User = Depends(get_current_user)) -> NoteFileOut:
+def create_note_file(request: Request, payload: NoteFileCreate, current_user: User = Depends(get_current_user)) -> NoteFileOut:
     root = notes_root_for_user(current_user.id)
     parent = resolve_user_note_path(root, payload.parent_path, allow_missing=True)
     if parent.exists() and not parent.is_dir():
@@ -78,7 +78,7 @@ def create_note_file(payload: NoteFileCreate, current_user: User = Depends(get_c
 
 @router.post("/notes/folder", response_model=MessageOut)
 @limiter.limit("30/minute")
-def create_note_folder(payload: NoteFolderCreate, current_user: User = Depends(get_current_user)) -> MessageOut:
+def create_note_folder(request: Request, payload: NoteFolderCreate, current_user: User = Depends(get_current_user)) -> MessageOut:
     root = notes_root_for_user(current_user.id)
     parent = resolve_user_note_path(root, payload.parent_path, allow_missing=True)
     if parent.exists() and not parent.is_dir():
@@ -97,6 +97,7 @@ def create_note_folder(payload: NoteFolderCreate, current_user: User = Depends(g
 @router.post("/notes/upload", response_model=NoteFileOut)
 @limiter.limit("10/minute")
 async def upload_note_file(
+    request: Request,
     parent_path: str = Form(""),
     file: UploadFile = File(...),
     current_user: User = Depends(get_current_user),
@@ -124,7 +125,7 @@ async def upload_note_file(
 
 @router.patch("/notes/path", response_model=MessageOut)
 @limiter.limit("30/minute")
-def rename_note_path(payload: NotePathRename, current_user: User = Depends(get_current_user)) -> MessageOut:
+def rename_note_path(request: Request, payload: NotePathRename, current_user: User = Depends(get_current_user)) -> MessageOut:
     root = notes_root_for_user(current_user.id)
     source = resolve_user_note_path(root, payload.path)
     new_name = payload.new_name.strip()
@@ -142,7 +143,7 @@ def rename_note_path(payload: NotePathRename, current_user: User = Depends(get_c
 
 @router.delete("/notes/path", response_model=MessageOut)
 @limiter.limit("30/minute")
-def delete_note_path(path: str, current_user: User = Depends(get_current_user)) -> MessageOut:
+def delete_note_path(request: Request, path: str, current_user: User = Depends(get_current_user)) -> MessageOut:
     root = notes_root_for_user(current_user.id)
     target = resolve_user_note_path(root, path)
     if target.is_dir():
@@ -154,7 +155,7 @@ def delete_note_path(path: str, current_user: User = Depends(get_current_user)) 
 
 @router.get("/notes/raw")
 @limiter.limit("60/minute")
-def read_note_raw(path: str, current_user: User = Depends(get_current_user)) -> FileResponse:
+def read_note_raw(request: Request, path: str, current_user: User = Depends(get_current_user)) -> FileResponse:
     root = notes_root_for_user(current_user.id)
     file_path = resolve_user_note_path(root, path)
     if not file_path.is_file():

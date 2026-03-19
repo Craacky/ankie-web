@@ -3,7 +3,7 @@ from __future__ import annotations
 import json
 from datetime import datetime
 
-from fastapi import APIRouter, Depends, File, Form, HTTPException, Query, UploadFile
+from fastapi import APIRouter, Depends, File, Form, HTTPException, Query, Request, UploadFile
 from fastapi.responses import JSONResponse
 from sqlalchemy import case, func, or_, select
 from sqlalchemy.exc import IntegrityError
@@ -45,7 +45,9 @@ def clamp_limit(limit: int, max_limit: int = 500, default: int = 200) -> int:
 
 @router.get("/collections", response_model=list[CollectionOut])
 @limiter.limit("60/minute")
-def list_collections(current_user: User = Depends(get_current_user), db: Session = Depends(get_db)) -> list[CollectionOut]:
+def list_collections(
+    request: Request, current_user: User = Depends(get_current_user), db: Session = Depends(get_db)
+) -> list[CollectionOut]:
     rows = db.execute(
         select(
             Collection.id,
@@ -209,6 +211,7 @@ def move_collection_to_folder(
 @router.get("/collections/{collection_id}", response_model=CollectionDetail)
 @limiter.limit("60/minute")
 def get_collection(
+    request: Request,
     collection_id: int,
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
@@ -238,6 +241,7 @@ def get_collection(
 @router.get("/collections/{collection_id}/cards", response_model=PaginatedCardsOut)
 @limiter.limit("60/minute")
 def list_collection_cards(
+    request: Request,
     collection_id: int,
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
@@ -276,6 +280,7 @@ def list_collection_cards(
 @router.get("/collections/{collection_id}/study-cards", response_model=StudyCardsOut)
 @limiter.limit("120/minute")
 def get_study_cards(
+    request: Request,
     collection_id: int,
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
@@ -318,6 +323,7 @@ def get_study_cards(
 @router.post("/collections/import", response_model=ImportResult)
 @limiter.limit("10/minute")
 async def import_collection(
+    request: Request,
     name: str = Form(...),
     file: UploadFile = File(...),
     current_user: User = Depends(get_current_user),
@@ -390,6 +396,7 @@ async def import_collection(
 @router.delete("/collections/{collection_id}", response_model=MessageOut)
 @limiter.limit("30/minute")
 def delete_collection(
+    request: Request,
     collection_id: int,
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
@@ -406,6 +413,7 @@ def delete_collection(
 @router.post("/collections/{collection_id}/reset", response_model=MessageOut)
 @limiter.limit("30/minute")
 def reset_collection_progress(
+    request: Request,
     collection_id: int,
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
@@ -448,6 +456,7 @@ def export_collection(
 @router.put("/cards/{card_id}", response_model=CardOut)
 @limiter.limit("60/minute")
 def update_card(
+    request: Request,
     card_id: int,
     payload: CardUpdate,
     current_user: User = Depends(get_current_user),
@@ -477,6 +486,7 @@ def update_card(
 @router.delete("/cards/{card_id}", response_model=MessageOut)
 @limiter.limit("60/minute")
 def delete_card(
+    request: Request,
     card_id: int,
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
@@ -497,6 +507,7 @@ def delete_card(
 @router.post("/cards/{card_id}/progress", response_model=CardProgressAction)
 @limiter.limit("120/minute")
 def mark_card_progress(
+    request: Request,
     card_id: int,
     action: CardProgressAction,
     current_user: User = Depends(get_current_user),
