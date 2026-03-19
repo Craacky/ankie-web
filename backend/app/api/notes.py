@@ -4,8 +4,6 @@ import mimetypes
 import shutil
 from pathlib import Path
 
-from typing import Annotated
-
 from fastapi import APIRouter, Depends, File, Form, HTTPException, Request, UploadFile
 from fastapi.responses import FileResponse
 from ..dependencies import get_current_user
@@ -100,8 +98,8 @@ def create_note_folder(request: Request, payload: NoteFolderCreate, current_user
 @limiter.limit("10/minute")
 async def upload_note_file(
     request: Request,
-    parent_path: Annotated[str, Form("")],
-    file: Annotated[UploadFile, File(...)],
+    parent_path: str = Form(""),
+    file: UploadFile = File(...),
     current_user: User = Depends(get_current_user),
 ) -> NoteFileOut:
     root = notes_root_for_user(current_user.id)
