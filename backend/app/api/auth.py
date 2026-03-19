@@ -3,7 +3,7 @@ from __future__ import annotations
 import os
 from datetime import datetime
 
-from fastapi import APIRouter, Cookie, Depends, HTTPException, Request, Response
+from fastapi import APIRouter, Body, Cookie, Depends, HTTPException, Request, Response
 from sqlalchemy import delete, select
 from sqlalchemy.orm import Session
 
@@ -45,7 +45,12 @@ def auth_config(request: Request) -> AuthConfigOut:
 
 @router.post("/auth/telegram", response_model=UserOut)
 @limiter.limit("10/minute")
-def auth_telegram(request: Request, payload: TelegramAuthPayload, response: Response, db: Session = Depends(get_db)) -> UserOut:
+def auth_telegram(
+    request: Request,
+    payload: TelegramAuthPayload = Body(...),
+    response: Response,
+    db: Session = Depends(get_db),
+) -> UserOut:
     bot_token = os.getenv("TELEGRAM_BOT_TOKEN", "").strip()
     if not bot_token:
         raise HTTPException(status_code=500, detail="TELEGRAM_BOT_TOKEN is not configured")
