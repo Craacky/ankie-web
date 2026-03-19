@@ -15,7 +15,7 @@
     X-Frame-Options "DENY"
     Referrer-Policy "no-referrer"
     Permissions-Policy "geolocation=(), camera=(), microphone=()"
-    Content-Security-Policy "default-src 'self'; img-src 'self' data: https:; style-src 'self' 'unsafe-inline' https://api.fontshare.com; font-src 'self' data: https://api.fontshare.com https://cdn.fontshare.com; script-src 'self' 'unsafe-eval' https://telegram.org; connect-src 'self' https://telegram.org https://oauth.telegram.org"
+    Content-Security-Policy "default-src 'self'; img-src 'self' data: https:; style-src 'self' 'unsafe-inline' https://api.fontshare.com; font-src 'self' data: https://api.fontshare.com https://cdn.fontshare.com; script-src 'self' 'unsafe-eval' https://telegram.org; connect-src 'self' https://telegram.org https://oauth.telegram.org; frame-src https://oauth.telegram.org"
   }
 
   @api path /api/*
