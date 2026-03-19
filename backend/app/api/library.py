@@ -3,7 +3,7 @@ from __future__ import annotations
 import json
 from datetime import datetime
 
-from fastapi import APIRouter, Depends, File, Form, HTTPException, Query, Request, UploadFile
+from fastapi import APIRouter, Body, Depends, File, Form, HTTPException, Query, Request, UploadFile
 from starlette.datastructures import UploadFile as StarletteUploadFile
 from fastapi.responses import JSONResponse
 from sqlalchemy import case, func, or_, select
@@ -515,7 +515,7 @@ def delete_card(
 def mark_card_progress(
     request: Request,
     card_id: int,
-    action: CardProgressAction,
+    action: CardProgressAction = Body(...),
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ) -> CardProgressAction:
