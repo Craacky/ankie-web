@@ -5,6 +5,7 @@ import shutil
 from pathlib import Path
 
 from fastapi import APIRouter, Depends, File, Form, HTTPException, Request, UploadFile
+from starlette.datastructures import UploadFile as StarletteUploadFile
 from fastapi.responses import FileResponse
 from ..dependencies import get_current_user
 from ..limiter import limiter
@@ -105,7 +106,7 @@ async def upload_note_file(
     file = form.get("file")
     if not isinstance(parent_path, str):
         parent_path = ""
-    if not isinstance(file, UploadFile):
+    if not isinstance(file, (UploadFile, StarletteUploadFile)):
         raise HTTPException(status_code=422, detail="file is required")
     root = notes_root_for_user(current_user.id)
     parent = resolve_user_note_path(root, parent_path, allow_missing=True)

@@ -4,6 +4,7 @@ import json
 from datetime import datetime
 
 from fastapi import APIRouter, Depends, File, Form, HTTPException, Query, Request, UploadFile
+from starlette.datastructures import UploadFile as StarletteUploadFile
 from fastapi.responses import JSONResponse
 from sqlalchemy import case, func, or_, select
 from sqlalchemy.exc import IntegrityError
@@ -332,7 +333,7 @@ async def import_collection(
     file = form.get("file")
     if not isinstance(name, str) or not name.strip():
         raise HTTPException(status_code=422, detail="name is required")
-    if not isinstance(file, UploadFile):
+    if not isinstance(file, (UploadFile, StarletteUploadFile)):
         raise HTTPException(status_code=422, detail="file is required")
     filename = (file.filename or "").lower()
     is_markdown = filename.endswith(".md") or file.content_type in {"text/markdown", "text/x-markdown"}
