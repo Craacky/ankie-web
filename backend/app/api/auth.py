@@ -47,8 +47,8 @@ def auth_config(request: Request) -> AuthConfigOut:
 @limiter.limit("10/minute")
 def auth_telegram(
     request: Request,
-    payload: TelegramAuthPayload = Body(...),
     response: Response,
+    payload: TelegramAuthPayload = Body(...),
     db: Session = Depends(get_db),
 ) -> UserOut:
     bot_token = os.getenv("TELEGRAM_BOT_TOKEN", "").strip()
