@@ -3,6 +3,8 @@ from __future__ import annotations
 import json
 from datetime import datetime
 
+from typing import Annotated
+
 from fastapi import APIRouter, Depends, File, Form, HTTPException, Query, Request, UploadFile
 from fastapi.responses import JSONResponse
 from sqlalchemy import case, func, or_, select
@@ -324,8 +326,8 @@ def get_study_cards(
 @limiter.limit("10/minute")
 async def import_collection(
     request: Request,
-    name: str = Form(...),
-    file: UploadFile = File(...),
+    name: Annotated[str, Form(...)],
+    file: Annotated[UploadFile, File(...)],
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ) -> ImportResult:
