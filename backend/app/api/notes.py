@@ -10,8 +10,20 @@ from fastapi.responses import FileResponse
 from ..dependencies import get_current_user
 from ..limiter import limiter
 from ..models import User
-from ..schemas import MessageOut, NoteFileCreate, NoteFileOut, NoteFileUpdate, NoteFolderCreate, NotePathRename, NoteTreeNode
-from ..services.notes import list_notes_children, notes_root_for_user, resolve_user_note_path
+from ..schemas import (
+    MessageOut,
+    NoteFileCreate,
+    NoteFileOut,
+    NoteFileUpdate,
+    NoteFolderCreate,
+    NotePathRename,
+    NoteTreeNode,
+)
+from ..services.notes import (
+    list_notes_children,
+    notes_root_for_user,
+    resolve_user_note_path,
+)
 from ..settings import notes_upload_max_bytes
 from ..utils.uploads import read_upload_with_limit
 
@@ -20,7 +32,9 @@ router = APIRouter()
 
 @router.get("/notes/tree", response_model=list[NoteTreeNode])
 @limiter.limit("60/minute")
-def notes_tree(request: Request, path: str = "", current_user: User = Depends(get_current_user)) -> list[NoteTreeNode]:
+def notes_tree(
+    request: Request, path: str = "", current_user: User = Depends(get_current_user)
+) -> list[NoteTreeNode]:
     root = notes_root_for_user(current_user.id)
     target = resolve_user_note_path(root, path, allow_missing=True) if path else root
     if target.exists() and not target.is_dir():
@@ -32,7 +46,9 @@ def notes_tree(request: Request, path: str = "", current_user: User = Depends(ge
 
 @router.get("/notes/file", response_model=NoteFileOut)
 @limiter.limit("60/minute")
-def read_note_file(request: Request, path: str, current_user: User = Depends(get_current_user)) -> NoteFileOut:
+def read_note_file(
+    request: Request, path: str, current_user: User = Depends(get_current_user)
+) -> NoteFileOut:
     root = notes_root_for_user(current_user.id)
     file_path = resolve_user_note_path(root, path)
     if not file_path.is_file():
@@ -47,7 +63,11 @@ def read_note_file(request: Request, path: str, current_user: User = Depends(get
 
 @router.put("/notes/file", response_model=NoteFileOut)
 @limiter.limit("60/minute")
-def update_note_file(request: Request, payload: NoteFileUpdate, current_user: User = Depends(get_current_user)) -> NoteFileOut:
+def update_note_file(
+    request: Request,
+    payload: NoteFileUpdate,
+    current_user: User = Depends(get_current_user),
+) -> NoteFileOut:
     root = notes_root_for_user(current_user.id)
     file_path = resolve_user_note_path(root, payload.path, allow_missing=True)
     if file_path.exists() and not file_path.is_file():
@@ -60,7 +80,11 @@ def update_note_file(request: Request, payload: NoteFileUpdate, current_user: Us
 
 @router.post("/notes/file", response_model=NoteFileOut)
 @limiter.limit("30/minute")
-def create_note_file(request: Request, payload: NoteFileCreate, current_user: User = Depends(get_current_user)) -> NoteFileOut:
+def create_note_file(
+    request: Request,
+    payload: NoteFileCreate,
+    current_user: User = Depends(get_current_user),
+) -> NoteFileOut:
     root = notes_root_for_user(current_user.id)
     parent = resolve_user_note_path(root, payload.parent_path, allow_missing=True)
     if parent.exists() and not parent.is_dir():
@@ -70,8 +94,12 @@ def create_note_file(request: Request, payload: NoteFileCreate, current_user: Us
     if not filename:
         raise HTTPException(status_code=400, detail="File name cannot be empty")
     if "/" in filename or "\\" in filename:
-        raise HTTPException(status_code=400, detail="File name cannot contain path separators")
-    file_path = resolve_user_note_path(root, str((parent / filename).relative_to(root)), allow_missing=True)
+        raise HTTPException(
+            status_code=400, detail="File name cannot contain path separators"
+        )
+    file_path = resolve_user_note_path(
+        root, str((parent / filename).relative_to(root)), allow_missing=True
+    )
     if file_path.exists():
         raise HTTPException(status_code=409, detail="File already exists")
     file_path.write_text(payload.content, encoding="utf-8")
@@ -81,7 +109,11 @@ def create_note_file(request: Request, payload: NoteFileCreate, current_user: Us
 
 @router.post("/notes/folder", response_model=MessageOut)
 @limiter.limit("30/minute")
-def create_note_folder(request: Request, payload: NoteFolderCreate, current_user: User = Depends(get_current_user)) -> MessageOut:
+def create_note_folder(
+    request: Request,
+    payload: NoteFolderCreate,
+    current_user: User = Depends(get_current_user),
+) -> MessageOut:
     root = notes_root_for_user(current_user.id)
     parent = resolve_user_note_path(root, payload.parent_path, allow_missing=True)
     if parent.exists() and not parent.is_dir():
@@ -91,8 +123,12 @@ def create_note_folder(request: Request, payload: NoteFolderCreate, current_user
     if not folder_name:
         raise HTTPException(status_code=400, detail="Folder name cannot be empty")
     if "/" in folder_name or "\\" in folder_name:
-        raise HTTPException(status_code=400, detail="Folder name cannot contain path separators")
-    folder_path = resolve_user_note_path(root, str((parent / folder_name).relative_to(root)), allow_missing=True)
+        raise HTTPException(
+            status_code=400, detail="Folder name cannot contain path separators"
+        )
+    folder_path = resolve_user_note_path(
+        root, str((parent / folder_name).relative_to(root)), allow_missing=True
+    )
     if folder_path.exists():
         raise HTTPException(status_code=409, detail="Folder already exists")
     folder_path.mkdir(parents=True, exist_ok=False)
@@ -120,14 +156,18 @@ async def upload_note_file(
     filename = Path(file.filename or "").name.strip()
     if not filename:
         raise HTTPException(status_code=400, detail="File name cannot be empty")
-    target = resolve_user_note_path(root, str((parent / filename).relative_to(root)), allow_missing=True)
+    target = resolve_user_note_path(
+        root, str((parent / filename).relative_to(root)), allow_missing=True
+    )
     if target.exists():
         raise HTTPException(status_code=409, detail="File already exists")
     data = await read_upload_with_limit(file, notes_upload_max_bytes())
     try:
         text_data = data.decode("utf-8")
     except UnicodeDecodeError as exc:
-        raise HTTPException(status_code=400, detail="Only UTF-8 text files are supported") from exc
+        raise HTTPException(
+            status_code=400, detail="Only UTF-8 text files are supported"
+        ) from exc
     target.write_text(text_data, encoding="utf-8")
     rel_path = str(target.relative_to(root)).replace("\\", "/")
     return NoteFileOut(path=rel_path, name=target.name, content=text_data)
@@ -135,7 +175,11 @@ async def upload_note_file(
 
 @router.patch("/notes/path", response_model=MessageOut)
 @limiter.limit("30/minute")
-def rename_note_path(request: Request, payload: NotePathRename, current_user: User = Depends(get_current_user)) -> MessageOut:
+def rename_note_path(
+    request: Request,
+    payload: NotePathRename,
+    current_user: User = Depends(get_current_user),
+) -> MessageOut:
     root = notes_root_for_user(current_user.id)
     if not payload.path.strip():
         raise HTTPException(status_code=400, detail="Path cannot be empty")
@@ -144,9 +188,13 @@ def rename_note_path(request: Request, payload: NotePathRename, current_user: Us
     if not new_name:
         raise HTTPException(status_code=400, detail="New name cannot be empty")
     if "/" in new_name or "\\" in new_name:
-        raise HTTPException(status_code=400, detail="New name cannot contain path separators")
+        raise HTTPException(
+            status_code=400, detail="New name cannot contain path separators"
+        )
     target = source.parent / new_name
-    target = resolve_user_note_path(root, str(target.relative_to(root)), allow_missing=True)
+    target = resolve_user_note_path(
+        root, str(target.relative_to(root)), allow_missing=True
+    )
     if target.exists():
         raise HTTPException(status_code=409, detail="Target already exists")
     source.rename(target)
@@ -155,21 +203,42 @@ def rename_note_path(request: Request, payload: NotePathRename, current_user: Us
 
 @router.delete("/notes/path", response_model=MessageOut)
 @limiter.limit("30/minute")
-def delete_note_path(request: Request, path: str, current_user: User = Depends(get_current_user)) -> MessageOut:
+def delete_note_path(
+    request: Request, path: str, current_user: User = Depends(get_current_user)
+) -> MessageOut:
     root = notes_root_for_user(current_user.id)
     if not path.strip():
         raise HTTPException(status_code=400, detail="Path cannot be empty")
     target = resolve_user_note_path(root, path)
+
+    try:
+        is_symlink = target.is_symlink()
+    except OSError:
+        raise HTTPException(status_code=400, detail="Invalid path")
+
+    if is_symlink:
+        raise HTTPException(status_code=400, detail="Cannot delete symlinks")
+
     if target.is_dir():
-        shutil.rmtree(target)
+        try:
+            shutil.rmtree(target)
+        except OSError as exc:
+            raise HTTPException(
+                status_code=500, detail=f"Failed to delete folder: {exc}"
+            )
     else:
-        target.unlink()
+        try:
+            target.unlink()
+        except OSError as exc:
+            raise HTTPException(status_code=500, detail=f"Failed to delete file: {exc}")
     return MessageOut(message="Path deleted")
 
 
 @router.get("/notes/raw")
 @limiter.limit("60/minute")
-def read_note_raw(request: Request, path: str, current_user: User = Depends(get_current_user)) -> FileResponse:
+def read_note_raw(
+    request: Request, path: str, current_user: User = Depends(get_current_user)
+) -> FileResponse:
     root = notes_root_for_user(current_user.id)
     file_path = resolve_user_note_path(root, path)
     if not file_path.is_file():

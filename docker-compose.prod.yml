@@ -2,6 +2,12 @@ services:
   backend:
     build:
       context: ./backend
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://localhost:8000/api/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
     environment:
       - DB_PATH=/data/ankie.db
       - TELEGRAM_BOT_TOKEN=${TELEGRAM_BOT_TOKEN}
@@ -29,6 +35,12 @@ services:
   frontend:
     build:
       context: ./frontend
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://localhost:80/"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 5s
     depends_on:
       - backend
     restart: unless-stopped
@@ -36,8 +48,10 @@ services:
   caddy:
     image: caddy:2.9-alpine
     depends_on:
-      - frontend
-      - backend
+      backend:
+        condition: service_healthy
+      frontend:
+        condition: service_healthy
     ports:
       - "80:80"
       - "443:443"

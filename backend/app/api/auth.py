@@ -11,7 +11,13 @@ from ..database import get_db
 from ..dependencies import get_current_user
 from ..limiter import limiter
 from ..models import User, Session as UserSession
-from ..schemas import AuthConfigOut, MessageOut, TelegramAuthPayload, UserOut, UserThemeUpdate
+from ..schemas import (
+    AuthConfigOut,
+    MessageOut,
+    TelegramAuthPayload,
+    UserOut,
+    UserThemeUpdate,
+)
 from ..settings import csrf_cookie_name
 from ..services.auth import (
     SESSION_COOKIE_NAME,
@@ -39,8 +45,12 @@ def health(request: Request) -> dict[str, str]:
 def auth_config(request: Request) -> AuthConfigOut:
     username = os.getenv("TELEGRAM_BOT_USERNAME", "").strip()
     if not username:
-        raise HTTPException(status_code=500, detail="TELEGRAM_BOT_USERNAME is not configured")
-    return AuthConfigOut(telegram_bot_username=username, csrf_cookie_name=csrf_cookie_name())
+        raise HTTPException(
+            status_code=503, detail="TELEGRAM_BOT_USERNAME is not configured"
+        )
+    return AuthConfigOut(
+        telegram_bot_username=username, csrf_cookie_name=csrf_cookie_name()
+    )
 
 
 @router.post("/auth/telegram", response_model=UserOut)
@@ -53,7 +63,9 @@ def auth_telegram(
 ) -> UserOut:
     bot_token = os.getenv("TELEGRAM_BOT_TOKEN", "").strip()
     if not bot_token:
-        raise HTTPException(status_code=500, detail="TELEGRAM_BOT_TOKEN is not configured")
+        raise HTTPException(
+            status_code=503, detail="TELEGRAM_BOT_TOKEN is not configured"
+        )
 
     if not verify_telegram_payload(payload, bot_token):
         raise HTTPException(status_code=401, detail="Invalid Telegram signature")
@@ -61,7 +73,9 @@ def auth_telegram(
     max_age_seconds = int(os.getenv("TELEGRAM_AUTH_MAX_AGE", str(24 * 60 * 60)))
     now_ts = int(datetime.utcnow().timestamp())
     if int(payload.auth_date) > now_ts + 60:
-        raise HTTPException(status_code=401, detail="Telegram auth date is in the future")
+        raise HTTPException(
+            status_code=401, detail="Telegram auth date is in the future"
+        )
     if now_ts - int(payload.auth_date) > max_age_seconds:
         raise HTTPException(status_code=401, detail="Telegram auth data is too old")
 
@@ -95,7 +109,9 @@ def auth_telegram(
 
 @router.get("/auth/me", response_model=UserOut)
 @limiter.limit("60/minute")
-def auth_me(request: Request, response: Response, current_user: User = Depends(get_current_user)) -> UserOut:
+def auth_me(
+    request: Request, response: Response, current_user: User = Depends(get_current_user)
+) -> UserOut:
     set_csrf_cookie(response)
     return user_to_out(current_user)
 
@@ -126,7 +142,9 @@ def auth_logout(
     db: Session = Depends(get_db),
 ) -> MessageOut:
     if session_token:
-        session = db.scalar(select(UserSession).where(UserSession.token == session_token))
+        session = db.scalar(
+            select(UserSession).where(UserSession.token == session_token)
+        )
         if session:
             db.delete(session)
             db.commit()

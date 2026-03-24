@@ -30,7 +30,9 @@ def is_admin_telegram_id(telegram_id: int | None) -> bool:
 def resolve_user_id_from_session(db: Session, session_token: str) -> int | None:
     now = datetime.utcnow()
     return db.scalar(
-        select(UserSession.user_id).where(UserSession.token == session_token, UserSession.expires_at > now)
+        select(UserSession.user_id).where(
+            UserSession.token == session_token, UserSession.expires_at > now
+        )
     )
 
 
@@ -89,18 +91,22 @@ def _send_telegram_alert(message: str) -> None:
     if not chat_id:
         return
     token = None
-    from ..settings import env_str  # local import to avoid cycle
+    from ..settings import env_str
 
     token = env_str("TELEGRAM_BOT_TOKEN", "")
     if not token:
+        logger.warning("Telegram alert skipped: TELEGRAM_BOT_TOKEN not configured")
         return
     url = f"https://api.telegram.org/bot{token}/sendMessage"
     payload = json.dumps({"chat_id": chat_id, "text": message}).encode("utf-8")
-    request = urllib.request.Request(url, data=payload, headers={"Content-Type": "application/json"})
+    request = urllib.request.Request(
+        url, data=payload, headers={"Content-Type": "application/json"}
+    )
     try:
         with urllib.request.urlopen(request, timeout=10):
+            logger.info("Telegram alert sent: %s", message[:100])
             return
-    except Exception as exc:  # noqa: BLE001
+    except Exception as exc:
         logger.warning("Failed to send Telegram alert: %s", exc)
 
 
@@ -123,7 +129,11 @@ def _maybe_alert(
         )
         .order_by(Alert.created_at.desc())
     )
-    if last_alert and last_alert.last_sent_at and (now - last_alert.last_sent_at).total_seconds() < window_seconds:
+    if (
+        last_alert
+        and last_alert.last_sent_at
+        and (now - last_alert.last_sent_at).total_seconds() < window_seconds
+    ):
         return
     alert = Alert(
         kind=kind,
@@ -137,7 +147,9 @@ def _maybe_alert(
     db.add(alert)
     db.commit()
     target = f"user_id={user_id}" if user_id else f"ip={ip}"
-    _send_telegram_alert(f"[ankie] {kind} threshold hit for {target}: {count} events/{window_seconds}s")
+    _send_telegram_alert(
+        f"[ankie] {kind} threshold hit for {target}: {count} events/{window_seconds}s"
+    )
 
 
 def check_alerts(db: Session) -> None:
@@ -154,7 +166,14 @@ def check_alerts(db: Session) -> None:
     ).all()
     for user_id, count in user_counts:
         if count >= req_threshold:
-            _maybe_alert(db, kind="high_request_rate_user", user_id=user_id, ip=None, window_seconds=window, count=int(count))
+            _maybe_alert(
+                db,
+                kind="high_request_rate_user",
+                user_id=user_id,
+                ip=None,
+                window_seconds=window,
+                count=int(count),
+            )
 
     ip_counts = db.execute(
         select(RequestLog.ip, func.count(RequestLog.id))
@@ -163,16 +182,34 @@ def check_alerts(db: Session) -> None:
     ).all()
     for ip, count in ip_counts:
         if count >= req_threshold:
-            _maybe_alert(db, kind="high_request_rate_ip", user_id=None, ip=ip, window_seconds=window, count=int(count))
+            _maybe_alert(
+                db,
+                kind="high_request_rate_ip",
+                user_id=None,
+                ip=ip,
+                window_seconds=window,
+                count=int(count),
+            )
 
     error_counts = db.execute(
         select(RequestLog.user_id, func.count(RequestLog.id))
-        .where(RequestLog.user_id.is_not(None), RequestLog.status_code >= 500, RequestLog.created_at >= window_start)
+        .where(
+            RequestLog.user_id.is_not(None),
+            RequestLog.status_code >= 500,
+            RequestLog.created_at >= window_start,
+        )
         .group_by(RequestLog.user_id)
     ).all()
     for user_id, count in error_counts:
         if count >= err_threshold:
-            _maybe_alert(db, kind="high_error_rate_user", user_id=user_id, ip=None, window_seconds=window, count=int(count))
+            _maybe_alert(
+                db,
+                kind="high_error_rate_user",
+                user_id=user_id,
+                ip=None,
+                window_seconds=window,
+                count=int(count),
+            )
 
 
 def record_admin_action(

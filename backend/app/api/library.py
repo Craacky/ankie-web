@@ -3,7 +3,17 @@ from __future__ import annotations
 import json
 from datetime import datetime
 
-from fastapi import APIRouter, Body, Depends, File, Form, HTTPException, Query, Request, UploadFile
+from fastapi import (
+    APIRouter,
+    Body,
+    Depends,
+    File,
+    Form,
+    HTTPException,
+    Query,
+    Request,
+    UploadFile,
+)
 from starlette.datastructures import UploadFile as StarletteUploadFile
 from fastapi.responses import JSONResponse
 from sqlalchemy import case, func, or_, select
@@ -47,7 +57,9 @@ def clamp_limit(limit: int, max_limit: int = 500, default: int = 200) -> int:
 @router.get("/collections", response_model=list[CollectionOut])
 @limiter.limit("60/minute")
 def list_collections(
-    request: Request, current_user: User = Depends(get_current_user), db: Session = Depends(get_db)
+    request: Request,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
 ) -> list[CollectionOut]:
     rows = db.execute(
         select(
@@ -65,7 +77,9 @@ def list_collections(
         .outerjoin(Card, Card.collection_id == Collection.id)
         .outerjoin(CardProgress, CardProgress.card_id == Card.id)
         .where(Collection.user_id == current_user.id)
-        .group_by(Collection.id, Collection.name, Collection.folder_id, Collection.created_at)
+        .group_by(
+            Collection.id, Collection.name, Collection.folder_id, Collection.created_at
+        )
         .order_by(Collection.created_at.asc())
     ).all()
     result: list[CollectionOut] = []
@@ -89,7 +103,9 @@ def list_collections(
 
 
 @router.get("/folders", response_model=list[FolderOut])
-def list_folders(current_user: User = Depends(get_current_user), db: Session = Depends(get_db)) -> list[FolderOut]:
+def list_folders(
+    current_user: User = Depends(get_current_user), db: Session = Depends(get_db)
+) -> list[FolderOut]:
     rows = db.execute(
         select(
             Folder.id,
@@ -100,7 +116,8 @@ def list_folders(current_user: User = Depends(get_current_user), db: Session = D
         .select_from(Folder)
         .outerjoin(
             Collection,
-            (Collection.folder_id == Folder.id) & (Collection.user_id == current_user.id),
+            (Collection.folder_id == Folder.id)
+            & (Collection.user_id == current_user.id),
         )
         .where(Folder.user_id == current_user.id)
         .group_by(Folder.id, Folder.name, Folder.created_at)
@@ -133,9 +150,16 @@ def create_folder(
         db.commit()
     except IntegrityError:
         db.rollback()
-        raise HTTPException(status_code=409, detail="Folder name already exists") from None
+        raise HTTPException(
+            status_code=409, detail="Folder name already exists"
+        ) from None
     db.refresh(folder)
-    return FolderOut(id=folder.id, name=folder.name, created_at=folder.created_at, collections_count=0)
+    return FolderOut(
+        id=folder.id,
+        name=folder.name,
+        created_at=folder.created_at,
+        collections_count=0,
+    )
 
 
 @router.patch("/folders/{folder_id}", response_model=FolderOut)
@@ -145,7 +169,9 @@ def rename_folder(
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ) -> FolderOut:
-    folder = db.scalar(select(Folder).where(Folder.id == folder_id, Folder.user_id == current_user.id))
+    folder = db.scalar(
+        select(Folder).where(Folder.id == folder_id, Folder.user_id == current_user.id)
+    )
     if not folder:
         raise HTTPException(status_code=404, detail="Folder not found")
 
@@ -158,14 +184,25 @@ def rename_folder(
         db.commit()
     except IntegrityError:
         db.rollback()
-        raise HTTPException(status_code=409, detail="Folder name already exists") from None
+        raise HTTPException(
+            status_code=409, detail="Folder name already exists"
+        ) from None
     db.refresh(folder)
 
     count = (
-        db.scalar(select(func.count(Collection.id)).where(Collection.folder_id == folder.id, Collection.user_id == current_user.id))
+        db.scalar(
+            select(func.count(Collection.id)).where(
+                Collection.folder_id == folder.id, Collection.user_id == current_user.id
+            )
+        )
         or 0
     )
-    return FolderOut(id=folder.id, name=folder.name, created_at=folder.created_at, collections_count=count)
+    return FolderOut(
+        id=folder.id,
+        name=folder.name,
+        created_at=folder.created_at,
+        collections_count=count,
+    )
 
 
 @router.delete("/folders/{folder_id}", response_model=MessageOut)
@@ -174,11 +211,17 @@ def delete_folder(
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ) -> MessageOut:
-    folder = db.scalar(select(Folder).where(Folder.id == folder_id, Folder.user_id == current_user.id))
+    folder = db.scalar(
+        select(Folder).where(Folder.id == folder_id, Folder.user_id == current_user.id)
+    )
     if not folder:
         raise HTTPException(status_code=404, detail="Folder not found")
 
-    collections = db.scalars(select(Collection).where(Collection.folder_id == folder_id, Collection.user_id == current_user.id)).all()
+    collections = db.scalars(
+        select(Collection).where(
+            Collection.folder_id == folder_id, Collection.user_id == current_user.id
+        )
+    ).all()
     for collection in collections:
         collection.folder_id = None
 
@@ -194,12 +237,20 @@ def move_collection_to_folder(
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ) -> CollectionOut:
-    collection = db.scalar(select(Collection).where(Collection.id == collection_id, Collection.user_id == current_user.id))
+    collection = db.scalar(
+        select(Collection).where(
+            Collection.id == collection_id, Collection.user_id == current_user.id
+        )
+    )
     if not collection:
         raise HTTPException(status_code=404, detail="Collection not found")
 
     if payload.folder_id is not None:
-        folder = db.scalar(select(Folder).where(Folder.id == payload.folder_id, Folder.user_id == current_user.id))
+        folder = db.scalar(
+            select(Folder).where(
+                Folder.id == payload.folder_id, Folder.user_id == current_user.id
+            )
+        )
         if not folder:
             raise HTTPException(status_code=404, detail="Folder not found")
 
@@ -219,16 +270,27 @@ def get_collection(
     offset: int = Query(0, ge=0),
     limit: int = Query(200, ge=0, le=500),
 ) -> CollectionDetail:
-    collection = db.scalar(select(Collection).where(Collection.id == collection_id, Collection.user_id == current_user.id))
+    collection = db.scalar(
+        select(Collection).where(
+            Collection.id == collection_id, Collection.user_id == current_user.id
+        )
+    )
     if not collection:
         raise HTTPException(status_code=404, detail="Collection not found")
 
     limit = clamp_limit(limit)
-    cards_total = db.scalar(select(func.count(Card.id)).where(Card.collection_id == collection_id)) or 0
+    cards_total = (
+        db.scalar(
+            select(func.count(Card.id)).where(Card.collection_id == collection_id)
+        )
+        or 0
+    )
     cards = db.scalars(
         select(Card)
         .join(Collection, Collection.id == Card.collection_id)
-        .where(Card.collection_id == collection_id, Collection.user_id == current_user.id)
+        .where(
+            Card.collection_id == collection_id, Collection.user_id == current_user.id
+        )
         .options(joinedload(Card.progress))
         .order_by(Card.created_at.asc())
         .offset(offset)
@@ -236,7 +298,11 @@ def get_collection(
     ).all()
 
     stats = collection_stats(db, collection)
-    return CollectionDetail(**stats.model_dump(), cards=[card_to_out(c) for c in cards], cards_total=int(cards_total))
+    return CollectionDetail(
+        **stats.model_dump(),
+        cards=[card_to_out(c) for c in cards],
+        cards_total=int(cards_total),
+    )
 
 
 @router.get("/collections/{collection_id}/cards", response_model=PaginatedCardsOut)
@@ -249,12 +315,21 @@ def list_collection_cards(
     offset: int = Query(0, ge=0),
     limit: int = Query(200, ge=0, le=500),
 ) -> PaginatedCardsOut:
-    collection = db.scalar(select(Collection.id).where(Collection.id == collection_id, Collection.user_id == current_user.id))
+    collection = db.scalar(
+        select(Collection.id).where(
+            Collection.id == collection_id, Collection.user_id == current_user.id
+        )
+    )
     if not collection:
         raise HTTPException(status_code=404, detail="Collection not found")
 
     limit = clamp_limit(limit)
-    total = db.scalar(select(func.count(Card.id)).where(Card.collection_id == collection_id)) or 0
+    total = (
+        db.scalar(
+            select(func.count(Card.id)).where(Card.collection_id == collection_id)
+        )
+        or 0
+    )
     rows = db.execute(
         select(Card, CardProgress.known)
         .outerjoin(CardProgress, CardProgress.card_id == Card.id)
@@ -288,17 +363,24 @@ def get_study_cards(
     offset: int = Query(0, ge=0),
     limit: int = Query(200, ge=0, le=500),
 ) -> StudyCardsOut:
-    collection = db.scalar(select(Collection).where(Collection.id == collection_id, Collection.user_id == current_user.id))
+    collection = db.scalar(
+        select(Collection).where(
+            Collection.id == collection_id, Collection.user_id == current_user.id
+        )
+    )
     if not collection:
         raise HTTPException(status_code=404, detail="Collection not found")
 
     limit = clamp_limit(limit)
     unknown_filter = or_(CardProgress.id.is_(None), CardProgress.known == False)  # noqa: E712
-    remaining = db.scalar(
-        select(func.count(Card.id))
-        .outerjoin(CardProgress, CardProgress.card_id == Card.id)
-        .where(Card.collection_id == collection_id, unknown_filter)
-    ) or 0
+    remaining = (
+        db.scalar(
+            select(func.count(Card.id))
+            .outerjoin(CardProgress, CardProgress.card_id == Card.id)
+            .where(Card.collection_id == collection_id, unknown_filter)
+        )
+        or 0
+    )
 
     cards = db.scalars(
         select(Card)
@@ -336,9 +418,19 @@ async def import_collection(
     if not isinstance(file, (UploadFile, StarletteUploadFile)):
         raise HTTPException(status_code=422, detail="file is required")
     filename = (file.filename or "").lower()
-    is_markdown = filename.endswith(".md") or file.content_type in {"text/markdown", "text/x-markdown"}
-    if not is_markdown and file.content_type not in {"application/json", "text/json", "text/plain", None}:
-        raise HTTPException(status_code=400, detail="Only JSON or Markdown files are supported")
+    is_markdown = filename.endswith(".md") or file.content_type in {
+        "text/markdown",
+        "text/x-markdown",
+    }
+    if not is_markdown and file.content_type not in {
+        "application/json",
+        "text/json",
+        "text/plain",
+        None,
+    }:
+        raise HTTPException(
+            status_code=400, detail="Only JSON or Markdown files are supported"
+        )
 
     data = await read_upload_with_limit(file, collections_import_max_bytes())
 
@@ -367,7 +459,9 @@ async def import_collection(
         db.flush()
     except IntegrityError:
         db.rollback()
-        raise HTTPException(status_code=409, detail="Collection name already exists") from None
+        raise HTTPException(
+            status_code=409, detail="Collection name already exists"
+        ) from None
 
     existing_pairs: set[tuple[str, str]] = set()
     imported_count = 0
@@ -407,7 +501,11 @@ def delete_collection(
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ) -> MessageOut:
-    collection = db.scalar(select(Collection).where(Collection.id == collection_id, Collection.user_id == current_user.id))
+    collection = db.scalar(
+        select(Collection).where(
+            Collection.id == collection_id, Collection.user_id == current_user.id
+        )
+    )
     if not collection:
         raise HTTPException(status_code=404, detail="Collection not found")
 
@@ -424,17 +522,26 @@ def reset_collection_progress(
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ) -> MessageOut:
-    collection = db.scalar(select(Collection).where(Collection.id == collection_id, Collection.user_id == current_user.id))
+    collection = db.scalar(
+        select(Collection).where(
+            Collection.id == collection_id, Collection.user_id == current_user.id
+        )
+    )
     if not collection:
         raise HTTPException(status_code=404, detail="Collection not found")
 
-    cards = db.scalars(select(Card.id).where(Card.collection_id == collection_id)).all()
-    if cards:
-        progresses = db.scalars(select(CardProgress).where(CardProgress.card_id.in_(cards))).all()
-        for progress in progresses:
-            progress.known = False
-            progress.known_at = None
-            progress.last_reviewed_at = datetime.utcnow()
+    db.query(CardProgress).filter(
+        CardProgress.card_id.in_(
+            select(Card.id).where(Card.collection_id == collection_id)
+        )
+    ).update(
+        {
+            CardProgress.known: False,
+            CardProgress.known_at: None,
+            CardProgress.last_reviewed_at: datetime.utcnow(),
+        },
+        synchronize_session=False,
+    )
     db.commit()
 
     return MessageOut(message="Collection progress reset")
@@ -446,13 +553,25 @@ def export_collection(
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ) -> JSONResponse:
-    collection = db.scalar(select(Collection).where(Collection.id == collection_id, Collection.user_id == current_user.id))
+    collection = db.scalar(
+        select(Collection).where(
+            Collection.id == collection_id, Collection.user_id == current_user.id
+        )
+    )
     if not collection:
         raise HTTPException(status_code=404, detail="Collection not found")
 
-    cards = db.scalars(select(Card).where(Card.collection_id == collection_id).order_by(Card.created_at.asc())).all()
+    cards = db.scalars(
+        select(Card)
+        .where(Card.collection_id == collection_id)
+        .order_by(Card.created_at.asc())
+    ).all()
     payload = [
-        {"question": c.question, "answer": c.answer, "markdown": bool(getattr(c, "is_markdown", False))}
+        {
+            "question": c.question,
+            "answer": c.answer,
+            "markdown": bool(getattr(c, "is_markdown", False)),
+        }
         for c in cards
     ]
 
@@ -480,8 +599,13 @@ def update_card(
     card.question = payload.question.strip()
     card.answer = payload.answer.strip()
     if not card.question or not card.answer:
-        raise HTTPException(status_code=400, detail="Question and answer cannot be empty")
-    if len(card.question) > card_question_max_chars() or len(card.answer) > card_answer_max_chars():
+        raise HTTPException(
+            status_code=400, detail="Question and answer cannot be empty"
+        )
+    if (
+        len(card.question) > card_question_max_chars()
+        or len(card.answer) > card_answer_max_chars()
+    ):
         raise HTTPException(status_code=400, detail="Question or answer is too long")
 
     db.commit()
@@ -498,9 +622,9 @@ def delete_card(
     db: Session = Depends(get_db),
 ) -> MessageOut:
     card = db.scalar(
-        select(Card).join(Collection, Collection.id == Card.collection_id).where(
-            Card.id == card_id, Collection.user_id == current_user.id
-        )
+        select(Card)
+        .join(Collection, Collection.id == Card.collection_id)
+        .where(Card.id == card_id, Collection.user_id == current_user.id)
     )
     if not card:
         raise HTTPException(status_code=404, detail="Card not found")
