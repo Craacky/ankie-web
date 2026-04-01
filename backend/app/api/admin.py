@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Request
 from sqlalchemy import case, func, select
@@ -39,18 +39,53 @@ def admin_overview(
     _: User = Depends(get_admin_user),
     db: Session = Depends(get_db),
 ) -> AdminOverviewOut:
-    window_start = datetime.utcnow() - timedelta(minutes=window_minutes)
-    total_requests = db.scalar(select(func.count(RequestLog.id)).where(RequestLog.created_at >= window_start)) or 0
+    window_start = datetime.now(timezone.utc) - timedelta(minutes=window_minutes)
+    total_requests = (
+        db.scalar(
+            select(func.count(RequestLog.id)).where(
+                RequestLog.created_at >= window_start
+            )
+        )
+        or 0
+    )
     unique_users = (
-        db.scalar(select(func.count(func.distinct(RequestLog.user_id))).where(RequestLog.user_id.is_not(None), RequestLog.created_at >= window_start))
+        db.scalar(
+            select(func.count(func.distinct(RequestLog.user_id))).where(
+                RequestLog.user_id.is_not(None), RequestLog.created_at >= window_start
+            )
+        )
         or 0
     )
     unique_ips = (
-        db.scalar(select(func.count(func.distinct(RequestLog.ip))).where(RequestLog.ip.is_not(None), RequestLog.created_at >= window_start))
+        db.scalar(
+            select(func.count(func.distinct(RequestLog.ip))).where(
+                RequestLog.ip.is_not(None), RequestLog.created_at >= window_start
+            )
+        )
+        or 0
+    )
+    unique_users = (
+        db.scalar(
+            select(func.count(func.distinct(RequestLog.user_id))).where(
+                RequestLog.user_id.is_not(None), RequestLog.created_at >= window_start
+            )
+        )
+        or 0
+    )
+    unique_ips = (
+        db.scalar(
+            select(func.count(func.distinct(RequestLog.ip))).where(
+                RequestLog.ip.is_not(None), RequestLog.created_at >= window_start
+            )
+        )
         or 0
     )
     error_requests = (
-        db.scalar(select(func.count(RequestLog.id)).where(RequestLog.status_code >= 500, RequestLog.created_at >= window_start))
+        db.scalar(
+            select(func.count(RequestLog.id)).where(
+                RequestLog.status_code >= 500, RequestLog.created_at >= window_start
+            )
+        )
         or 0
     )
     return AdminOverviewOut(
@@ -71,12 +106,14 @@ def admin_users(
     _: User = Depends(get_admin_user),
     db: Session = Depends(get_db),
 ) -> list[AdminUserOut]:
-    window_start = datetime.utcnow() - timedelta(minutes=window_minutes)
+    window_start = datetime.now(timezone.utc) - timedelta(minutes=window_minutes)
     stats = db.execute(
         select(
             RequestLog.user_id,
             func.count(RequestLog.id).label("request_count"),
-            func.sum(case((RequestLog.status_code >= 500, 1), else_=0)).label("error_count"),
+            func.sum(case((RequestLog.status_code >= 500, 1), else_=0)).label(
+                "error_count"
+            ),
             func.max(RequestLog.created_at).label("last_seen"),
         )
         .where(RequestLog.user_id.is_not(None), RequestLog.created_at >= window_start)
@@ -86,8 +123,11 @@ def admin_users(
     ).all()
 
     user_ids = [row.user_id for row in stats]
-    users = {user.id: user for user in db.scalars(select(User).where(User.id.in_(user_ids))).all()}
-    now = datetime.utcnow()
+    users = {
+        user.id: user
+        for user in db.scalars(select(User).where(User.id.in_(user_ids))).all()
+    }
+    now = datetime.now(timezone.utc)
     banned_ids = {
         row[0]
         for row in db.execute(
@@ -172,7 +212,9 @@ def admin_ban(
         raise HTTPException(status_code=400, detail="user_id or ip is required")
     expires_at = None
     if payload.duration_minutes:
-        expires_at = datetime.utcnow() + timedelta(minutes=payload.duration_minutes)
+        expires_at = datetime.now(timezone.utc) + timedelta(
+            minutes=payload.duration_minutes
+        )
     db.add(
         UserFlag(
             user_id=payload.user_id,
@@ -210,7 +252,9 @@ def admin_unban(
         query = query.filter(UserFlag.user_id == payload.user_id)
     if payload.ip:
         query = query.filter(UserFlag.ip == payload.ip)
-    updated = query.update({UserFlag.banned: False, UserFlag.expires_at: datetime.utcnow()})
+    updated = query.update(
+        {UserFlag.banned: False, UserFlag.expires_at: datetime.now(timezone.utc)}
+    )
     db.commit()
     record_admin_action(
         db,
@@ -233,7 +277,9 @@ def admin_alerts(
     _: User = Depends(get_admin_user),
     db: Session = Depends(get_db),
 ) -> list[AdminAlertOut]:
-    rows = db.scalars(select(Alert).order_by(Alert.created_at.desc()).limit(limit)).all()
+    rows = db.scalars(
+        select(Alert).order_by(Alert.created_at.desc()).limit(limit)
+    ).all()
     return [
         AdminAlertOut(
             id=row.id,

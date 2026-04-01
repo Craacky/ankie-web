@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from datetime import datetime, timezone
+
 from fastapi import Cookie, Depends, HTTPException
 from sqlalchemy import select
 from sqlalchemy.orm import Session, joinedload
@@ -18,9 +20,7 @@ def get_current_user(
     if not session_token:
         raise HTTPException(status_code=401, detail="Unauthorized")
 
-    from datetime import datetime
-
-    now = datetime.utcnow()
+    now = datetime.now(timezone.utc)
     session = db.scalar(
         select(UserSession)
         .where(UserSession.token == session_token, UserSession.expires_at > now)

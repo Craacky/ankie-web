@@ -3,7 +3,7 @@ from __future__ import annotations
 import json
 import logging
 import urllib.request
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
@@ -28,7 +28,7 @@ def is_admin_telegram_id(telegram_id: int | None) -> bool:
 
 
 def resolve_user_id_from_session(db: Session, session_token: str) -> int | None:
-    now = datetime.utcnow()
+    now = datetime.now(timezone.utc)
     return db.scalar(
         select(UserSession.user_id).where(
             UserSession.token == session_token, UserSession.expires_at > now
@@ -37,7 +37,7 @@ def resolve_user_id_from_session(db: Session, session_token: str) -> int | None:
 
 
 def is_banned(db: Session, user_id: int | None, ip: str | None) -> bool:
-    now = datetime.utcnow()
+    now = datetime.now(timezone.utc)
     query = select(UserFlag.id).where(
         UserFlag.banned == True,  # noqa: E712
         (UserFlag.expires_at.is_(None)) | (UserFlag.expires_at > now),
@@ -81,7 +81,7 @@ def record_request_log(
 
 
 def cleanup_request_logs(db: Session) -> None:
-    cutoff = datetime.utcnow() - timedelta(days=request_log_retention_days())
+    cutoff = datetime.now(timezone.utc) - timedelta(days=request_log_retention_days())
     db.query(RequestLog).filter(RequestLog.created_at < cutoff).delete()
     db.commit()
 
@@ -106,6 +106,8 @@ def _send_telegram_alert(message: str) -> None:
         with urllib.request.urlopen(request, timeout=10):
             logger.info("Telegram alert sent: %s", message[:100])
             return
+    except urllib.error.URLError as exc:
+        logger.warning("Failed to send Telegram alert (network error): %s", exc)
     except Exception as exc:
         logger.warning("Failed to send Telegram alert: %s", exc)
 
@@ -119,7 +121,7 @@ def _maybe_alert(
     window_seconds: int,
     count: int,
 ) -> None:
-    now = datetime.utcnow()
+    now = datetime.now(timezone.utc)
     last_alert = db.scalar(
         select(Alert)
         .where(
@@ -154,7 +156,7 @@ def _maybe_alert(
 
 def check_alerts(db: Session) -> None:
     window = alert_window_seconds()
-    window_start = datetime.utcnow() - timedelta(seconds=window)
+    window_start = datetime.now(timezone.utc) - timedelta(seconds=window)
 
     req_threshold = alert_requests_threshold()
     err_threshold = alert_error_threshold()

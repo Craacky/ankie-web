@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import os
-from datetime import datetime
+from datetime import datetime, timezone
 
 from fastapi import APIRouter, Body, Cookie, Depends, HTTPException, Request, Response
 from sqlalchemy import delete, select
@@ -35,7 +35,6 @@ router = APIRouter()
 
 
 @router.get("/health")
-@limiter.limit("30/minute")
 def health(request: Request) -> dict[str, str]:
     return {"status": "ok"}
 
@@ -71,7 +70,7 @@ def auth_telegram(
         raise HTTPException(status_code=401, detail="Invalid Telegram signature")
 
     max_age_seconds = int(os.getenv("TELEGRAM_AUTH_MAX_AGE", str(24 * 60 * 60)))
-    now_ts = int(datetime.utcnow().timestamp())
+    now_ts = int(datetime.now(timezone.utc).timestamp())
     if int(payload.auth_date) > now_ts + 60:
         raise HTTPException(
             status_code=401, detail="Telegram auth date is in the future"

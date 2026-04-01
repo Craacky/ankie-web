@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import json
-from datetime import datetime
+from datetime import datetime, timezone
 
 from fastapi import (
     APIRouter,
@@ -538,7 +538,7 @@ def reset_collection_progress(
         {
             CardProgress.known: False,
             CardProgress.known_at: None,
-            CardProgress.last_reviewed_at: datetime.utcnow(),
+            CardProgress.last_reviewed_at: datetime.now(timezone.utc),
         },
         synchronize_session=False,
     )
@@ -660,8 +660,8 @@ def mark_card_progress(
         db.add(progress)
 
     progress.known = action.known
-    progress.last_reviewed_at = datetime.utcnow()
-    progress.known_at = datetime.utcnow() if action.known else None
+    progress.last_reviewed_at = datetime.now(timezone.utc)
+    progress.known_at = datetime.now(timezone.utc) if action.known else None
 
     db.commit()
 

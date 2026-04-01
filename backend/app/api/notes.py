@@ -156,6 +156,38 @@ async def upload_note_file(
     filename = Path(file.filename or "").name.strip()
     if not filename:
         raise HTTPException(status_code=400, detail="File name cannot be empty")
+
+    # Validate file extension for security
+    dangerous_extensions = {
+        ".exe",
+        ".bat",
+        ".cmd",
+        ".com",
+        ".pif",
+        ".scr",
+        ".vbs",
+        ".js",
+        ".jar",
+        ".app",
+        ".deb",
+        ".rpm",
+        ".dmg",
+        ".pkg",
+        ".sh",
+        ".bash",
+        ".ps1",
+        ".psm1",
+        ".dll",
+        ".so",
+        ".dylib",
+    }
+    file_ext = Path(filename).suffix.lower()
+    if file_ext in dangerous_extensions:
+        raise HTTPException(
+            status_code=400,
+            detail=f"File extension {file_ext} is not allowed for security reasons",
+        )
+
     target = resolve_user_note_path(
         root, str((parent / filename).relative_to(root)), allow_missing=True
     )

@@ -22,7 +22,14 @@ from .database import SessionLocal
 from .limiter import limiter
 from .services.auth import SESSION_COOKIE_NAME
 from .services.admin import is_banned, record_request_log, resolve_user_id_from_session
-from .settings import allow_cors_any, cors_origins, csrf_cookie_name, csrf_header_name, disable_rate_limiting, enable_api_docs
+from .settings import (
+    allow_cors_any,
+    cors_origins,
+    csrf_cookie_name,
+    csrf_header_name,
+    disable_rate_limiting,
+    enable_api_docs,
+)
 from .startup import admin_monitor_loop, run_migrations, session_cleanup_loop
 
 logging.basicConfig(level=logging.INFO)
@@ -31,6 +38,11 @@ logger = logging.getLogger(__name__)
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):  # noqa: ARG001
+    from .startup import validate_required_env_vars
+
+    # Validate required environment variables before starting
+    validate_required_env_vars()
+
     run_migrations()
     cleanup_task = asyncio.create_task(session_cleanup_loop())
     admin_task = asyncio.create_task(admin_monitor_loop())
@@ -56,7 +68,9 @@ app = FastAPI(
 
 origins = cors_origins()
 if "*" in origins and not allow_cors_any():
-    raise RuntimeError("CORS_ORIGINS cannot include '*' in production. Set ALLOW_CORS_ANY=true to override.")
+    raise RuntimeError(
+        "CORS_ORIGINS cannot include '*' in production. Set ALLOW_CORS_ANY=true to override."
+    )
 allow_credentials = origins != ["*"]
 app.add_middleware(
     CORSMiddleware,
@@ -68,8 +82,25 @@ app.add_middleware(
 limiter.enabled = not disable_rate_limiting()
 app.state.limiter = limiter
 if limiter.enabled:
-    app.add_exception_handler(RateLimitExceeded, lambda request, exc: JSONResponse(status_code=429, content={"detail": "Rate limit exceeded"}))
+    app.add_exception_handler(
+        RateLimitExceeded,
+        lambda request, exc: JSONResponse(
+            status_code=429, content={"detail": "Rate limit exceeded"}
+        ),
+    )
     app.add_middleware(SlowAPIMiddleware)
+
+
+@app.middleware("http")
+async def request_size_limit(request: Request, call_next):
+    """Limit request body size to prevent memory exhaustion."""
+    max_size = 50 * 1024 * 1024  # 50MB global limit
+    content_length = request.headers.get("content-length")
+    if content_length and int(content_length) > max_size:
+        return JSONResponse(
+            status_code=413, content={"detail": "Request body too large"}
+        )
+    return await call_next(request)
 
 
 @app.middleware("http")
@@ -79,15 +110,15 @@ async def request_logging(request: Request, call_next):
     session_token = request.cookies.get(SESSION_COOKIE_NAME)
     user_id = None
     ip = request.client.host if request.client else None
-    if session_token:
-        with SessionLocal() as db:
+
+    # Use single database session for all checks to avoid race conditions
+    with SessionLocal() as db:
+        if session_token:
             user_id = resolve_user_id_from_session(db, session_token)
-            if is_banned(db, user_id, ip):
-                return JSONResponse(status_code=403, content={"detail": "Access denied"})
-    else:
-        with SessionLocal() as db:
-            if is_banned(db, None, ip):
-                return JSONResponse(status_code=403, content={"detail": "Access denied"})
+
+        if is_banned(db, user_id, ip):
+            return JSONResponse(status_code=403, content={"detail": "Access denied"})
+
     try:
         response = await call_next(request)
     except Exception:
@@ -137,8 +168,14 @@ async def csrf_protection(request: Request, call_next):
         if session_cookie:
             csrf_cookie = request.cookies.get(csrf_cookie_name())
             csrf_header = request.headers.get(csrf_header_name())
-            if not csrf_cookie or not csrf_header or not secrets.compare_digest(csrf_cookie, csrf_header):
-                return JSONResponse(status_code=403, content={"detail": "CSRF token missing or invalid"})
+            if (
+                not csrf_cookie
+                or not csrf_header
+                or not secrets.compare_digest(csrf_cookie, csrf_header)
+            ):
+                return JSONResponse(
+                    status_code=403, content={"detail": "CSRF token missing or invalid"}
+                )
     return await call_next(request)
 
 
@@ -147,6 +184,8 @@ async def http_exception_handler(request: Request, exc: StarletteHTTPException):
     if exc.status_code == 404:
         return JSONResponse(status_code=404, content={"detail": "Not found"})
     return JSONResponse(status_code=exc.status_code, content={"detail": exc.detail})
+
+
 app.include_router(auth_router, prefix="/api")
 app.include_router(notes_router, prefix="/api")
 app.include_router(library_router, prefix="/api")

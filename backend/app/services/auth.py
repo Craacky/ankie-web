@@ -4,7 +4,7 @@ import hashlib
 import hmac
 import os
 import secrets
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 
 from fastapi import Response
 from sqlalchemy.orm import Session
@@ -29,7 +29,9 @@ def verify_telegram_payload(payload: TelegramAuthPayload, bot_token: str) -> boo
     data_check_string = "\n".join(parts)
 
     secret_key = hashlib.sha256(bot_token.encode("utf-8")).digest()
-    expected_hash = hmac.new(secret_key, data_check_string.encode("utf-8"), hashlib.sha256).hexdigest()
+    expected_hash = hmac.new(
+        secret_key, data_check_string.encode("utf-8"), hashlib.sha256
+    ).hexdigest()
     return hmac.compare_digest(expected_hash, incoming_hash)
 
 
@@ -47,7 +49,7 @@ def user_to_out(user: User) -> UserOut:
 
 def create_session(db: Session, user_id: int) -> UserSession:
     ttl_days = env_int("SESSION_TTL_DAYS", 30)
-    now = datetime.utcnow()
+    now = datetime.now(timezone.utc)
     session = UserSession(
         token=secrets.token_urlsafe(48),
         user_id=user_id,
@@ -92,9 +94,13 @@ def set_csrf_cookie(response: Response, token: str | None = None) -> str:
 
 def clear_session_cookie(response: Response) -> None:
     cookie_secure = env_bool("COOKIE_SECURE", False)
-    response.delete_cookie(key=SESSION_COOKIE_NAME, path="/", samesite="lax", secure=cookie_secure)
+    response.delete_cookie(
+        key=SESSION_COOKIE_NAME, path="/", samesite="lax", secure=cookie_secure
+    )
 
 
 def clear_csrf_cookie(response: Response) -> None:
     cookie_secure = env_bool("COOKIE_SECURE", False)
-    response.delete_cookie(key=csrf_cookie_name(), path="/", samesite="strict", secure=cookie_secure)
+    response.delete_cookie(
+        key=csrf_cookie_name(), path="/", samesite="strict", secure=cookie_secure
+    )

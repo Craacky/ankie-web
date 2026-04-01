@@ -1,9 +1,22 @@
-from datetime import datetime
+from datetime import datetime, timezone
 
-from sqlalchemy import Boolean, DateTime, ForeignKey, Integer, String, Text, UniqueConstraint
+from sqlalchemy import (
+    Boolean,
+    DateTime,
+    ForeignKey,
+    Integer,
+    String,
+    Text,
+    UniqueConstraint,
+)
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from .database import Base
+
+
+def utcnow() -> datetime:
+    """Return current UTC time with timezone info."""
+    return datetime.now(timezone.utc)
 
 
 class User(Base):
@@ -16,20 +29,32 @@ class User(Base):
     last_name: Mapped[str | None] = mapped_column(String(255), nullable=True)
     photo_url: Mapped[str | None] = mapped_column(Text, nullable=True)
     theme_key: Mapped[str | None] = mapped_column(String(64), nullable=True)
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, nullable=False)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime, default=utcnow, nullable=False
+    )
 
-    sessions: Mapped[list["Session"]] = relationship("Session", back_populates="user", cascade="all, delete-orphan")
+    sessions: Mapped[list["Session"]] = relationship(
+        "Session", back_populates="user", cascade="all, delete-orphan"
+    )
     folders: Mapped[list["Folder"]] = relationship("Folder", back_populates="user")
-    collections: Mapped[list["Collection"]] = relationship("Collection", back_populates="user")
+    collections: Mapped[list["Collection"]] = relationship(
+        "Collection", back_populates="user"
+    )
 
 
 class Session(Base):
     __tablename__ = "sessions"
 
     id: Mapped[int] = mapped_column(primary_key=True, index=True)
-    token: Mapped[str] = mapped_column(String(255), unique=True, index=True, nullable=False)
-    user_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True)
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, nullable=False)
+    token: Mapped[str] = mapped_column(
+        String(255), unique=True, index=True, nullable=False
+    )
+    user_id: Mapped[int] = mapped_column(
+        ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True
+    )
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime, default=utcnow, nullable=False
+    )
     expires_at: Mapped[datetime] = mapped_column(DateTime, nullable=False, index=True)
 
     user: Mapped[User] = relationship("User", back_populates="sessions")
@@ -40,41 +65,66 @@ class Folder(Base):
     __table_args__ = (UniqueConstraint("user_id", "name", name="uq_folders_user_name"),)
 
     id: Mapped[int] = mapped_column(primary_key=True, index=True)
-    user_id: Mapped[int | None] = mapped_column(ForeignKey("users.id", ondelete="SET NULL"), nullable=True, index=True)
+    user_id: Mapped[int | None] = mapped_column(
+        ForeignKey("users.id", ondelete="SET NULL"), nullable=True, index=True
+    )
     name: Mapped[str] = mapped_column(String(255), nullable=False)
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, nullable=False)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime, default=utcnow, nullable=False
+    )
 
     user: Mapped[User | None] = relationship("User", back_populates="folders")
-    collections: Mapped[list["Collection"]] = relationship("Collection", back_populates="folder")
+    collections: Mapped[list["Collection"]] = relationship(
+        "Collection", back_populates="folder"
+    )
 
 
 class Collection(Base):
     __tablename__ = "collections"
-    __table_args__ = (UniqueConstraint("user_id", "name", name="uq_collections_user_name"),)
+    __table_args__ = (
+        UniqueConstraint("user_id", "name", name="uq_collections_user_name"),
+    )
 
     id: Mapped[int] = mapped_column(primary_key=True, index=True)
-    user_id: Mapped[int | None] = mapped_column(ForeignKey("users.id", ondelete="SET NULL"), nullable=True, index=True)
+    user_id: Mapped[int | None] = mapped_column(
+        ForeignKey("users.id", ondelete="SET NULL"), nullable=True, index=True
+    )
     name: Mapped[str] = mapped_column(String(255), nullable=False)
-    folder_id: Mapped[int | None] = mapped_column(ForeignKey("folders.id", ondelete="SET NULL"), nullable=True, index=True)
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, nullable=False)
+    folder_id: Mapped[int | None] = mapped_column(
+        ForeignKey("folders.id", ondelete="SET NULL"), nullable=True, index=True
+    )
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime, default=utcnow, nullable=False
+    )
 
     user: Mapped[User | None] = relationship("User", back_populates="collections")
     folder: Mapped[Folder | None] = relationship("Folder", back_populates="collections")
-    cards: Mapped[list["Card"]] = relationship("Card", back_populates="collection", cascade="all, delete-orphan")
+    cards: Mapped[list["Card"]] = relationship(
+        "Card", back_populates="collection", cascade="all, delete-orphan"
+    )
 
 
 class Card(Base):
     __tablename__ = "cards"
 
     id: Mapped[int] = mapped_column(primary_key=True, index=True)
-    collection_id: Mapped[int] = mapped_column(ForeignKey("collections.id", ondelete="CASCADE"), nullable=False, index=True)
+    collection_id: Mapped[int] = mapped_column(
+        ForeignKey("collections.id", ondelete="CASCADE"), nullable=False, index=True
+    )
     question: Mapped[str] = mapped_column(Text, nullable=False)
     answer: Mapped[str] = mapped_column(Text, nullable=False)
     is_markdown: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, nullable=False)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime, default=utcnow, nullable=False
+    )
 
     collection: Mapped[Collection] = relationship("Collection", back_populates="cards")
-    progress: Mapped["CardProgress"] = relationship("CardProgress", back_populates="card", uselist=False, cascade="all, delete-orphan")
+    progress: Mapped["CardProgress"] = relationship(
+        "CardProgress",
+        back_populates="card",
+        uselist=False,
+        cascade="all, delete-orphan",
+    )
 
 
 class CardProgress(Base):
@@ -82,8 +132,12 @@ class CardProgress(Base):
     __table_args__ = (UniqueConstraint("card_id", name="uq_card_progress_card_id"),)
 
     id: Mapped[int] = mapped_column(primary_key=True, index=True)
-    card_id: Mapped[int] = mapped_column(ForeignKey("cards.id", ondelete="CASCADE"), nullable=False, index=True)
-    known: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
+    card_id: Mapped[int] = mapped_column(
+        ForeignKey("cards.id", ondelete="CASCADE"), nullable=False, index=True
+    )
+    known: Mapped[bool] = mapped_column(
+        Boolean, default=False, nullable=False, index=True
+    )
     last_reviewed_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
     known_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
 
@@ -94,7 +148,9 @@ class RequestLog(Base):
     __tablename__ = "request_logs"
 
     id: Mapped[int] = mapped_column(primary_key=True, index=True)
-    user_id: Mapped[int | None] = mapped_column(ForeignKey("users.id", ondelete="SET NULL"), nullable=True, index=True)
+    user_id: Mapped[int | None] = mapped_column(
+        ForeignKey("users.id", ondelete="SET NULL"), nullable=True, index=True
+    )
     ip: Mapped[str | None] = mapped_column(String(64), nullable=True, index=True)
     method: Mapped[str] = mapped_column(String(16), nullable=False)
     path: Mapped[str] = mapped_column(String(512), nullable=False, index=True)
@@ -102,7 +158,9 @@ class RequestLog(Base):
     duration_ms: Mapped[int] = mapped_column(Integer, nullable=False)
     request_id: Mapped[str] = mapped_column(String(64), nullable=False, index=True)
     user_agent: Mapped[str | None] = mapped_column(String(512), nullable=True)
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, nullable=False, index=True)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime, default=utcnow, nullable=False, index=True
+    )
 
     user: Mapped[User | None] = relationship("User")
 
@@ -111,25 +169,41 @@ class UserFlag(Base):
     __tablename__ = "user_flags"
 
     id: Mapped[int] = mapped_column(primary_key=True, index=True)
-    user_id: Mapped[int | None] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), nullable=True, index=True)
+    user_id: Mapped[int | None] = mapped_column(
+        ForeignKey("users.id", ondelete="CASCADE"), nullable=True, index=True
+    )
     ip: Mapped[str | None] = mapped_column(String(64), nullable=True, index=True)
-    banned: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False, index=True)
+    banned: Mapped[bool] = mapped_column(
+        Boolean, default=True, nullable=False, index=True
+    )
     reason: Mapped[str | None] = mapped_column(String(255), nullable=True)
-    expires_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True, index=True)
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, nullable=False, index=True)
-    created_by_user_id: Mapped[int | None] = mapped_column(ForeignKey("users.id", ondelete="SET NULL"), nullable=True, index=True)
+    expires_at: Mapped[datetime | None] = mapped_column(
+        DateTime, nullable=True, index=True
+    )
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime, default=utcnow, nullable=False, index=True
+    )
+    created_by_user_id: Mapped[int | None] = mapped_column(
+        ForeignKey("users.id", ondelete="SET NULL"), nullable=True, index=True
+    )
 
 
 class AdminAction(Base):
     __tablename__ = "admin_actions"
 
     id: Mapped[int] = mapped_column(primary_key=True, index=True)
-    admin_user_id: Mapped[int | None] = mapped_column(ForeignKey("users.id", ondelete="SET NULL"), nullable=True, index=True)
+    admin_user_id: Mapped[int | None] = mapped_column(
+        ForeignKey("users.id", ondelete="SET NULL"), nullable=True, index=True
+    )
     action: Mapped[str] = mapped_column(String(64), nullable=False)
-    target_user_id: Mapped[int | None] = mapped_column(ForeignKey("users.id", ondelete="SET NULL"), nullable=True, index=True)
+    target_user_id: Mapped[int | None] = mapped_column(
+        ForeignKey("users.id", ondelete="SET NULL"), nullable=True, index=True
+    )
     target_ip: Mapped[str | None] = mapped_column(String(64), nullable=True, index=True)
     reason: Mapped[str | None] = mapped_column(String(255), nullable=True)
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, nullable=False, index=True)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime, default=utcnow, nullable=False, index=True
+    )
 
 
 class Alert(Base):
@@ -137,9 +211,15 @@ class Alert(Base):
 
     id: Mapped[int] = mapped_column(primary_key=True, index=True)
     kind: Mapped[str] = mapped_column(String(64), nullable=False, index=True)
-    user_id: Mapped[int | None] = mapped_column(ForeignKey("users.id", ondelete="SET NULL"), nullable=True, index=True)
+    user_id: Mapped[int | None] = mapped_column(
+        ForeignKey("users.id", ondelete="SET NULL"), nullable=True, index=True
+    )
     ip: Mapped[str | None] = mapped_column(String(64), nullable=True, index=True)
     window_seconds: Mapped[int] = mapped_column(Integer, nullable=False)
     count: Mapped[int] = mapped_column(Integer, nullable=False)
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, nullable=False, index=True)
-    last_sent_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True, index=True)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime, default=utcnow, nullable=False, index=True
+    )
+    last_sent_at: Mapped[datetime | None] = mapped_column(
+        DateTime, nullable=True, index=True
+    )

@@ -29,6 +29,12 @@ def resolve_user_note_path(
     if normalized == "":
         return root
 
+    # Check for dangerous path components
+    path_parts = normalized.split("/")
+    for part in path_parts:
+        if part in ("", ".", "..") or "\x00" in part:
+            raise HTTPException(status_code=400, detail="Invalid path component")
+
     target = (root / normalized).resolve()
 
     try:
@@ -37,6 +43,14 @@ def resolve_user_note_path(
     except OSError:
         raise HTTPException(status_code=400, detail="Invalid path")
 
+    # Check for symlinks
+    try:
+        if target.exists() and target.is_symlink():
+            raise HTTPException(status_code=400, detail="Symlinks are not allowed")
+    except OSError:
+        pass
+
+    # Verify target is under root
     if target_resolved != root_resolved:
         try:
             is_under = root_resolved in target_resolved.parents or str(
