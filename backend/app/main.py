@@ -41,20 +41,28 @@ async def lifespan(app: FastAPI):  # noqa: ARG001
     from .startup import validate_required_env_vars
 
     # Validate required environment variables before starting
+    logger.info("Validating environment variables...")
     validate_required_env_vars()
 
+    logger.info("Running database migrations...")
     run_migrations()
+    logger.info("Database migrations completed")
+
+    logger.info("Starting background tasks...")
     cleanup_task = asyncio.create_task(session_cleanup_loop())
     admin_task = asyncio.create_task(admin_monitor_loop())
+    logger.info("Application startup complete")
     try:
         yield
     finally:
+        logger.info("Shutting down background tasks...")
         cleanup_task.cancel()
         admin_task.cancel()
         with suppress(asyncio.CancelledError):
             await cleanup_task
         with suppress(asyncio.CancelledError):
             await admin_task
+        logger.info("Shutdown complete")
 
 
 docs_enabled = enable_api_docs()
