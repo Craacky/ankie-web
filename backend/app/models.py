@@ -113,7 +113,7 @@ class Card(Base):
     )
     question: Mapped[str] = mapped_column(Text, nullable=False)
     answer: Mapped[str] = mapped_column(Text, nullable=False)
-    is_markdown: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
+    is_markdown: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False, index=True)
     created_at: Mapped[datetime] = mapped_column(
         DateTime, default=utcnow, nullable=False
     )

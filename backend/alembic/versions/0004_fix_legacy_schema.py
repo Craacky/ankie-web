@@ -17,10 +17,7 @@ def upgrade() -> None:
     bind = op.get_bind()
     inspector = sa.inspect(bind)
 
-    if "cards" in inspector.get_table_names():
-        if not _column_exists(inspector, "cards", "is_markdown"):
-            op.add_column("cards", sa.Column("is_markdown", sa.Boolean(), nullable=False, server_default=sa.text("0")))
-
+    # Migration 0003 already handles is_markdown, skip it here
     if "card_progress" in inspector.get_table_names():
         if not _column_exists(inspector, "card_progress", "known"):
             op.add_column("card_progress", sa.Column("known", sa.Boolean(), nullable=False, server_default=sa.text("0")))
@@ -31,6 +28,4 @@ def upgrade() -> None:
 
 
 def downgrade() -> None:
-    # Best-effort: SQLite doesn't reliably support DROP COLUMN across all versions.
-    # Leave columns in place to avoid breaking existing data.
     pass

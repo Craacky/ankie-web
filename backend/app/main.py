@@ -127,31 +127,32 @@ async def request_logging(request: Request, call_next):
         if is_banned(db, user_id, ip):
             return JSONResponse(status_code=403, content={"detail": "Access denied"})
 
-    try:
-        response = await call_next(request)
-    except Exception:
+        try:
+            response = await call_next(request)
+        except Exception:
+            duration_ms = (time.monotonic() - start) * 1000
+            logger.exception(
+                "request_id=%s method=%s path=%s status=error duration_ms=%.2f ip=%s",
+                request_id,
+                request.method,
+                request.url.path,
+                duration_ms,
+                request.client.host if request.client else "unknown",
+            )
+            raise
+
         duration_ms = (time.monotonic() - start) * 1000
-        logger.exception(
-            "request_id=%s method=%s path=%s status=error duration_ms=%.2f ip=%s",
+        logger.info(
+            "request_id=%s method=%s path=%s status=%s duration_ms=%.2f ip=%s",
             request_id,
             request.method,
             request.url.path,
+            response.status_code,
             duration_ms,
             request.client.host if request.client else "unknown",
         )
-        raise
-    duration_ms = (time.monotonic() - start) * 1000
-    logger.info(
-        "request_id=%s method=%s path=%s status=%s duration_ms=%.2f ip=%s",
-        request_id,
-        request.method,
-        request.url.path,
-        response.status_code,
-        duration_ms,
-        request.client.host if request.client else "unknown",
-    )
-    try:
-        with SessionLocal() as db:
+
+        try:
             record_request_log(
                 db,
                 user_id=user_id,
@@ -163,8 +164,9 @@ async def request_logging(request: Request, call_next):
                 request_id=request_id,
                 user_agent=request.headers.get("user-agent"),
             )
-    except Exception as exc:  # noqa: BLE001
-        logger.warning("Failed to record request log: %s", exc)
+        except Exception as exc:  # noqa: BLE001
+            logger.warning("Failed to record request log: %s", exc)
+
     response.headers["x-request-id"] = request_id
     return response
 

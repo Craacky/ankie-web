@@ -48,7 +48,14 @@ def run_migrations() -> None:
     config.set_main_option("script_location", str(base_dir / "alembic"))
     db_path = os.getenv("DB_PATH", "/data/ankie.db")
     config.set_main_option("sqlalchemy.url", f"sqlite:///{db_path}")
-    command.upgrade(config, "head")
+
+    try:
+        logger.info("Starting database migrations...")
+        command.upgrade(config, "head")
+        logger.info("Database migrations completed successfully")
+    except Exception as exc:
+        logger.error("Migration failed: %s", exc, exc_info=True)
+        raise RuntimeError(f"Database migration failed: {exc}") from exc
 
 
 async def session_cleanup_loop() -> None:
