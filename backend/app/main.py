@@ -38,13 +38,17 @@ logger = logging.getLogger(__name__)
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):  # noqa: ARG001
-    from .startup import validate_required_env_vars
+    from .startup import validate_required_env_vars, init_database
 
     # Validate required environment variables before starting
     logger.info("Validating environment variables...")
     validate_required_env_vars()
 
-    # Migrations are now run before uvicorn starts (see Dockerfile CMD)
+    # Initialize database tables
+    logger.info("Initializing database...")
+    init_database()
+    logger.info("Database initialized")
+
     logger.info("Starting background tasks...")
     cleanup_task = asyncio.create_task(session_cleanup_loop())
     admin_task = asyncio.create_task(admin_monitor_loop())
