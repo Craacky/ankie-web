@@ -3,8 +3,6 @@ from __future__ import annotations
 from alembic import op
 import sqlalchemy as sa
 
-from app.database import Base
-
 revision = "0001_baseline"
 down_revision = None
 branch_labels = None
@@ -21,7 +19,6 @@ def _index_exists(inspector: sa.Inspector, table_name: str, index_name: str) -> 
 
 def upgrade() -> None:
     bind = op.get_bind()
-    Base.metadata.create_all(bind=bind)
 
     inspector = sa.inspect(bind)
 
