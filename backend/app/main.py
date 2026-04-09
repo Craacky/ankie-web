@@ -44,10 +44,7 @@ async def lifespan(app: FastAPI):  # noqa: ARG001
     logger.info("Validating environment variables...")
     validate_required_env_vars()
 
-    logger.info("Running database migrations...")
-    run_migrations()
-    logger.info("Database migrations completed")
-
+    # Migrations are now run before uvicorn starts (see Dockerfile CMD)
     logger.info("Starting background tasks...")
     cleanup_task = asyncio.create_task(session_cleanup_loop())
     admin_task = asyncio.create_task(admin_monitor_loop())
