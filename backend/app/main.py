@@ -30,7 +30,7 @@ from .settings import (
     disable_rate_limiting,
     enable_api_docs,
 )
-from .startup import admin_monitor_loop, run_migrations, session_cleanup_loop
+from .startup import admin_monitor_loop, session_cleanup_loop
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
