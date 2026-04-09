@@ -35,6 +35,7 @@ router = APIRouter()
 
 
 @router.get("/health")
+@router.head("/health")
 def health(request: Request) -> dict[str, str]:
     return {"status": "ok"}
 
